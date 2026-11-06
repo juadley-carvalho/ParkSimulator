@@ -67,6 +67,7 @@ function atualizarAtracoes(dt) {
         a.passageiros = []; a.fase = 'carregando'; a.tCarga = 0;
       }
     }
-    a.angulo += dt * (a.fase === 'rodando' ? 2.4 : 0.3);   // gira rápido só em movimento
+    const giro = def.giro || { parado: 0.3, rodando: 2.4 };   // padrão: o do carrossel
+    a.angulo += dt * (a.fase === 'rodando' ? giro.rodando : giro.parado);
   }
 }

@@ -12,6 +12,7 @@ function montarMapaInicial() {
   construir('BARRACA', 14, 13);
   construir('BANHEIRO', 10, 11);
   construir('CARROSSEL', 8, 13);
+  construir('RODA_GIGANTE', 15, 10);
 }
 
 function loop(t) {

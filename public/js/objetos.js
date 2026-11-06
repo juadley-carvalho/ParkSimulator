@@ -18,6 +18,11 @@ const OBJETOS = {
   // "tam": pegada em tiles (padrão 1x1). A âncora é o tile de trás (menor gx e gy).
   CARROSSEL: { nome: 'Carrossel', cor: '#ab47bc', tam: { w: 2, h: 2 }, desenhar: desenharCarrossel,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 8, efeitos: { felicidade: +35, nausea: +25, energia: -10 } } } },
+  // "altura": onde o rótulo da fila é desenhado acima do objeto. "giro": velocidade angular (rad/s)
+  // parado (embarcando) e em movimento. Intensidade baixa: pouca náusea.
+  RODA_GIGANTE: { nome: 'Roda-gigante', cor: '#26a69a', tam: { w: 3, h: 2 }, altura: 140, desenhar: desenharRodaGigante,
+             servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 20, giro: { parado: 0.12, rodando: 0.5 },
+                                     efeitos: { felicidade: +30, nausea: +5, energia: -5 } } } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
