@@ -22,7 +22,7 @@ function atualizarPainel() {
   document.getElementById('estado').textContent =
     g.estado === 'usando' ? `Usando ${ICONES[g.uso.servico]} (${Math.ceil(g.uso.resta)}s)` :
     g.objetivo ? `Indo: ${ICONES[g.objetivo]}` : 'Passeando';
-  document.getElementById('dinheiro').textContent = `Dinheiro: ${moeda(g.dinheiro)}`;
+  document.getElementById('dinheiro').textContent = `Dinheiro: ${moeda(g.dinheiro)} · Tolerância: ${g.tolerancia}/10`;
   if (g.estado === 'esperando')
     document.getElementById('estado').textContent =
       `Na fila ${ICONES[g.uso.servico]} (paciência: ${Math.max(0, Math.ceil(g.paciencia - g.uso.espera))}s)`;
@@ -61,7 +61,9 @@ function atualizarPainelObj() {
   const d = gestao.get(selObj), atr = atracoes.get(selObj);
   const [gx, gy] = selObj.split(',').map(Number);
   const manut = (ECONOMIA[objetos[gy][gx]] || {}).manutencao || 0;
+  const brinquedo = Object.values(OBJETOS[objetos[gy][gx]].servicos).find(s => s.intensidade);
   $('oStats').innerHTML = `Receita total: ${moeda(d.receita)}<br>Usos: ${d.usos}<br>Manutenção: ${moeda(manut)}/mês` +
+    (brinquedo ? `<br>Intensidade: ${brinquedo.intensidade}/10` : '') +
     (atr ? `<br>Fila: ${atr.fila.length}/${FILA_MAX} · A bordo: ${atr.passageiros.length}` : '');
 }
 

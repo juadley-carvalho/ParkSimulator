@@ -7,7 +7,8 @@
 // a partir do centro (cx, cy) do tile.
 const OBJETOS = {
   ARVORE:  { nome: 'Árvore',  cor: '#3e8e3e', desenhar: desenharArvore },
-  // "servicos": o que o objeto oferece. Cada serviço tem atividade, duração (s) e efeitos nas necessidades.
+  // "servicos": o que o objeto oferece. Cada serviço tem atividade, duração (s) e efeitos nas necessidades;
+  // brinquedos também têm "intensidade" (1 a 10).
   BANCO:   { nome: 'Banco',   cor: '#8b5a2b', desenhar: desenharBanco,
              servicos: { descanso: { atividade: 'sentar', duracao: 6, efeitos: { energia: +40, nausea: -35 } } } },
   BARRACA: { nome: 'Barraca', cor: '#d9534f', desenhar: desenharBarraca,
@@ -17,11 +18,11 @@ const OBJETOS = {
              servicos: { banheiro: { atividade: 'banheiro', duracao: 4, efeitos: { banheiro: -100 } } } },
   // "tam": pegada em tiles (padrão 1x1). A âncora é o tile de trás (menor gx e gy).
   CARROSSEL: { nome: 'Carrossel', cor: '#ab47bc', tam: { w: 2, h: 2 }, desenhar: desenharCarrossel,
-             servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 8, efeitos: { felicidade: +35, nausea: +25, energia: -10 } } } },
+             servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 8, intensidade: 5, efeitos: { felicidade: +35, nausea: +25, energia: -10 } } } },
   // "altura": onde o rótulo da fila é desenhado acima do objeto. "giro": velocidade angular (rad/s)
   // parado (embarcando) e em movimento. Intensidade baixa: pouca náusea.
   RODA_GIGANTE: { nome: 'Roda-gigante', cor: '#26a69a', tam: { w: 3, h: 2 }, altura: 140, desenhar: desenharRodaGigante,
-             servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 20, giro: { parado: 0.12, rodando: 0.5 },
+             servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 20, intensidade: 2, giro: { parado: 0.12, rodando: 0.5 },
                                      efeitos: { felicidade: +30, nausea: +5, energia: -5 } } } },
 };
 

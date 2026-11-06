@@ -61,7 +61,7 @@ function atualizarAtracoes(dt) {
       a.resta -= dt;
       if (a.resta <= 0) {
         for (const g of a.passageiros) {
-          for (const [campo, v] of Object.entries(def.efeitos)) g.n[campo] = limitar(g.n[campo] + v);
+          for (const [campo, v] of Object.entries(efeitosFinais(g, def))) g.n[campo] = limitar(g.n[campo] + v);
           g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
         }
         a.passageiros = []; a.fase = 'carregando'; a.tCarga = 0;

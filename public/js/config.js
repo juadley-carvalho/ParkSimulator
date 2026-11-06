@@ -61,3 +61,12 @@ const TEMPO_CARGA = 5;     // segundos esperando passageiros antes de partir mei
 const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entram e saem (já é CAMINHO)
 
 const MAX_CONVIDADOS = 40;
+
+// Intensidade (brinquedos) x tolerância (convidados), ambas de 1 a 10.
+// O convidado aceita brinquedos até JANELA_INTENSIDADE pontos acima ou abaixo da sua tolerância.
+// Com a felicidade em DESESPERO_FELICIDADE ou menos, aceita qualquer um, mas paga por cada ponto
+// além da janela: menos felicidade e (se o brinquedo for intenso demais) mais náusea.
+const JANELA_INTENSIDADE = 2;
+const DESESPERO_FELICIDADE = 25;
+const PENALIDADE_FELIC_POR_PONTO = 5;
+const NAUSEA_POR_PONTO = 6;

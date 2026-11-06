@@ -19,6 +19,7 @@ function semear(n, ponto) {
       objetivo: null,         // serviço que ele está indo buscar (ex.: 'comida')
       uso: null,              // dados do serviço em uso
       dinheiro: Math.round(aleatorio(30, 150)),   // $ com que chegou ao parque
+      tolerancia: Math.round((aleatorio(1, 10) + aleatorio(1, 10)) / 2),   // intensidade preferida, 1 a 10 (média de 2 sorteios: concentra no meio)
       paciencia: aleatorio(25, 45),               // segundos que aguenta numa fila
       evitar: {},                                 // serviço -> instante até o qual ele não tenta de novo
       n: { fome: aleatorio(10, 50), sede: aleatorio(10, 50), banheiro: aleatorio(0, 30),
