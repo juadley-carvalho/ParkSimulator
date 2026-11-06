@@ -1,0 +1,89 @@
+/* ============================================================
+   input.js — mouse, toque, câmera e regras de aplicação das ferramentas
+   Botão esquerdo: pinta/constrói/inspeciona · Botão do meio: move · Roda: zoom
+   ============================================================ */
+
+function ajustarTamanho() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+}
+
+function centralizar() {
+  const c = gradeParaMundo(MAPA / 2, MAPA / 2);
+  camera.zoom = Math.min(1, innerWidth / (MAPA * TILE_W * 0.9));
+  camera.x = innerWidth / 2 - c.x * camera.zoom;
+  camera.y = innerHeight / 2 - c.y * camera.zoom;
+}
+
+// Única função que altera os dados. Aqui ficam as regras do jogo.
+function aplicar(gx, gy) {
+  const { camada, chave } = ferramenta;   // precisa vir ANTES de usar "chave" na linha abaixo
+  if (!dentroDoMapa(gx, gy) || (chave === 'BANCO' && mapa[gy][gx] !== 'CAMINHO')) return;
+  if (camada === 'inspecionar') { selecionar(gx, gy); return; }
+  if (camada === 'terreno') {
+    const o = objetoEm(gx, gy);
+    if (chave === 'CAMINHO' && o && ehGrande(o.chave)) return;   // atração ocupa o chão: sem caminho por baixo
+    if (mapa[gy][gx] === chave) return;                  // nada a mudar, nada a cobrar
+    if (ehEntrada(gx, gy)) { avisar('A entrada não pode ser alterada'); return; }
+    if (!cobrar(CUSTO_TERRENO[chave] || 0)) return;
+    mapa[gy][gx] = chave;
+    if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto
+  } else if (camada === 'objeto') {
+    if (podeConstruir(chave, gx, gy) && cobrar(custoDe(chave))) construir(chave, gx, gy); // não se constrói na água
+  } else {
+    removerObjeto(gx, gy);                              // demolir
+  }
+}
+
+const pintarEm = (sx, sy) => { const g = telaParaGrade(sx, sy); aplicar(g.gx, g.gy); };
+
+// Ao arrastar rápido o mouse "pula" tiles. Amostramos pontos entre a posição
+// anterior e a atual para o traço ficar contínuo.
+function pintarLinha(a, b) {
+  const dist = Math.hypot(b.x - a.x, b.y - a.y);
+  const passos = Math.max(1, Math.ceil(dist / (TILE_H * camera.zoom / 2)));
+  for (let i = 1; i <= passos; i++) {
+    const t = i / passos;
+    pintarEm(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  }
+}
+
+// Liga os eventos de mouse/toque ao canvas (chamada uma vez, em main.js)
+function iniciarEntradaUsuario() {
+  canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); }); // sem autoscroll
+  canvas.addEventListener('pointerdown', e => {
+    if (e.button === 1) { modo = 'mover'; canvas.classList.add('dragging'); }
+    else if (e.button === 0) { modo = 'pintar'; pintarEm(e.clientX, e.clientY); }
+    else return;
+    ultimo = { x: e.clientX, y: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    const atual = { x: e.clientX, y: e.clientY };
+    if (modo === 'mover') {
+      camera.x += atual.x - ultimo.x;
+      camera.y += atual.y - ultimo.y;
+    } else if (modo === 'pintar') {
+      pintarLinha(ultimo, atual);
+    }
+    ultimo = atual;
+
+    hover = telaParaGrade(atual.x, atual.y);
+    if (dentroDoMapa(hover.gx, hover.gy)) {
+      const o = objetoEm(hover.gx, hover.gy), obj = o && o.chave;
+      info.textContent = `(${hover.gx}, ${hover.gy}) · ${TIPOS[mapa[hover.gy][hover.gx]].nome}` +
+                         (obj ? ` · ${OBJETOS[obj].nome}` : '');
+    } else info.textContent = '–';
+  });
+  canvas.addEventListener('pointerup', () => { modo = null; canvas.classList.remove('dragging'); });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const novo = Math.min(3, Math.max(0.3, camera.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+    const k = novo / camera.zoom;
+    camera.x = e.clientX - (e.clientX - camera.x) * k;
+    camera.y = e.clientY - (e.clientY - camera.y) * k;
+    camera.zoom = novo;
+  }, { passive: false });
+  addEventListener('resize', ajustarTamanho);
+}

@@ -1,0 +1,41 @@
+/* ============================================================
+   main.js — mapa inicial, loop do jogo e partida
+   Precisa ser o ÚLTIMO script carregado.
+   ============================================================ */
+
+// Terreno e construções com que o parque começa. Edite à vontade.
+function montarMapaInicial() {
+  for (let i = 0; i < MAPA; i++) { mapa[12][i] = 'CAMINHO'; mapa[i][12] = 'CAMINHO'; }
+  for (let gy = 3; gy <= 6; gy++) for (let gx = 3; gx <= 7; gx++) mapa[gy][gx] = 'AGUA';
+  [[9,9],[15,15],[16,9],[9,16],[2,10]].forEach(([gx, gy]) => objetos[gy][gx] = 'ARVORE');
+  construir('BANCO', 13, 11);
+  construir('BARRACA', 14, 13);
+  construir('BANHEIRO', 10, 11);
+  construir('CARROSSEL', 8, 13);
+}
+
+function loop(t) {
+  const dt = Math.min((t - tAnterior) / 1000, 0.1);   // limita dt: ao voltar de outra aba, ninguém "teleporta"
+  tAnterior = t;
+  tempo += dt;
+  atualizar(dt);
+  atualizarAtracoes(dt);
+  atualizarFinancas(dt);
+  atualizarEntrada(dt);
+  desenhar();
+  qtd.textContent = `${convidados.length} (saíram: ${stats.sairam})`;
+  atualizarPainel();
+  atualizarPainelObj();
+  atualizarFinancasUI();
+  requestAnimationFrame(loop);
+}
+
+// ---------- Partida ----------
+montarMapaInicial();
+iniciarUI();
+montarBarra();
+iniciarEntradaUsuario();
+ajustarTamanho();
+centralizar();
+// (sem convidados iniciais: eles chegam pela entrada, ver atualizarEntrada)
+requestAnimationFrame(loop);

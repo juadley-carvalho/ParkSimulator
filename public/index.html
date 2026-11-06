@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parque de Diversões</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="tela"></canvas>
+<div id='barra'></div>
+<div id='painel'></div>
+<div id='painelObj'></div>
+<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>Finanças</button><span id='finAviso'></span></div>
+<div id='modalFin' class='modal'><div class='caixa'>
+  <h3 style='margin:0 0 8px'>Finanças e empréstimo</h3>
+  <div id='empInfo' style='line-height:1.6'></div>
+  <div style='margin:10px 0'>Juros mensal: <input id='inJuros' type='number' min='0' max='100' step='0.1' style='width:70px'> %</div>
+  <div style='display:flex;gap:8px;flex-wrap:wrap'>
+    <button class='btn' id='btnPegar'></button><button class='btn' id='btnPagar'></button><button class='btn' id='btnFechar'>Fechar</button>
+  </div>
+  <div id='balanco' style='margin-top:12px;font-size:13px;line-height:1.5'></div>
+</div></div>
+<div id="hud"><b id="info">–</b><br>Convidados: <b id="qtd">0</b><br><small>Botão esquerdo: pintar/arrastar · Botão do meio: mover · Roda: zoom</small></div>
+
+
+<!-- A ORDEM importa: cada arquivo usa o que foi definido nos anteriores. main.js é o último. -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/dom.js"></script>
+<script src="js/estado.js"></script>
+<script src="js/iso.js"></script>
+<script src="js/desenho.js"></script>
+<script src="js/objetos.js"></script>
+<script src="js/atracoes.js"></script>
+<script src="js/necessidades.js"></script>
+<script src="js/convidados.js"></script>
+<script src="js/entrada.js"></script>
+<script src="js/financas.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
