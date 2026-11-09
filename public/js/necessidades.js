@@ -67,7 +67,7 @@ function iniciarServico(g, servico, r) {
     const preco = precoUso(r.ancora, servico);
     if (g.dinheiro < preco) { g.evitar[servico] = tempo + 20; return false; }   // o preço mudou: sem dinheiro
     pagar(g, r.ancora, servico, preco);
-    g.estado = 'usando'; g.uso = { servico, def: r.def, resta: r.def.duracao }; g.alvo = null;
+    g.estado = 'usando'; g.uso = { servico, def: r.def, ancora: r.ancora, resta: r.def.duracao }; g.alvo = null;
     return true;
   }
   const a = atracoes.get(chaveAtr(r.ancora.gx, r.ancora.gy));

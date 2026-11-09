@@ -23,11 +23,14 @@ npm start       # http://localhost:3000
 | Zoom | roda do mouse |
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
+| Salvar e carregar o parque | botão **Salvar / Carregar** |
 
 ## Estrutura
 
 ```
-server.js            servidor Express (serve a pasta public)
+server.js            servidor Express: arquivos estáticos e API de saves
+armazenamento.js     camada de armazenamento dos saves (arquivos JSON em ./saves)
+saves/               criada automaticamente; um arquivo .json por save (fora do git)
 package.json
 public/
   index.html         estrutura da página e ordem dos scripts
@@ -46,6 +49,7 @@ public/
     entrada.js       entrada/saída do parque
     financas.js      caixa, empréstimo, cobranças, fechamento do mês
     ui.js            painéis, tela de finanças, barra de ferramentas
+    salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves
     input.js         mouse/toque, câmera, regras das ferramentas
     main.js          mapa inicial, loop do jogo e partida
 ```
@@ -64,3 +68,23 @@ Os arquivos são scripts clássicos que compartilham o mesmo escopo global. Cada
 - **Novo objeto**: função `desenhar...` em `desenho.js`, entrada em `OBJETOS` (`objetos.js`) e custos em `ECONOMIA`/`PRECO_PADRAO` (`config.js`). O botão da barra aparece sozinho.
 - **Campos opcionais de uma atração** (em `OBJETOS`): `tam` (pegada em tiles), `altura` (posição do rótulo da fila) e, no serviço, `capacidade`, `duracao`, `voltas` (atração de circuito: a corrida dá n voltas e o trem volta à estação), `intensidade` (1 a 10, compara com a `tolerancia` do convidado; regras e limites em `config.js`) e `giro` (velocidade de rotação parado/em movimento).
 - **Mapa inicial**: `montarMapaInicial()` em `main.js`.
+
+## Salvar e carregar
+
+Cada save é um arquivo `saves/<id>.json`, onde o id vem do nome digitado (`"Meu Parque"` vira `meu-parque`). Ele guarda o terreno, os objetos, preços e receitas, filas das atrações, finanças e todos os convidados, com o que cada um está fazendo.
+
+- O arquivo tem um campo `versao`. **Ao mudar a estrutura do estado do jogo, aumente `VERSAO_SAVE` em `salvar.js`** e acrescente a conversão em `migrar()`, para os saves antigos continuarem abrindo.
+- Ao carregar, o save é validado antes de tocar no jogo: se estiver inválido, o parque atual fica intacto. Terrenos e objetos que não existem mais viram grama e vazio, e campos novos de convidado ganham valores padrão.
+- A gravação é atômica (arquivo temporário + renomear), então uma queda no meio não corrompe o save anterior.
+- Para usar outra pasta: `SAVES_DIR=/caminho npm start`.
+
+### API
+
+| Método | Rota | O que faz |
+|---|---|---|
+| GET | `/api/saves` | lista os saves (id, nome, salvoEm, resumo) |
+| GET | `/api/saves/:id` | devolve um save completo |
+| PUT | `/api/saves/:id` | cria ou substitui (corpo: `versao`, `nome`, `resumo`, `estado`) |
+| DELETE | `/api/saves/:id` | apaga |
+
+O id só aceita letras minúsculas, números e hífen. Para trocar o armazenamento (por exemplo, SQLite), reescreva só o `armazenamento.js`, mantendo `listar`, `ler`, `gravar` e `apagar`.

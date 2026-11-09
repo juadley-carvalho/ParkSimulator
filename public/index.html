@@ -11,7 +11,17 @@
 <div id='barra'></div>
 <div id='painel'></div>
 <div id='painelObj'></div>
-<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>Finanças</button><span id='finAviso'></span></div>
+<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>Finanças</button><button class='btn' id='btnJogo'>Salvar / Carregar</button><span id='finAviso'></span></div>
+<div id='modalJogo' class='modal'><div class='caixa'>
+  <h3 style='margin:0 0 8px'>Salvar e carregar</h3>
+  <div style='display:flex;gap:8px'>
+    <input id='inNomeSave' type='text' maxlength='40' placeholder='Nome do save' value='Meu parque' style='flex:1;min-width:0'>
+    <button class='btn' id='btnSalvar'>Salvar</button>
+  </div>
+  <div id='msgJogo' style='min-height:1.4em;margin:8px 0;font-size:13px'></div>
+  <div id='listaSaves'></div>
+  <div style='margin-top:10px'><button class='btn' id='btnFecharJogo'>Fechar</button></div>
+</div></div>
 <div id='modalFin' class='modal'><div class='caixa'>
   <h3 style='margin:0 0 8px'>Finanças e empréstimo</h3>
   <div id='empInfo' style='line-height:1.6'></div>
@@ -38,6 +48,7 @@
 <script src="js/entrada.js"></script>
 <script src="js/financas.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/salvar.js"></script>
 <script src="js/input.js"></script>
 <script src="js/main.js"></script>
 </body>

@@ -42,3 +42,7 @@ canvas.dragging { cursor:grabbing; }
 .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); align-items:center; justify-content:center; }
 .modal.aberto { display:flex; }
 .modal .caixa { background:var(--bg); color:var(--fg); padding:16px 20px; border-radius:12px; width:min(380px, 92vw); }
+#listaSaves { max-height: 40vh; overflow: auto; }
+.save-linha { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(128,128,128,.3); }
+.save-linha .info { flex: 1; min-width: 0; }
+.save-linha small { display: block; opacity: .75; }

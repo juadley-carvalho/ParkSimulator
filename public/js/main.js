@@ -35,6 +35,7 @@ function loop(t) {
 // ---------- Partida ----------
 montarMapaInicial();
 iniciarUI();
+iniciarSalvar();
 montarBarra();
 iniciarEntradaUsuario();
 ajustarTamanho();
