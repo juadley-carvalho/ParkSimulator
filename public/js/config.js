@@ -19,11 +19,13 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   BANHEIRO:  { custo: 350,  manutencao: 50 },
   CARROSSEL: { custo: 3000, manutencao: 200 },
   RODA_GIGANTE: { custo: 5000, manutencao: 300 },
+  MONTANHA_RUSSA: { custo: 12000, manutencao: 600 },
 };
 
 const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4, bebida: 2 },
                       BANHEIRO: { banheiro: 0 }, CARROSSEL: { diversao: 5 },
-                      RODA_GIGANTE: { diversao: 6 } };
+                      RODA_GIGANTE: { diversao: 6 },
+                      MONTANHA_RUSSA: { diversao: 8 } };
 
 const CUSTO_TERRENO = { GRAMA: 0, CAMINHO: 10, AGUA: 25 };   // cobrado ao trocar o terreno do tile
 

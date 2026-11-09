@@ -62,5 +62,5 @@ Os arquivos são scripts clássicos que compartilham o mesmo escopo global. Cada
 - **Balanceamento** (custos, preços, juros, velocidade, filas): `js/config.js`.
 - **Novo terreno**: entrada em `TIPOS` e `CUSTO_TERRENO`.
 - **Novo objeto**: função `desenhar...` em `desenho.js`, entrada em `OBJETOS` (`objetos.js`) e custos em `ECONOMIA`/`PRECO_PADRAO` (`config.js`). O botão da barra aparece sozinho.
-- **Campos opcionais de uma atração** (em `OBJETOS`): `tam` (pegada em tiles), `altura` (posição do rótulo da fila) e, no serviço, `capacidade`, `duracao`, `intensidade` (1 a 10, compara com a `tolerancia` do convidado; regras e limites em `config.js`) e `giro` (velocidade de rotação parado/em movimento).
+- **Campos opcionais de uma atração** (em `OBJETOS`): `tam` (pegada em tiles), `altura` (posição do rótulo da fila) e, no serviço, `capacidade`, `duracao`, `voltas` (atração de circuito: a corrida dá n voltas e o trem volta à estação), `intensidade` (1 a 10, compara com a `tolerancia` do convidado; regras e limites em `config.js`) e `giro` (velocidade de rotação parado/em movimento).
 - **Mapa inicial**: `montarMapaInicial()` em `main.js`.

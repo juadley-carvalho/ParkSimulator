@@ -55,7 +55,7 @@ function atualizarAtracoes(dt) {
       }
       if (a.passageiros.length) a.tCarga += dt;
       const lotado = a.passageiros.length >= def.capacidade;
-      if (lotado || (a.passageiros.length && a.tCarga >= TEMPO_CARGA)) { a.fase = 'rodando'; a.resta = def.duracao; }
+      if (lotado || (a.passageiros.length && a.tCarga >= TEMPO_CARGA)) { a.fase = 'rodando'; a.resta = def.duracao; if (def.voltas) a.angulo = 0; }
     } else {
       // 3) Corrida: ao terminar, aplica os efeitos em cada passageiro e libera todos
       a.resta -= dt;
@@ -65,9 +65,11 @@ function atualizarAtracoes(dt) {
           g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
         }
         a.passageiros = []; a.fase = 'carregando'; a.tCarga = 0;
+        if (def.voltas) a.angulo = 0;   // o trem volta exatamente à estação
       }
     }
-    const giro = def.giro || { parado: 0.3, rodando: 2.4 };   // padrão: o do carrossel
+    const giro = def.voltas ? { parado: 0, rodando: def.voltas * 2 * Math.PI / def.duracao }   // circuito: n voltas por corrida
+                          : (def.giro || { parado: 0.3, rodando: 2.4 });   // senão, o padrão do carrossel
     a.angulo += dt * (a.fase === 'rodando' ? giro.rodando : giro.parado);
   }
 }

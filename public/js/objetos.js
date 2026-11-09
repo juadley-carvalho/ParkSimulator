@@ -24,6 +24,11 @@ const OBJETOS = {
   RODA_GIGANTE: { nome: 'Roda-gigante', cor: '#26a69a', tam: { w: 3, h: 2 }, altura: 140, desenhar: desenharRodaGigante,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 20, intensidade: 2, giro: { parado: 0.12, rodando: 0.5 },
                                      efeitos: { felicidade: +30, nausea: +5, energia: -5 } } } },
+  // "voltas": atração de circuito. O ângulo vai de 0 a 2π por volta e a corrida dá exatamente
+  // essas voltas, então o trem sempre termina de volta na estação.
+  MONTANHA_RUSSA: { nome: 'Montanha-russa', cor: '#e53935', tam: { w: 4, h: 3 }, altura: 120, desenhar: desenharMontanhaRussa,
+             servicos: { diversao: { atividade: 'brinquedo', capacidade: 12, duracao: 25, voltas: 2, intensidade: 8,
+                                     efeitos: { felicidade: +45, nausea: +30, energia: -15 } } } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).

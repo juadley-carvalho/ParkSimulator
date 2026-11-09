@@ -152,6 +152,58 @@ function desenharRodaGigante(cx, cy, atr) {
   ctx.restore();
 }
 
+// Montanha-russa (4x3 tiles): circuito fechado em elipse com três colinas, apoios e um trem
+// de 3 vagões. A posição do trem é a fração da volta (atr.angulo / 2π). Trilho, apoios e vagões
+// entram numa lista ordenada pela profundidade no chão, para se cobrirem corretamente.
+function desenharMontanhaRussa(cx, cy, atr) {
+  const w = 4, h = 3, N = 96;
+  const ex = { x: TILE_W / 2 * w / 2, y: TILE_H / 2 * w / 2 };    // meio comprimento ao longo de gx
+  const ey = { x: -TILE_W / 2 * h / 2, y: TILE_H / 2 * h / 2 };   // meia profundidade ao longo de gy
+  const colina = (t, centro, largura) => Math.exp(-(((t - centro) / largura) ** 2));
+  const altura = t => 8 + 60 * colina(t, 0.25, 0.12) + 34 * colina(t, 0.6, 0.08) + 20 * colina(t, 0.85, 0.06);
+  // Ponto do circuito (t de 0 a 1). "chao" é a posição do ponto no chão: serve para ordenar o desenho.
+  const ponto = t => {
+    const a = t * 2 * Math.PI, s = 0.9 * Math.cos(a), r = 0.88 * Math.sin(a), z = altura(t);
+    return { x: cx + s * ex.x + r * ey.x, y: cy + s * ex.y + r * ey.y - z, chao: cy + s * ex.y + r * ey.y, z };
+  };
+  const pts = Array.from({ length: N + 1 }, (_, i) => ponto(i / N));
+  const itens = [];
+
+  for (let i = 0; i < N; i++) {
+    const A = pts[i], B = pts[i + 1];
+    itens.push({ d: (A.chao + B.chao) / 2, f: () => {
+      ctx.strokeStyle = '#37474f'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      ctx.strokeStyle = '#ef5350'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y - 1); ctx.lineTo(B.x, B.y - 1); ctx.stroke();
+    } });
+    if (i % 4 === 0 && A.z > 14) itens.push({ d: A.chao - 0.1, f: () => {   // apoio vertical até o chão
+      ctx.strokeStyle = '#90a4ae'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y + 2); ctx.lineTo(A.x, A.chao); ctx.stroke();
+    } });
+  }
+
+  const volta = atr ? (atr.angulo / (2 * Math.PI)) % 1 : 0;
+  const ocupadas = atr ? atr.passageiros.length : 0;
+  for (let c = 0; c < 3; c++) {                      // vagão 0 na frente; os outros logo atrás
+    const P = ponto(((volta - c * 0.03) % 1 + 1) % 1);
+    itens.push({ d: P.chao + 0.5, f: () => {
+      ctx.fillStyle = ['#ffca28', '#42a5f5', '#66bb6a'][c];
+      ctx.fillRect(P.x - 6, P.y - 9, 12, 8);
+      ctx.fillStyle = '#f1c9a5';                     // 4 lugares por vagão
+      for (let k = 0; k < Math.max(0, Math.min(4, ocupadas - c * 4)); k++) {
+        ctx.beginPath(); ctx.arc(P.x - 4.5 + k * 3, P.y - 11, 1.8, 0, Math.PI * 2); ctx.fill();
+      }
+    } });
+  }
+
+  caixaRet(cx, cy, w, h, 3, '#a1887f', '#795548', '#6d4c41');   // plataforma
+  ctx.save();
+  ctx.lineCap = 'round';
+  itens.sort((a, b) => a.d - b.d).forEach(it => it.f());
+  ctx.restore();
+}
+
 // Portão: dois postes nas laterais do caminho e uma viga no alto
 function desenharPortao() {
   const c = gradeParaMundo(ENTRADA.gx + 0.5, ENTRADA.gy + 0.5);
