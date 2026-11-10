@@ -83,31 +83,6 @@ function atualizarFinancasUI() {
     : 'Nenhum mês fechado ainda.');
 }
 
-function atualizarBarra() {
-  for (const b of barra.querySelectorAll('button'))
-    b.classList.toggle('ativo', b.dataset.id === ferramenta.camada + ':' + ferramenta.chave);
-}
-
-function addBotao(nome, cor, camada, chave) {
-  const b = document.createElement('button');
-  b.textContent = nome;
-  b.dataset.id = camada + ':' + chave;
-  b.style.setProperty('--c', cor);
-  b.addEventListener('click', () => { ferramenta = { camada, chave }; atualizarBarra(); });
-  barra.appendChild(b);
-}
-
-function addSeparador() { const s = document.createElement('div'); s.className = 'sep'; barra.appendChild(s); }
-
-// Ações: botões que executam algo na hora, em vez de selecionar uma ferramenta
-function addAcao(nome, cor, fn) {
-  const b = document.createElement('button');
-  b.textContent = nome;
-  b.style.setProperty('--c', cor);
-  b.addEventListener('click', fn);
-  barra.appendChild(b);
-}
-
 // Monta os painéis e liga os botões da tela de finanças (chamada uma vez, em main.js)
 function iniciarUI() {
   painel.innerHTML = CAMPOS.map(([c, nome]) =>
@@ -126,21 +101,4 @@ function iniciarUI() {
     const v = parseFloat(e.target.value);
     if (!isNaN(v)) fin.juros = Math.max(0, v) / 100;
   });
-}
-
-// Gera a barra de ferramentas a partir dos catálogos TIPOS e OBJETOS
-function montarBarra() {
-  for (const [k, t] of Object.entries(TIPOS)) addBotao(t.nome + (CUSTO_TERRENO[k] ? ' $' + CUSTO_TERRENO[k] : ''), t.cor[0], 'terreno', k);
-  addSeparador();
-  for (const [k, o] of Object.entries(OBJETOS)) addBotao(o.nome + (custoDe(k) ? ' $' + custoDe(k) : ''), o.cor, 'objeto', k);
-  addSeparador();
-  addBotao('Demolir', '#e53935', 'remover', 'X');
-  addBotao('Inspecionar', '#ffe14d', 'inspecionar', 'X');
-  addSeparador();
-  addAcao('+5 convidados', '#7e57c2', () => semear(5, [ENTRADA.gx, ENTRADA.gy]));
-  addAcao('Limpar', '#9e9e9e', () => {
-    convidados.length = 0; selecionado = null;
-    for (const a of atracoes.values()) { a.fila.length = 0; a.passageiros.length = 0; a.fase = 'carregando'; a.tCarga = 0; }
-  });
-  atualizarBarra();
 }

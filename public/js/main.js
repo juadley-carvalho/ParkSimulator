@@ -29,6 +29,7 @@ function loop(t) {
   atualizarPainel();
   atualizarPainelObj();
   atualizarFinancasUI();
+  atualizarBarra();
   requestAnimationFrame(loop);
 }
 

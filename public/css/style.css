@@ -8,19 +8,8 @@ html, body { height:100%; margin:0; }
 body { background:var(--bg); color:var(--fg); font:14px system-ui, sans-serif; overflow:hidden; }
 canvas { display:block; width:100%; height:100%; cursor:crosshair; touch-action:none; }
 canvas.dragging { cursor:grabbing; }
-#hud { position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); left:10px;
+#hud { max-width:300px; position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); left:10px;
        background:var(--panel); padding:8px 12px; border-radius:8px; line-height:1.5; }
-#barra { position:fixed; left:50%; transform:translateX(-50%); max-width:96vw;
-         bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
-         display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
-         background:var(--panel); padding:8px; border-radius:12px; }
-#barra button { display:flex; align-items:center; gap:6px; padding:7px 10px; border-radius:8px;
-                border:2px solid transparent; background:transparent; color:var(--fg);
-                font:inherit; cursor:pointer; }
-#barra button::before { content:""; width:16px; height:16px; border-radius:4px;
-                        background:var(--c); border:1px solid rgba(0,0,0,.25); }
-#barra button.ativo { border-color:#ffb400; font-weight:600; }
-#barra .sep { width:1px; background:rgba(128,128,128,.4); margin:0 4px; }
 #painel { display:none; position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px;
           width:180px; background:var(--panel); padding:8px 12px; border-radius:8px; }
 #painel .linha { display:flex; align-items:center; gap:6px; margin:3px 0; }
@@ -46,3 +35,41 @@ canvas.dragging { cursor:grabbing; }
 .save-linha { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(128,128,128,.3); }
 .save-linha .info { flex: 1; min-width: 0; }
 .save-linha small { display: block; opacity: .75; }
+
+/* ---------- Barra de construção (parte inferior) ---------- */
+#barra { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+         width: min(96vw, 700px); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box;
+         background: var(--panel); padding: 8px; border-radius: 16px; box-shadow: 0 4px 18px rgba(0,0,0,.25);
+         backdrop-filter: blur(6px); }
+#barra button { font: inherit; color: var(--fg); cursor: pointer; }
+#barraItens .itens { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px; justify-content: safe center; scrollbar-width: thin; }
+#barraItens .itens[hidden] { display: none; }
+
+.cartao { flex: 0 0 auto; width: 108px; min-height: 70px; box-sizing: border-box; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border: 2px solid transparent;
+          border-radius: 12px; background: rgba(128,128,128,.14); transition: transform .08s, background .12s; }
+.cartao:hover { background: rgba(128,128,128,.28); transform: translateY(-2px); }
+.cartao .ic { font-size: 26px; line-height: 1.15; }
+.cartao .nm { font-size: 12px; font-weight: 600; text-align: center; line-height: 1.15; }
+.cartao .pr { font-size: 11px; opacity: .75; min-height: 1em; }
+.cartao.ativo { border-color: #ffb400; background: rgba(255,180,0,.22); }
+.cartao.sem-saldo { opacity: .5; }
+.cartao.sem-saldo .pr { color: #e53935; opacity: 1; font-weight: 600; }
+
+#barraAbas { display: flex; justify-content: safe center; gap: 4px; overflow-x: auto; padding-top: 6px;
+             border-top: 1px solid rgba(128,128,128,.3); }
+.aba { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 5px; padding: 5px 11px;
+       border: 2px solid transparent; border-radius: 999px; background: transparent; }
+.aba .ic { font-size: 17px; }
+.aba .tx { font-size: 13px; }
+.aba:hover { background: rgba(128,128,128,.2); }
+.aba.aberta { background: rgba(128,128,128,.28); font-weight: 600; }
+.aba.com-ferramenta::after { content: ""; position: absolute; top: 3px; right: 5px; width: 7px; height: 7px;
+                             border-radius: 50%; background: #ffb400; }   /* a ferramenta ativa está nesta aba */
+@media (max-width: 560px) { .aba .tx { display: none; } .cartao { width: 76px; } }
+
+/* Telas estreitas: a barra de finanças ocupa o topo inteiro e os painéis descem abaixo dela */
+@media (max-width: 1000px) {
+  #fin { left: 10px; right: 10px; transform: none; justify-content: center; flex-wrap: wrap; white-space: normal; }
+  #hud, #painel, #painelObj { top: calc(env(safe-area-inset-top, 0px) + 66px); }
+}

@@ -7,10 +7,21 @@ const TILE_W = 64, TILE_H = 32, MAPA = 24, PROFUNDIDADE = 14;
 
 // Catálogo de terrenos
 const TIPOS = {
-  GRAMA:   { nome: 'Grama',   cor: ['#6fbf5a', '#65b350'] },
-  CAMINHO: { nome: 'Caminho', cor: ['#cbb98b', '#c3b082'] },
-  AGUA:    { nome: 'Água',    cor: ['#4aa3d8', '#429bd0'] },
+  GRAMA:   { nome: 'Grama', icone: '🌱',   cor: ['#6fbf5a', '#65b350'] },
+  CAMINHO: { nome: 'Caminho', icone: '👣', cor: ['#cbb98b', '#c3b082'] },
+  AGUA:    { nome: 'Água', icone: '💧',    cor: ['#4aa3d8', '#429bd0'] },
 };
+
+// Categorias da barra de construção (a ordem aqui é a ordem das abas). Cada objeto do catálogo
+// escolhe a sua em "categoria"; sem categoria, cai em "cenario". Categoria vazia não aparece.
+const CATEGORIAS = [
+  { id: 'ferramentas', nome: 'Ferramentas', icone: '🧰' },
+  { id: 'terreno',     nome: 'Terreno',     icone: '⛰️' },
+  { id: 'cenario',     nome: 'Cenário',     icone: '🌳' },
+  { id: 'servicos',    nome: 'Serviços',    icone: '🍔' },
+  { id: 'atracoes',    nome: 'Atrações',    icone: '🎢' },
+  { id: 'teste',       nome: 'Teste',       icone: '🧪' },
+];
 
 const ECONOMIA = {          // custo = construção; manutencao = por mês
   ARVORE:    { custo: 30,   manutencao: 2 },

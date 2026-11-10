@@ -48,7 +48,8 @@ public/
     convidados.js    criação e movimentação
     entrada.js       entrada/saída do parque
     financas.js      caixa, empréstimo, cobranças, fechamento do mês
-    ui.js            painéis, tela de finanças, barra de ferramentas
+    ui.js            painéis de detalhes e tela de finanças
+    barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves
     input.js         mouse/toque, câmera, regras das ferramentas
     main.js          mapa inicial, loop do jogo e partida
@@ -64,8 +65,8 @@ Os arquivos são scripts clássicos que compartilham o mesmo escopo global. Cada
 ### Onde mexer
 
 - **Balanceamento** (custos, preços, juros, velocidade, filas): `js/config.js`.
-- **Novo terreno**: entrada em `TIPOS` e `CUSTO_TERRENO`.
-- **Novo objeto**: função `desenhar...` em `desenho.js`, entrada em `OBJETOS` (`objetos.js`) e custos em `ECONOMIA`/`PRECO_PADRAO` (`config.js`). O botão da barra aparece sozinho.
+- **Novo terreno**: entrada em `TIPOS` (com `icone`) e `CUSTO_TERRENO`.
+- **Novo objeto**: função `desenhar...` em `desenho.js`, entrada em `OBJETOS` (`objetos.js`) e custos em `ECONOMIA`/`PRECO_PADRAO` (`config.js`). O cartão na barra aparece sozinho, na categoria e com o ícone que você declarar em `categoria` e `icone`.
 - **Campos opcionais de uma atração** (em `OBJETOS`): `tam` (pegada em tiles), `altura` (posição do rótulo da fila) e, no serviço, `capacidade`, `duracao`, `voltas` (atração de circuito: a corrida dá n voltas e o trem volta à estação), `intensidade` (1 a 10, compara com a `tolerancia` do convidado; regras e limites em `config.js`) e `giro` (velocidade de rotação parado/em movimento).
 - **Mapa inicial**: `montarMapaInicial()` em `main.js`.
 
@@ -88,3 +89,10 @@ Cada save é um arquivo `saves/<id>.json`, onde o id vem do nome digitado (`"Meu
 | DELETE | `/api/saves/:id` | apaga |
 
 O id só aceita letras minúsculas, números e hífen. Para trocar o armazenamento (por exemplo, SQLite), reescreva só o `armazenamento.js`, mantendo `listar`, `ler`, `gravar` e `apagar`.
+
+## Barra de construção
+
+A barra inferior tem **abas por categoria** (Ferramentas, Terreno, Cenário, Serviços, Atrações e Teste). Cada aba mostra cartões com ícone, nome e preço; passe o mouse sobre um cartão para ver custo, manutenção, tamanho e, nos brinquedos, intensidade e lugares. A aba que contém a ferramenta ativa mostra um ponto laranja, e cartões acima do saldo do caixa ficam esmaecidos com o preço em vermelho.
+
+- As categorias e a ordem das abas ficam em `CATEGORIAS` (`config.js`). Uma categoria sem itens não aparece.
+- Itens com `camada` selecionam uma ferramenta; itens com `acao` executam algo na hora (veja `listaDeItens()` em `barra.js`).
