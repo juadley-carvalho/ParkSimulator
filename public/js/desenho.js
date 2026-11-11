@@ -204,6 +204,70 @@ function desenharMontanhaRussa(cx, cy, atr) {
   ctx.restore();
 }
 
+// Barraca de bebidas (1x1): balcão azul, toldo em pirâmide baixa e um copo gigante com canudo no topo.
+function desenharBarracaBebidas(cx, cy) {
+  caixa(cx, cy, 0.6, 15, '#e1f5fe', '#81d4fa', '#4fc3f7');                  // balcão
+  const base = cy - 15 - 6, hw = TILE_W / 2 * 0.74, hh = TILE_H / 2 * 0.74;    // toldo, um pouco maior que o balcão
+  const pico = { x: cx, y: base - 11 };
+  poligono([{ x: cx - hw, y: base }, { x: cx, y: base + hh }, pico], '#29b6f6');
+  poligono([{ x: cx + hw, y: base }, { x: cx, y: base + hh }, pico], '#0277bd');
+  ctx.fillStyle = '#ff7043';                                                // copo
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, pico.y - 13); ctx.lineTo(cx + 6, pico.y - 13); ctx.lineTo(cx + 4, pico.y + 1); ctx.lineTo(cx - 4, pico.y + 1);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;                              // canudo
+  ctx.beginPath(); ctx.moveTo(cx + 2, pico.y - 13); ctx.lineTo(cx + 5, pico.y - 20); ctx.stroke();
+}
+
+// Navio pirata (3x2 tiles): um barco pendurado por braços que balança como pêndulo entre dois pórticos.
+// O ângulo é amplitude * sen(atr.angulo). A amplitude sobe e desce ao longo da corrida e fica pequena
+// (balanço suave) enquanto embarca. Como na roda-gigante, o plano do movimento é paralelo ao eixo gx.
+function desenharNavioPirata(cx, cy, atr) {
+  const H = 78, L = 52;                                       // altura do eixo e comprimento dos braços
+  const D = { x: 0.894, y: 0.447 }, P = { x: -14, y: 7 };    // eixo gx na tela / meio tile de profundidade
+  const pt = (h, v, lado) => ({ x: cx + h * D.x + lado * P.x, y: cy + h * D.y + lado * P.y - v });
+  const duracao = OBJETOS.NAVIO_PIRATA.servicos.diversao.duracao;
+  const progresso = atr && atr.fase === 'rodando' ? 1 - atr.resta / duracao : 0;
+  const amplitude = 0.14 + 1.0 * Math.sin(Math.PI * Math.min(1, Math.max(0, progresso)));   // radianos
+  const ang = amplitude * Math.sin(atr ? atr.angulo : 0);
+  // Ponto do barco: u ao longo do casco, d abaixo do eixo. Gira "ang" em torno do eixo (pêndulo).
+  const barco = (u, d) => pt(u * Math.cos(ang) + d * Math.sin(ang), H - d * Math.cos(ang) + u * Math.sin(ang), 0);
+  const ocupadas = atr ? atr.passageiros.length : 0;
+  const linha = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+
+  caixaRet(cx, cy, 3, 2, 4, '#4aa3d8', '#2f7fb0', '#276a96');   // "mar" sob o barco
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const portico = lado => {
+    const topo = pt(0, H + 4, lado);
+    ctx.strokeStyle = '#e53935'; ctx.lineWidth = 4;
+    for (const f of [-40, 40]) linha(topo, pt(f, 4, lado));
+  };
+
+  portico(-1);                                                  // pórtico de trás
+  ctx.strokeStyle = '#eceff1'; ctx.lineWidth = 4;
+  linha(pt(0, H, -1), pt(0, H, 1));                             // eixo entre os pórticos
+  ctx.strokeStyle = '#cfd8dc'; ctx.lineWidth = 2.5;
+  for (const u of [-18, 18]) linha(pt(0, H, 0), barco(u, L - 12));   // braços
+
+  const casco = [];                                             // fundo curvo e borda superior
+  for (let u = -38; u <= 38; u += 6) casco.push(barco(u, L + 12 - 24 * (u / 38) ** 2));
+  casco.push(barco(38, L - 16), barco(32, L - 7), barco(-32, L - 7), barco(-38, L - 16));
+  poligono(casco, '#8d5a2b', '#4e342e');
+  ctx.strokeStyle = '#ffe0b2'; ctx.lineWidth = 1.5;
+  linha(barco(-34, L - 9), barco(34, L - 9));                   // faixa clara
+  ctx.strokeStyle = '#4e342e'; ctx.lineWidth = 2.5;
+  linha(barco(0, L - 7), barco(0, L - 30));                     // mastro
+  poligono([barco(0, L - 30), barco(16, L - 25), barco(0, L - 20)], '#212121');   // bandeira pirata
+  ctx.fillStyle = '#f1c9a5';                                    // passageiros (10 lugares)
+  for (let i = 0; i < Math.min(ocupadas, 10); i++) {
+    const p = barco(-30 + i * (60 / 9), L - 11);
+    ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+  portico(1);                                                   // pórtico da frente
+  ctx.restore();
+}
+
 // Portão: dois postes nas laterais do caminho e uma viga no alto
 function desenharPortao() {
   const c = gradeParaMundo(ENTRADA.gx + 0.5, ENTRADA.gy + 0.5);

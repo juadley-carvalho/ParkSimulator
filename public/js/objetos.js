@@ -29,6 +29,13 @@ const OBJETOS = {
   MONTANHA_RUSSA: { categoria: 'atracoes', icone: '🎢', nome: 'Montanha-russa', cor: '#e53935', tam: { w: 4, h: 3 }, altura: 120, desenhar: desenharMontanhaRussa,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 12, duracao: 25, voltas: 2, intensidade: 8,
                                      efeitos: { felicidade: +45, nausea: +30, energia: -15 } } } },
+  // Só bebidas, mas mais eficiente que a barraca comum (e ainda alivia um pouco a náusea).
+  BARRACA_BEBIDAS: { categoria: 'servicos', icone: '🥤', nome: 'Barraca de bebidas', cor: '#29b6f6', desenhar: desenharBarracaBebidas,
+             servicos: { bebida: { atividade: 'beber', duracao: 2, efeitos: { sede: -80, banheiro: +10, nausea: -10 } } } },
+  // Intensidade 7: fica entre o carrossel (5) e a montanha-russa (8). "giro" = velocidade do balanço (rad/s).
+  NAVIO_PIRATA: { categoria: 'atracoes', icone: '🏴‍☠️', nome: 'Navio pirata', cor: '#8d5a2b', tam: { w: 3, h: 2 }, altura: 105, desenhar: desenharNavioPirata,
+             servicos: { diversao: { atividade: 'brinquedo', capacidade: 10, duracao: 18, intensidade: 7, giro: { parado: 0.6, rodando: 2.0 },
+                                     efeitos: { felicidade: +40, nausea: +20, energia: -12 } } } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
