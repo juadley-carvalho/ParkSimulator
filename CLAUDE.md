@@ -18,6 +18,8 @@ JavaScript na prática enquanto o jogo cresce. Estrutura de pastas e API de save
 - Se o pedido envolve decisões de design de jogo, dê sua opinião e proponha as regras antes; se já está claro, implemente.
 - Mudanças focadas, no estilo existente (comentários explicam o *porquê*). Não reorganize arquivos sem pedir.
 - Não diga que algo funciona sem verificar (seção "Verificação"). Diga o que foi e o que **não** foi testado.
+- **Ao concluir cada pedido: commit e push automáticos** (o usuário autorizou). Mensagem no padrão
+  `vX.Y.Z - descrição em português`, incrementando a versão a partir do último commit (`git log`).
 
 ## Rodar
 ```
@@ -46,6 +48,13 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
   movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `ui` painéis de detalhes e janelas de
   finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `input` mouse/teclado/câmera.
+
+## Interface (style.css)
+- Tema único de jogo: cores em variáveis no `:root` (sem modo claro/escuro). Fonte Fredoka servida de
+  `public/fonts/` (OFL, funciona offline); no canvas, `FONTE_JOGO` (config.js). Emojis continuam na fonte do sistema.
+- Janela = `.modal > .janela > .janela-topo (h3 + .fechar ✕) + .janela-corpo (.secao com h4)`. Painéis laterais
+  usam `.painel-topo`. Botões: `.btn` (azul), `.btn-ok` (verde), `.btn-perigo` (vermelho). Esc fecha janelas/painéis.
+- HUD e painéis laterais ficam abaixo da barra superior (`--abaixo-do-topo`); lado a lado, eles se sobrepunham.
 
 ## Modelo de dados
 - Grade 24×24 (`MAPA`). `mapa[gy][gx]` = chave de `TIPOS` (GRAMA, CAMINHO, AGUA). **Sempre `[gy][gx]`** (linha primeiro).

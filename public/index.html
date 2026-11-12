@@ -12,33 +12,52 @@
 <div id='painel'></div>
 <div id='painelObj'></div>
 <div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><span id='finAviso'></span></div>
-<div id='modalJogo' class='modal'><div class='caixa'>
-  <h3 style='margin:0 0 8px'>Salvar e carregar</h3>
-  <div style='display:flex;gap:8px'>
-    <input id='inNomeSave' type='text' maxlength='40' placeholder='Nome do save' value='Meu parque' style='flex:1;min-width:0'>
-    <button class='btn' id='btnSalvar'>Salvar</button>
+<!-- Janelas: faixa de título (com ✕) + corpo dividido em seções. Esc fecha qualquer uma (ui.js). -->
+<div id='modalJogo' class='modal'><div class='janela'>
+  <div class='janela-topo'><h3>💾 Salvar e carregar</h3><button class='fechar' id='btnFecharJogo' title='Fechar (Esc)'>✕</button></div>
+  <div class='janela-corpo'>
+    <div class='linha-form'>
+      <input id='inNomeSave' type='text' maxlength='40' placeholder='Nome do save' value='Meu parque' style='flex:1;min-width:0'>
+      <button class='btn btn-ok' id='btnSalvar'>Salvar</button>
+    </div>
+    <div id='msgJogo' class='msg'></div>
+    <div id='listaSaves'></div>
   </div>
-  <div id='msgJogo' style='min-height:1.4em;margin:8px 0;font-size:13px'></div>
-  <div id='listaSaves'></div>
-  <div style='margin-top:10px'><button class='btn' id='btnFecharJogo'>Fechar</button></div>
 </div></div>
-<div id='modalFin' class='modal'><div class='caixa'>
-  <h3 style='margin:0 0 8px'>Finanças e empréstimo</h3>
-  <div id='empInfo' style='line-height:1.6'></div>
-  <div style='margin:10px 0'>Juros mensal: <input id='inJuros' type='number' min='0' max='100' step='0.1' style='width:70px'> %</div>
-  <div style='display:flex;gap:8px;flex-wrap:wrap'>
-    <button class='btn' id='btnPegar'></button><button class='btn' id='btnPagar'></button><button class='btn' id='btnFechar'>Fechar</button>
+<div id='modalFin' class='modal'><div class='janela'>
+  <div class='janela-topo'><h3>📊 Finanças</h3><button class='fechar' id='btnFechar' title='Fechar (Esc)'>✕</button></div>
+  <div class='janela-corpo'>
+    <div class='secao'>
+      <h4>🏦 Empréstimo</h4>
+      <div id='empInfo'></div>
+      <div class='linha-form'><label for='inJuros'>Juros mensal:</label>
+        <input id='inJuros' type='number' min='0' max='100' step='0.1' style='width:80px'> %</div>
+      <div class='botoes'><button class='btn' id='btnPegar'></button><button class='btn' id='btnPagar'></button></div>
+    </div>
+    <div class='secao'>
+      <h4>📈 Balanço</h4>
+      <div id='balanco'></div>
+    </div>
   </div>
-  <div id='balanco' style='margin-top:12px;font-size:13px;line-height:1.5'></div>
 </div></div>
-<div id='modalParque' class='modal'><div class='caixa'>
-  <h3 style='margin:0 0 8px'>Parque</h3>
-  <div style='margin:8px 0'>Nome:
-    <input id='inNomeParque' type='text' style='width:100%;box-sizing:border-box;margin-top:4px'></div>
-  <div style='margin:8px 0'>Preço de entrada: $ <input id='inPrecoEntrada' type='number' min='0' step='0.5' style='width:80px'></div>
-  <div id='parqueDica' style='font-size:13px;opacity:.8;line-height:1.4'></div>
-  <div id='parqueInfo' style='margin-top:10px;font-size:13px;line-height:1.5'></div>
-  <div style='margin-top:10px'><button class='btn' id='btnFecharParque'>Fechar</button></div>
+<div id='modalParque' class='modal'><div class='janela'>
+  <div class='janela-topo'><h3>🎡 Parque</h3><button class='fechar' id='btnFecharParque' title='Fechar (Esc)'>✕</button></div>
+  <div class='janela-corpo'>
+    <div class='secao'>
+      <h4>🏷️ Identidade</h4>
+      <input id='inNomeParque' type='text' placeholder='Nome do parque' style='width:100%'>
+    </div>
+    <div class='secao'>
+      <h4>🎟️ Entrada</h4>
+      <div class='linha-form'><label for='inPrecoEntrada'>Preço:</label> $
+        <input id='inPrecoEntrada' type='number' min='0' step='0.5' style='width:90px'></div>
+      <div id='parqueDica' class='dica'></div>
+    </div>
+    <div class='secao'>
+      <h4>🚶 Portão</h4>
+      <div id='parqueInfo'></div>
+    </div>
+  </div>
 </div></div>
 <div id="hud"><b id="info">–</b><br>Convidados: <b id="qtd">0</b><br><small>Botão esquerdo: pintar/arrastar · Botão do meio: mover · Roda: zoom · Z: girar atração</small></div>
 

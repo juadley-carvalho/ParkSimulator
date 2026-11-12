@@ -293,13 +293,13 @@ function desenharPortao() {
   for (const p of [E, D]) ctx.fillRect(p.x - 3, p.y - alt, 6, alt);
   poligono([{ x: E.x, y: E.y - alt }, { x: D.x, y: D.y - alt }, { x: D.x, y: D.y - alt - 10 }, { x: E.x, y: E.y - alt - 10 }], '#e53935');
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(c.x - 24, c.y - alt - 26, 48, 13);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff'; ctx.font = `600 10px ${FONTE_JOGO}`; ctx.textAlign = 'center';
   ctx.fillText('ENTRADA', c.x, c.y - alt - 16);
 }
 
 function desenharFila(a, cx, cy, alt = 84) {
   const t = `Fila ${a.fila.length}/${FILA_MAX}`;
-  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.font = `500 12px ${FONTE_JOGO}`; ctx.textAlign = 'center';
   const w = ctx.measureText(t).width + 10;
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(cx - w / 2, cy - alt, w, 16);
   ctx.fillStyle = '#fff'; ctx.fillText(t, cx, cy - alt + 12);

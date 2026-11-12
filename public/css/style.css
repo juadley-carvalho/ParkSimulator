@@ -1,75 +1,177 @@
-/* Estilos do simulador. As cores do tema ficam nas variáveis de :root (claro/escuro). */
-:root { --bg:#dfe8f0; --fg:#1b2733; --panel:#ffffffd9; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg:#141b22; --fg:#e6edf3; --panel:#1e2831d9; }
+/* Estilos do simulador: tema único "de jogo" (painéis azul-marinho com moldura, faixas de título
+   coloridas, botões com relevo). As cores ficam nas variáveis de :root; mude aqui para retematizar. */
+
+/* Fonte Fredoka (SIL Open Font License, ver fonts/OFL.txt), servida pelo próprio projeto: funciona offline.
+   Só o subconjunto "latin", que já cobre os acentos do português. */
+@font-face {
+  font-family: 'Fredoka';
+  src: url('../fonts/fredoka-latin.woff2') format('woff2');
+  font-weight: 400 700;      /* fonte variável: um arquivo serve todos os pesos */
+  font-display: swap;        /* mostra o texto na fonte do sistema até a Fredoka carregar */
 }
-:root[data-theme="dark"] { --bg:#141b22; --fg:#e6edf3; --panel:#1e2831d9; }
+
+:root {
+  --fundo: #141b22;                         /* atrás do mapa */
+  --texto: #f4f1e8;
+  --texto-suave: #b9c3d6;
+  --painel: linear-gradient(180deg, #2c3a5a 0%, #1f2942 100%);
+  --painel-borda: #0d1323;
+  --painel-brilho: rgba(255,255,255,.12);   /* filete claro por dentro da moldura */
+  --faixa: linear-gradient(180deg, #ff9f43 0%, #e8583a 100%);   /* faixa de título das janelas */
+  --faixa-sombra: #a83221;
+  --ouro: #ffd34d;                          /* dinheiro, destaques */
+  --perigo: #ff5a4f;
+  --ok: #5fd068;
+  --campo: #121a2c;                         /* fundo de inputs e barras */
+  --fonte: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
+}
+
 html, body { height:100%; margin:0; }
-body { background:var(--bg); color:var(--fg); font:14px system-ui, sans-serif; overflow:hidden; }
+body { background:var(--fundo); color:var(--texto); font:15px/1.4 var(--fonte); overflow:hidden; }
 canvas { display:block; width:100%; height:100%; cursor:crosshair; touch-action:none; }
 canvas.dragging { cursor:grabbing; }
-#hud { max-width:300px; position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); left:10px;
-       background:var(--panel); padding:8px 12px; border-radius:8px; line-height:1.5; }
-#painel { display:none; position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px;
-          width:180px; background:var(--panel); padding:8px 12px; border-radius:8px; }
-#painel .linha { display:flex; align-items:center; gap:6px; margin:3px 0; }
-#painel .linha span { width:72px; }
-#painel .barra { flex:1; height:8px; border-radius:4px; background:rgba(128,128,128,.3); overflow:hidden; }
-#painel .barra i { display:block; height:100%; }
-#painel #estado { margin-top:6px; font-size:13px; }
-#painelObj { display:none; position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px;
-             width:200px; background:var(--panel); padding:8px 12px; border-radius:8px; }
-#painelObj .linha { display:flex; align-items:center; gap:6px; margin:4px 0; }
-#painelObj .linha span { width:72px; }
-#painelObj input { width:80px; }
-.btn { padding:6px 10px; border-radius:8px; border:1px solid rgba(128,128,128,.5);
-       background:transparent; color:var(--fg); font:inherit; cursor:pointer; }
+button, input { font:inherit; }
+b, strong { font-weight:600; }
+
+/* ---------- Painel base: tudo que é "janela" do jogo usa esta moldura ---------- */
+#hud, #painel, #painelObj, #fin, .janela, #barra {
+  background:var(--painel); color:var(--texto);
+  border:3px solid var(--painel-borda); border-radius:14px;
+  box-shadow: inset 0 0 0 1px var(--painel-brilho), 0 6px 0 rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.35);
+}
+
+/* Faixa de título (janelas e painéis laterais) */
+.janela-topo, .painel-topo {
+  display:flex; align-items:center; gap:8px; background:var(--faixa);
+  color:#fff; text-shadow:0 2px 0 var(--faixa-sombra); font-weight:700; letter-spacing:.3px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.janela-topo { padding:10px 12px 10px 18px; border-radius:10px 10px 0 0; }
+.janela-topo h3 { margin:0; flex:1; font-size:19px; font-weight:700; }
+.painel-topo { margin:-8px -10px 8px; padding:6px 8px 6px 12px; border-radius:10px 10px 0 0; font-size:15px; }
+.painel-topo span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Botão "✕" das faixas de título */
+.fechar { width:28px; height:28px; flex:0 0 auto; border-radius:8px; border:2px solid rgba(0,0,0,.25);
+          background:rgba(0,0,0,.18); color:#fff; font-weight:700; cursor:pointer; line-height:1; padding:0; }
+.fechar:hover { background:rgba(0,0,0,.32); }
+
+/* ---------- Botões com relevo (a sombra de baixo some ao apertar) ---------- */
+.btn { padding:7px 14px; border-radius:10px; border:2px solid #0b3a6b; cursor:pointer; font-weight:600;
+       color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35);
+       background:linear-gradient(180deg, #4fb3ff 0%, #1e7fd8 100%);
+       box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 #0b3a6b;
+       transition: transform .06s, box-shadow .06s, filter .1s; }
+.btn:hover { filter:brightness(1.1); }
+.btn:active { transform:translateY(3px); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 #0b3a6b; }
+.btn-ok { border-color:#1d6b26; background:linear-gradient(180deg, #74e07c 0%, #34a83f 100%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 #1d6b26; }
+.btn-ok:active { box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 #1d6b26; }
+.btn-perigo { border-color:#7d1d17; background:linear-gradient(180deg, #ff7a6e 0%, #d63a2f 100%);
+              box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 #7d1d17; }
+.btn-perigo:active { box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 #7d1d17; }
+
+/* ---------- Campos de texto/número ---------- */
+input[type=text], input[type=number] {
+  background:var(--campo); color:var(--texto); border:2px solid #3a4a70; border-radius:8px;
+  padding:6px 8px; box-shadow: inset 0 2px 0 rgba(0,0,0,.35); outline:none; box-sizing:border-box;
+}
+input[type=text]:focus, input[type=number]:focus { border-color:var(--ouro); }
+
+/* HUD e painéis laterais ficam SEMPRE abaixo da barra superior (--abaixo-do-topo): com a fonte do jogo
+   a barra é larga e, lado a lado, eles se sobrepunham em telas comuns (~1400 px). */
+:root { --abaixo-do-topo: calc(env(safe-area-inset-top,0px) + 72px); }
+
+/* ---------- HUD (canto superior esquerdo) ---------- */
+#hud { max-width:300px; position:fixed; top:var(--abaixo-do-topo); left:10px;
+       padding:8px 12px; line-height:1.5; }
+#hud #info { color:var(--ouro); }
+#hud small { color:var(--texto-suave); }
+
+/* ---------- Barra superior: nome, data, dinheiro e botões ---------- */
 #fin { position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); left:50%; transform:translateX(-50%);
-       display:flex; align-items:center; gap:10px; background:var(--panel); padding:6px 12px;
-       border-radius:8px; white-space:nowrap; }
-#finAviso { color:#e53935; font-weight:600; }
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); align-items:center; justify-content:center; }
-.modal.aberto { display:flex; }
-.modal .caixa { background:var(--bg); color:var(--fg); padding:16px 20px; border-radius:12px; width:min(380px, 92vw); }
-#listaSaves { max-height: 40vh; overflow: auto; }
-.save-linha { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(128,128,128,.3); }
-.save-linha .info { flex: 1; min-width: 0; }
-.save-linha small { display: block; opacity: .75; }
+       display:flex; align-items:center; gap:10px; padding:6px 8px 6px 14px; white-space:nowrap; }
+#finTxt { font-weight:600; color:var(--ouro); text-shadow:0 2px 0 rgba(0,0,0,.4); }
+#finAviso { color:var(--perigo); font-weight:700; text-shadow:0 1px 0 #000; }
+
+/* ---------- Painéis laterais (convidado e objeto) ---------- */
+#painel, #painelObj { display:none; position:fixed; top:var(--abaixo-do-topo); right:10px;
+                      padding:8px 10px 10px; }
+#painel { width:210px; }
+#painelObj { width:230px; }
+#painel .linha, #painelObj .linha { display:flex; align-items:center; gap:6px; margin:4px 0; }
+#painel .linha span, #painelObj .linha span { width:76px; color:var(--texto-suave); }
+#painel .barra { flex:1; height:10px; border-radius:6px; background:var(--campo); overflow:hidden;
+                 border:1px solid #000; box-shadow: inset 0 2px 0 rgba(0,0,0,.4); }
+#painel .barra i { display:block; height:100%; box-shadow: inset 0 2px 0 rgba(255,255,255,.3); }
+#painel #dinheiro { margin-top:8px; color:var(--ouro); font-weight:600; }
+#painel #estado { margin-top:2px; font-size:14px; }
+#painelObj input { width:80px; }
+#oStats { margin-top:8px; font-size:14px; line-height:1.55; padding-top:6px; border-top:2px dashed rgba(255,255,255,.12); }
+
+/* ---------- Janelas (modais) ---------- */
+.modal { display:none; position:fixed; inset:0; background:rgba(5,10,20,.55); align-items:center; justify-content:center;
+         backdrop-filter: blur(2px); }
+.modal.aberto { display:flex; animation: surgir .14s ease-out; }
+@keyframes surgir { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:none; } }
+.janela { width:min(420px, 92vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden; }
+.janela-corpo { padding:14px 18px 18px; overflow:auto; }
+.secao { margin:0 0 14px; padding:10px 12px; border-radius:10px; background:rgba(0,0,0,.2);
+         border:1px solid rgba(255,255,255,.07); }
+.secao:last-child { margin-bottom:0; }
+.secao h4 { margin:0 0 6px; font-size:15px; color:var(--ouro); font-weight:600; }
+.linha-form { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:6px 0; }
+.linha-form label { color:var(--texto-suave); }
+.botoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.dica { font-size:13px; color:var(--texto-suave); line-height:1.45; }
+.msg { min-height:1.4em; margin:8px 0; font-size:14px; }
+#empInfo, #balanco, #parqueInfo { line-height:1.6; }
+#empInfo b, #balanco b, #parqueInfo b { color:var(--ouro); }
+
+/* Lista de saves */
+#listaSaves { max-height:40vh; overflow:auto; }
+.save-linha { display:flex; align-items:center; gap:8px; padding:8px; margin-top:6px; border-radius:10px;
+              background:rgba(0,0,0,.2); border:1px solid rgba(255,255,255,.07); }
+.save-linha .info { flex:1; min-width:0; }
+.save-linha b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.save-linha small { display:block; color:var(--texto-suave); }
+.save-linha .btn { padding:5px 10px; font-size:14px; }
 
 /* ---------- Barra de construção (parte inferior) ---------- */
 #barra { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-         width: min(96vw, 700px); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box;
-         background: var(--panel); padding: 8px; border-radius: 16px; box-shadow: 0 4px 18px rgba(0,0,0,.25);
-         backdrop-filter: blur(6px); }
-#barra button { font: inherit; color: var(--fg); cursor: pointer; }
-#barraItens .itens { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px; justify-content: safe center; scrollbar-width: thin; }
+         width: min(96vw, 780px); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; padding: 8px; }
+#barra button { color: var(--texto); cursor: pointer; }
+#barraItens .itens { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px 6px; justify-content: safe center; scrollbar-width: thin; }
 #barraItens .itens[hidden] { display: none; }
 
-.cartao { flex: 0 0 auto; width: 108px; min-height: 70px; box-sizing: border-box; display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border: 2px solid transparent;
-          border-radius: 12px; background: rgba(128,128,128,.14); transition: transform .08s, background .12s; }
-.cartao:hover { background: rgba(128,128,128,.28); transform: translateY(-2px); }
+.cartao { flex: 0 0 auto; width: 108px; min-height: 72px; box-sizing: border-box; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border: 2px solid #0d1323;
+          border-radius: 12px; background: linear-gradient(180deg, #3a4b72 0%, #2a3858 100%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 3px 0 #0d1323; transition: transform .08s, filter .12s; }
+.cartao:hover { filter: brightness(1.15); transform: translateY(-2px); }
 .cartao .ic { font-size: 26px; line-height: 1.15; }
-.cartao .nm { font-size: 12px; font-weight: 600; text-align: center; line-height: 1.15; }
-.cartao .pr { font-size: 11px; opacity: .75; min-height: 1em; }
-.cartao.ativo { border-color: #ffb400; background: rgba(255,180,0,.22); }
+.cartao .nm { font-size: 13px; font-weight: 600; text-align: center; line-height: 1.15; }
+.cartao .pr { font-size: 12px; color: var(--ouro); min-height: 1em; }
+.cartao.ativo { border-color: var(--ouro); background: linear-gradient(180deg, #6a5a2a 0%, #4a3f1f 100%);
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 3px 0 #8a6d12, 0 0 12px rgba(255,211,77,.35); }
 .cartao.sem-saldo { opacity: .5; }
-.cartao.sem-saldo .pr { color: #e53935; opacity: 1; font-weight: 600; }
+.cartao.sem-saldo .pr { color: var(--perigo); opacity: 1; font-weight: 600; }
 
-#barraAbas { display: flex; justify-content: safe center; gap: 4px; overflow-x: auto; padding-top: 6px;
-             border-top: 1px solid rgba(128,128,128,.3); }
-.aba { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 5px; padding: 5px 11px;
+#barraAbas { display: flex; justify-content: safe center; gap: 4px; overflow-x: auto; padding-top: 6px; scrollbar-width: none;
+             border-top: 2px dashed rgba(255,255,255,.12); }
+.aba { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 5px; padding: 5px 12px;
        border: 2px solid transparent; border-radius: 999px; background: transparent; }
 .aba .ic { font-size: 17px; }
-.aba .tx { font-size: 13px; }
-.aba:hover { background: rgba(128,128,128,.2); }
-.aba.aberta { background: rgba(128,128,128,.28); font-weight: 600; }
-.aba.com-ferramenta::after { content: ""; position: absolute; top: 3px; right: 5px; width: 7px; height: 7px;
-                             border-radius: 50%; background: #ffb400; }   /* a ferramenta ativa está nesta aba */
+.aba .tx { font-size: 14px; }
+.aba:hover { background: rgba(255,255,255,.08); }
+.aba.aberta { background: var(--faixa); color: #fff; font-weight: 600; text-shadow: 0 1px 0 var(--faixa-sombra);
+              border-color: rgba(0,0,0,.2); }
+.aba.com-ferramenta::after { content: ""; position: absolute; top: 3px; right: 5px; width: 8px; height: 8px;
+                             border-radius: 50%; background: var(--ouro); border: 1px solid #000; }   /* a ferramenta ativa está nesta aba */
 @media (max-width: 560px) { .aba .tx { display: none; } .cartao { width: 76px; } }
 
-/* Telas estreitas: a barra de finanças ocupa o topo inteiro e os painéis descem abaixo dela */
+/* Telas estreitas: a barra superior ocupa o topo inteiro e os painéis descem abaixo dela */
 @media (max-width: 1000px) {
   #fin { left: 10px; right: 10px; transform: none; justify-content: center; flex-wrap: wrap; white-space: normal; }
-  #hud, #painel, #painelObj { top: calc(env(safe-area-inset-top, 0px) + 66px); }
+  :root { --abaixo-do-topo: calc(env(safe-area-inset-top, 0px) + 118px); }   /* a barra quebra em 2 linhas */
 }

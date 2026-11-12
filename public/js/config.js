@@ -5,6 +5,9 @@
 
 const TILE_W = 64, TILE_H = 32, MAPA = 24, PROFUNDIDADE = 14;
 
+// Fonte dos textos desenhados no canvas (a mesma da interface, declarada em style.css)
+const FONTE_JOGO = "'Fredoka', 'Segoe UI', sans-serif";
+
 // Catálogo de terrenos
 const TIPOS = {
   GRAMA:   { nome: 'Grama', icone: '🌱',   cor: ['#6fbf5a', '#65b350'] },

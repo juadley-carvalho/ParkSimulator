@@ -5,7 +5,9 @@
 
 const arred = v => Math.round(v * 100) / 100;
 
-const moeda = v => '$' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Negativo com o sinal antes do símbolo: −$2.064,00 (e não $-2.064,00)
+const moeda = v => (v < 0 ? '−$' : '$') +
+  Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Valor curto para os cartões da barra: $3.000 (sem centavos)
 const moedaCurta = v => '$' + v.toLocaleString('pt-BR');

@@ -229,7 +229,7 @@ function iniciarSalvar() {
       try { await carregarDe(s.id); mensagem(''); modal.classList.remove('aberto'); }
       catch (e) { mensagem('Não foi possível carregar: ' + e.message, true); }
     });
-    const apagar = document.createElement('button'); apagar.className = 'btn'; apagar.textContent = 'Apagar';
+    const apagar = document.createElement('button'); apagar.className = 'btn btn-perigo'; apagar.textContent = 'Apagar';
     apagar.addEventListener('click', async () => {
       if (!confirm(`Apagar "${s.nome || s.id}" para sempre?`)) return;
       try { await chamarApi(`${SAVES_URL}/${encodeURIComponent(s.id)}`, { method: 'DELETE' }); await atualizarLista(); }

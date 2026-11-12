@@ -44,10 +44,12 @@ function selecionarObjeto(k) {
   selObj = k; selecionado = null;
   const [gx, gy] = k.split(',').map(Number);
   const chave = objetos[gy][gx], d = gestao.get(k);
-  painelObj.innerHTML = `<b>${OBJETOS[chave].nome}</b>` +
+  painelObj.innerHTML = `<div class='painel-topo'><span>${OBJETOS[chave].icone} ${OBJETOS[chave].nome}</span>` +
+    `<button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
     Object.keys(OBJETOS[chave].servicos).map(s =>
       `<div class='linha'><span>${NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.5' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
-    `<div id='oStats' style='margin-top:6px;font-size:13px;line-height:1.5'></div>`;
+    `<div id='oStats'></div>`;
+  painelObj.querySelector('.fechar').addEventListener('click', () => { selObj = null; });
   // Os campos só são criados aqui; o loop atualiza apenas o texto das estatísticas
   painelObj.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
     d.precos[inp.dataset.s] = Math.max(0, arred(parseFloat(inp.value) || 0));
@@ -129,9 +131,18 @@ function iniciarParqueUI() {
 
 // Monta os painéis e liga os botões da tela de finanças (chamada uma vez, em main.js)
 function iniciarUI() {
-  painel.innerHTML = CAMPOS.map(([c, nome]) =>
+  painel.innerHTML = `<div class='painel-topo'><span>🙂 Convidado</span><button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
+    CAMPOS.map(([c, nome]) =>
     `<div class="linha"><span>${nome}</span><div class="barra"><i id="b-${c}"></i></div></div>`).join('') +
-    '<div id="dinheiro" style="margin-top:6px"></div><div id="estado"></div>';
+    '<div id="dinheiro"></div><div id="estado"></div>';
+  painel.querySelector('.fechar').addEventListener('click', () => { selecionado = null; });
+  // Esc: fecha a janela aberta; sem janela, fecha os painéis de seleção
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const abertas = document.querySelectorAll('.modal.aberto');
+    if (abertas.length) abertas.forEach(m => m.classList.remove('aberto'));
+    else { selecionado = null; selObj = null; }
+  });
   iniciarParqueUI();
   $('btnPegar').textContent = 'Pegar ' + moeda(PARCELA);
   $('btnPagar').textContent = 'Pagar ' + moeda(PARCELA);
