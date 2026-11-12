@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ícone da aba: roda-gigante nas cores da interface (fundo azul-marinho, aro laranja, cabines coloridas).
+       Traços grossos de propósito: a aba mostra o ícone com só 16 px. -->
+  <rect width="64" height="64" rx="14" fill="#1f2942"/>
+  <!-- Pernas (cavalete) e base -->
+  <path d="M32 29 L17 57 M32 29 L47 57" stroke="#b9c3d6" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M12 57 H52" stroke="#b9c3d6" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Raios -->
+  <g stroke="#f4f1e8" stroke-width="2.5" stroke-linecap="round">
+    <path d="M32 9 V49"/><path d="M12 29 H52"/>
+    <path d="M17.9 14.9 L46.1 43.1"/><path d="M46.1 14.9 L17.9 43.1"/>
+  </g>
+  <!-- Aro -->
+  <circle cx="32" cy="29" r="20" fill="none" stroke="#ff9f43" stroke-width="4.5"/>
+  <!-- Cabines nas pontas dos raios -->
+  <circle cx="32" cy="9" r="5" fill="#ffd34d"/>
+  <circle cx="46.1" cy="14.9" r="5" fill="#4fb3ff"/>
+  <circle cx="52" cy="29" r="5" fill="#5fd068"/>
+  <circle cx="46.1" cy="43.1" r="5" fill="#ff5a4f"/>
+  <circle cx="32" cy="49" r="5" fill="#ffd34d"/>
+  <circle cx="17.9" cy="43.1" r="5" fill="#4fb3ff"/>
+  <circle cx="12" cy="29" r="5" fill="#5fd068"/>
+  <circle cx="17.9" cy="14.9" r="5" fill="#ff5a4f"/>
+  <!-- Eixo central -->
+  <circle cx="32" cy="29" r="4.5" fill="#ffd34d" stroke="#0d1323" stroke-width="1.5"/>
+</svg>
