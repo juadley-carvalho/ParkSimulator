@@ -18,6 +18,8 @@ function semear(n, ponto) {
       estado: 'andando',      // 'andando' | 'usando'
       objetivo: null,         // serviço que ele está indo buscar (ex.: 'comida')
       uso: null,              // dados do serviço em uso
+      // Passo próprio (tiles/s): uns apressados, outros sem pressa. Evita que todos andem em sincronia.
+      velocidade: VELOCIDADE * aleatorio(1 - VARIACAO_VELOCIDADE, 1 + VARIACAO_VELOCIDADE),
       dinheiro: Math.round(aleatorio(30, 150)),   // $ com que chegou ao parque
       tolerancia: Math.round((aleatorio(1, 10) + aleatorio(1, 10)) / 2),   // intensidade preferida, 1 a 10 (média de 2 sorteios: concentra no meio)
       paciencia: aleatorio(25, 45),               // segundos que aguenta numa fila
@@ -87,7 +89,7 @@ function atualizar(dt) {
     if (invalido) { escolherAlvo(g); if (!g.alvo) continue; }   // sem alvo: fica parado e tenta de novo
 
     const tx = g.alvo.gx + 0.5 + g.ox, ty = g.alvo.gy + 0.5 + g.oy;
-    const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = VELOCIDADE * dt;
+    const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = g.velocidade * dt;
     if (dist <= passo) { g.x = tx; g.y = ty; escolherAlvo(g); }   // chegou: decide o próximo
     else { g.x += dx / dist * passo; g.y += dy / dist * passo; }
   }

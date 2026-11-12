@@ -25,6 +25,17 @@ function pagar(g, ancora, servico, preco) {
   if (d) { d.receita = arred(d.receita + preco); d.usos++; }
 }
 
+// Ingresso do parque, cobrado na chegada. Entra na receita do mês e também à parte (entradasMes),
+// para o balanço mostrar quanto veio do portão e quanto dos objetos.
+function pagarEntrada(g) {
+  const preco = parque.precoEntrada;
+  if (!preco) return;
+  g.dinheiro = arred(g.dinheiro - preco);
+  fin.caixa = arred(fin.caixa + preco);
+  fin.receitaMes = arred(fin.receitaMes + preco);
+  fin.entradasMes = arred(fin.entradasMes + preco);
+}
+
 function custoManutencaoMensal() {
   let total = 0;
   for (let gy = 0; gy < MAPA; gy++)
@@ -39,8 +50,9 @@ function custoManutencaoMensal() {
 function fecharMes() {
   const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal();
   fin.caixa = arred(fin.caixa - juros - manut);
-  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, visitantes: fin.visitantesMes };
-  fin.receitaMes = 0; fin.visitantesMes = 0; fin.mes++;
+  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, visitantes: fin.visitantesMes,
+                  entradas: fin.entradasMes, recusas: fin.recusasMes };
+  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.mes++;
 }
 
 function atualizarFinancas(dt) {

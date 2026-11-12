@@ -11,7 +11,7 @@
 <div id='barra'></div>
 <div id='painel'></div>
 <div id='painelObj'></div>
-<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><span id='finAviso'></span></div>
+<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><span id='finAviso'></span></div>
 <div id='modalJogo' class='modal'><div class='caixa'>
   <h3 style='margin:0 0 8px'>Salvar e carregar</h3>
   <div style='display:flex;gap:8px'>
@@ -30,6 +30,15 @@
     <button class='btn' id='btnPegar'></button><button class='btn' id='btnPagar'></button><button class='btn' id='btnFechar'>Fechar</button>
   </div>
   <div id='balanco' style='margin-top:12px;font-size:13px;line-height:1.5'></div>
+</div></div>
+<div id='modalParque' class='modal'><div class='caixa'>
+  <h3 style='margin:0 0 8px'>Parque</h3>
+  <div style='margin:8px 0'>Nome:
+    <input id='inNomeParque' type='text' style='width:100%;box-sizing:border-box;margin-top:4px'></div>
+  <div style='margin:8px 0'>Preço de entrada: $ <input id='inPrecoEntrada' type='number' min='0' step='0.5' style='width:80px'></div>
+  <div id='parqueDica' style='font-size:13px;opacity:.8;line-height:1.4'></div>
+  <div id='parqueInfo' style='margin-top:10px;font-size:13px;line-height:1.5'></div>
+  <div style='margin-top:10px'><button class='btn' id='btnFecharParque'>Fechar</button></div>
 </div></div>
 <div id="hud"><b id="info">–</b><br>Convidados: <b id="qtd">0</b><br><small>Botão esquerdo: pintar/arrastar · Botão do meio: mover · Roda: zoom · Z: girar atração</small></div>
 

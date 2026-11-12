@@ -57,7 +57,8 @@ const LIMITE_EMPRESTIMO = 20000, PARCELA = 1000;
 // Empréstimo inicial: o caixa de abertura do parque vem dele. Os juros podem ser alterados no jogo.
 const SALDO_INICIAL = 15000, DIVIDA_INICIAL = 15000, JUROS_MENSAL = 0.03;
 
-const VELOCIDADE = 1.6;                                   // tiles por segundo
+const VELOCIDADE = 1.6;                                   // tiles por segundo (média)
+const VARIACAO_VELOCIDADE = 0.15;                         // cada convidado anda até 15% mais rápido ou mais devagar
 
 const VIZINHOS = [[1, 0], [-1, 0], [0, 1], [0, -1]];     // direita, esquerda, baixo, cima
 
@@ -99,6 +100,13 @@ const TEMPO_CARGA = 5;     // segundos esperando passageiros antes de partir mei
 const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entram e saem (já é CAMINHO)
 
 const MAX_CONVIDADOS = 40;
+
+// Parque: nome e ingresso (editáveis na janela "Parque"). O ingresso é cobrado na chegada, e o
+// convidado só entra se ele custar até FRACAO_MAX_ENTRADA do dinheiro que trouxe (com $100, até $30).
+// Preço alto = menos gente entrando e menos dinheiro sobrando para os brinquedos e barracas.
+const NOME_PARQUE_PADRAO = 'Meu parque', NOME_PARQUE_MAX = 30;
+const PRECO_ENTRADA_PADRAO = 0;
+const FRACAO_MAX_ENTRADA = 0.3;
 
 // Tecla que gira 90° o objeto que está sendo posicionado (só muda algo em objetos não quadrados).
 const TECLA_GIRAR = 'z';

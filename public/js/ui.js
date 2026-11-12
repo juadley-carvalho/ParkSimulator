@@ -69,7 +69,7 @@ function atualizarPainelObj() {
 }
 
 function atualizarFinancasUI() {
-  $('finTxt').textContent = `📅 Dia ${diaDoMes(fin.tMes)} de ${nomeDoMes(fin.mes)} · ` +
+  $('finTxt').textContent = `🎡 ${nomeDoParque()} · 📅 Dia ${diaDoMes(fin.tMes)} de ${nomeDoMes(fin.mes)} · ` +
                             `💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
   $('finTxt').style.color = fin.caixa < 0 ? '#e53935' : '';
   $('finAviso').textContent = tempo - fin.tAviso < 2.5 ? fin.aviso : '';
@@ -88,8 +88,43 @@ function atualizarFinancasUI() {
     `${fin.visitantesMes} visitantes · ${porVisitante(fin.receitaMes, fin.visitantesMes)} por visitante<br>` + (b
     ? `${nomeDoMes(b.mes)}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)} = ` +
       `<b>${moeda(b.receita - b.manut - b.juros)}</b><br>` +
-      (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '')
+      (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '') +
+      (b.entradas ? ` · entradas ${moeda(b.entradas)}` : '') +
+      (b.recusas ? ` · ${b.recusas} acharam a entrada cara` : '')
     : 'Nenhum mês fechado ainda.');
+}
+
+// Janela "Parque": estatísticas do portão no mês em andamento (atualizadas a cada quadro, só com ela aberta)
+function atualizarParqueUI() {
+  document.title = nomeDoParque();
+  if (!$('modalParque').classList.contains('aberto')) return;
+  const tentaram = fin.visitantesMes + fin.recusasMes;
+  $('parqueInfo').innerHTML =
+    `<b>${nomeDoMes(fin.mes)}</b> (até agora):<br>` +
+    `Entraram: ${fin.visitantesMes} · Desistiram no portão: ${fin.recusasMes}` +
+    (tentaram ? ` (${Math.round(fin.recusasMes / tentaram * 100)}%)` : '') + '<br>' +
+    `Receita das entradas: ${moeda(fin.entradasMes)}`;
+}
+
+// Liga os campos da janela "Parque" (chamada uma vez, em iniciarUI)
+function iniciarParqueUI() {
+  const nome = $('inNomeParque'), preco = $('inPrecoEntrada');
+  nome.maxLength = NOME_PARQUE_MAX;
+  $('parqueDica').textContent = `Cobrado na chegada. Cada convidado só entra se a entrada custar até ` +
+    `${Math.round(FRACAO_MAX_ENTRADA * 100)}% do dinheiro que trouxe; o que pagar no portão não gasta lá dentro.`;
+  $('btnParque').addEventListener('click', () => {
+    // Preenchidos só ao abrir, para o loop não sobrescrever o que está sendo digitado
+    nome.value = parque.nome;
+    preco.value = parque.precoEntrada;
+    $('modalParque').classList.add('aberto');
+  });
+  $('btnFecharParque').addEventListener('click', () => $('modalParque').classList.remove('aberto'));
+  // O nome é texto do usuário: só aparece na tela via textContent / document.title (nunca innerHTML)
+  nome.addEventListener('input', () => { parque.nome = nome.value.slice(0, NOME_PARQUE_MAX); });
+  preco.addEventListener('input', () => {
+    const v = parseFloat(preco.value);
+    if (!isNaN(v)) parque.precoEntrada = Math.max(0, arred(v));
+  });
 }
 
 // Monta os painéis e liga os botões da tela de finanças (chamada uma vez, em main.js)
@@ -97,6 +132,7 @@ function iniciarUI() {
   painel.innerHTML = CAMPOS.map(([c, nome]) =>
     `<div class="linha"><span>${nome}</span><div class="barra"><i id="b-${c}"></i></div></div>`).join('') +
     '<div id="dinheiro" style="margin-top:6px"></div><div id="estado"></div>';
+  iniciarParqueUI();
   $('btnPegar').textContent = 'Pegar ' + moeda(PARCELA);
   $('btnPagar').textContent = 'Pagar ' + moeda(PARCELA);
   $('btnPegar').addEventListener('click', pegarEmprestimo);

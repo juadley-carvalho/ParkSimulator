@@ -31,6 +31,7 @@ function loop(t) {
   atualizarPainel();
   atualizarPainelObj();
   atualizarFinancasUI();
+  atualizarParqueUI();
   atualizarBarra();
   requestAnimationFrame(loop);
 }

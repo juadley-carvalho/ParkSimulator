@@ -73,7 +73,8 @@ function podeConstruir(chave, gx, gy, rot = 0) {
       if (!dentroDoMapa(x, y) || mapa[y][x] === 'AGUA' || objetos[y][x] || ehEntrada(x, y)) return false;
       if ((mapa[y][x] === 'CAMINHO') !== ficaSobreCaminho(chave)) return false;
     }
-  return true;
+  // Quem fica sobre o caminho é desenhado nas bordas livres: num cruzamento (4 lados ligados) não cabe
+  return !ficaSobreCaminho(chave) || ladosSemCaminho(gx, gy).length > 0;
 }
 
 function construir(chave, gx, gy, rot = 0) {

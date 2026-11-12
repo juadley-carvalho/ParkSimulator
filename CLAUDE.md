@@ -44,8 +44,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - `mapa`, `objetos` etc. são `const` **mutadas no lugar**: não reatribua (veja `aplicarJogo`, que copia linha a linha).
 - Responsabilidades: `estado` dados · `iso` grade↔tela · `desenho` canvas · `objetos` catálogo e regras de construção ·
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
-  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `ui` painéis de detalhes e tela de
-  finanças · `barra` barra de construção · `salvar` serialização + API + tela de saves · `input` mouse/teclado/câmera.
+  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `ui` painéis de detalhes e janelas de
+  finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `input` mouse/teclado/câmera.
 
 ## Modelo de dados
 - Grade 24×24 (`MAPA`). `mapa[gy][gx]` = chave de `TIPOS` (GRAMA, CAMINHO, AGUA). **Sempre `[gy][gx]`** (linha primeiro).
@@ -56,7 +56,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - Mapas indexados pela âncora, chave `"gx,gy"` (`chaveAtr`): `atracoes` (fila, passageiros, fase, ângulo), `gestao`
   (preços, receita, usos de todo objeto com serviços) e `rotacoes` (objetos girados 90°).
 - Objetos grandes: `tam: {w,h}` no catálogo. Girar (tecla Z, `TECLA_GIRAR`) troca w/h via `tamanhoDe(chave, rot)`;
-  só objetos não quadrados giram. Funções de desenho recebem `(cx, cy, atr, rot)`, com (cx, cy) = centro da PEGADA.
+  só objetos não quadrados giram. Funções de desenho recebem `(cx, cy, atr, rot, ancora)`, com (cx, cy) = centro da
+  PEGADA e `ancora` = `{gx, gy}` (para olhar os vizinhos, como o banco).
 - Desenho por ordem de profundidade (algoritmo do pintor): todo o terreno, depois objetos e convidados numa lista
   ordenada por `x + y`. Ao desenhar, use `ctx.save()/restore()` se mudar estilos (eles persistem entre itens).
 - Convidado: campos em `semear`. Estados: `andando | usando | esperando | brincando`. Necessidades em `g.n`:
@@ -72,6 +73,13 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   O preço de uso é por objeto (ferramenta Inspecionar); padrões em `PRECO_PADRAO`. `fin` nasce de `finInicial()`.
 - **Chão x objetos**: só objetos `sobreCaminho` (o banco) ficam sobre CAMINHO; os demais nunca (bloqueariam a
   passagem). Trocar grama/caminho sob um objeto é recusado; água afoga o objeto. Demolir solta quem o usava.
+  O banco é desenhado em cada lado do tile NÃO ligado a outro caminho (`ladosSemCaminho`); sem lado livre
+  (cruzamento) não se constrói, e um caminho novo que feche o último lado remove o banco (com reembolso).
+- **Convidados** andam a `VELOCIDADE` ±15% (`g.velocidade`, sorteada em `semear`); a atratividade usa a velocidade dele.
+- **Parque** (janela 🎡, `parque` em estado.js): nome (até 30 caracteres, só via `textContent`/`document.title`) e
+  preço de entrada (padrão $0). O ingresso é cobrado na chegada (`pagarEntrada`); quem acha caro (preço >
+  30% do dinheiro que trouxe, `FRACAO_MAX_ENTRADA`) desiste no portão (`fin.recusasMes`). Na simulação o
+  lucro mensal é máximo perto de $20 ($0: +$450 · $10: +$760 · $20: +$930 · $30: +$390).
 - **Chegada/saída**: convidados entram pela `ENTRADA` (tile da borda, protegido) a cada 3–8 s (máx 40) com $30–150.
   Saem se felicidade ≤ 10 ou dinheiro < $2, andando até a entrada. Só andam em CAMINHO; se o chão some, BFS até o
   caminho mais próximo (atravessa grama, nunca água).
@@ -139,6 +147,6 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   redistribui o gasto entre os objetos, sem aumentar o total (simulação: ~$8,4/s antes e depois da atratividade).
 
 ## Ideias / backlog
-- Preço de entrada e chegadas dependentes da avaliação do parque; autosave; mais atrações (trem, casa
+- Chegadas e tolerância ao preço de entrada dependentes da avaliação do parque; autosave; mais atrações (trem, casa
   mal-assombrada, tiro ao alvo); capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).

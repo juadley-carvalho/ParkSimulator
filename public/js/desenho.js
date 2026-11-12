@@ -62,8 +62,24 @@ function desenharArvore(cx, cy) {
   ctx.beginPath(); ctx.arc(cx - 4, cy - 34, 9, 0, Math.PI * 2); ctx.fill();
 }
 
-function desenharBanco(cx, cy) {
-  caixa(cx, cy, 0.45, 9, '#a9743d', '#6e4521', '#85552a');
+// Um banco em cada lado do caminho que não se liga a outro caminho (ver ladosSemCaminho).
+// Cada banco = assento (caixa baixa) + encosto (caixa fina e alta) do lado de fora, virado para o caminho.
+// "ancora" = tile do banco; sem ela (ex.: prévia), desenha os dois lados de um caminho reto.
+function desenharBanco(cx, cy, atr, rot, ancora) {
+  const lados = ancora ? ladosSemCaminho(ancora.gx, ancora.gy) : [[0, 1], [0, -1]];
+  const pecas = [];
+  for (const [dx, dy] of lados) {
+    // Medidas em frações de tile: "ao longo" da borda e "através" dela (em direção ao centro)
+    // Comprimento 0.4: as pontas (±0.2 do centro) não invadem o banco de um lado vizinho (que começa em 0.2)
+    const peca = (dist, largura, alt, cores) => {
+      const w = dx ? largura : 0.4, h = dx ? 0.4 : largura;     // lado em gx: fino em gx, comprido em gy
+      const p = gradeParaMundo(dx * dist, dy * dist);             // deslocamento a partir do centro
+      pecas.push({ prof: dx * dist + dy * dist, desenhar: () => caixaRet(cx + p.x, cy + p.y, w, h, alt, ...cores) });
+    };
+    peca(0.3, 0.2, 6, ['#b07a40', '#6e4521', '#85552a']);     // assento
+    peca(0.42, 0.05, 13, ['#8b5a2b', '#5d3a1a', '#734a22']);  // encosto
+  }
+  pecas.sort((a, b) => a.prof - b.prof).forEach(p => p.desenhar());   // algoritmo do pintor, dentro do tile
 }
 
 function desenharBarraca(cx, cy) {
@@ -339,7 +355,7 @@ function desenhar() {
       // profundidade = tile mais à frente da pegada
       const atr = atracoes.get(chaveAtr(gx, gy));   // estado da fila (ou undefined)
       itens.push({ prof: (gx + w - 1) + (gy + h - 1) + 1,
-        desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
+        desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot, { gx, gy }); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
     }
   for (const g of convidados) if (g.estado !== 'brincando') itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });

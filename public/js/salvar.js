@@ -18,7 +18,7 @@ function serializarJogo() {
     versao: VERSAO_SAVE,
     resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length },
     estado: {
-      mapa, objetos, fin, tempo, tChegada, stats,
+      mapa, objetos, fin, parque, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
       rotacoes: Object.fromEntries(rotacoes),
       atracoes: Object.fromEntries([...atracoes].map(([k, a]) =>
@@ -88,6 +88,11 @@ function aplicarJogo(doc) {
   Object.assign(fin, finInicial());   // parte dos padrões (fin é const: mutamos, não reatribuímos)
   for (const k of Object.keys(fin)) if (typeof f[k] === typeof fin[k]) fin[k] = f[k];
   fin.aviso = ''; fin.tAviso = -99;
+  // Parque: save antigo (sem "parque") fica com os padrões
+  const p = e.parque || {};
+  Object.assign(parque, parqueInicial());
+  if (typeof p.nome === 'string') parque.nome = p.nome.slice(0, NOME_PARQUE_MAX);
+  parque.precoEntrada = Math.max(0, num(p.precoEntrada, PRECO_ENTRADA_PADRAO));
   tempo = num(e.tempo, 0);
   tChegada = num(e.tChegada, 1);
   stats.sairam = num(e.stats && e.stats.sairam, 0);
@@ -105,7 +110,8 @@ function aplicarJogo(doc) {
     const n = Object.fromEntries(Object.entries(baseN).map(([c, padrao]) => [c, limitar(num(sn[c], padrao))]));
     return { ...base, ...s, n, evitar: { ...s.evitar },
              dinheiro: Math.max(0, num(s.dinheiro, base.dinheiro)), tolerancia: num(s.tolerancia, base.tolerancia),
-             paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0) };
+             paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0),
+             velocidade: num(s.velocidade, VELOCIDADE) > 0 ? num(s.velocidade, VELOCIDADE) : VELOCIDADE };
   });
   convidados.length = 0;
   porIndice.forEach(g => { if (g) convidados.push(g); });
@@ -247,7 +253,10 @@ function iniciarSalvar() {
     } catch (e) { mensagem('Não foi possível salvar: ' + e.message, true); }
   }
 
-  $('btnJogo').addEventListener('click', () => { mensagem(''); modal.classList.add('aberto'); atualizarLista(); });
+  $('btnJogo').addEventListener('click', () => {
+    $('inNomeSave').value = nomeDoParque();   // sugere o nome do parque (pode ser trocado antes de salvar)
+    mensagem(''); modal.classList.add('aberto'); atualizarLista();
+  });
   $('btnFecharJogo').addEventListener('click', () => modal.classList.remove('aberto'));
   $('btnSalvar').addEventListener('click', salvar);
   $('inNomeSave').addEventListener('keydown', e => { if (e.key === 'Enter') salvar(); });

@@ -48,7 +48,7 @@ function atratividade(g, servico, def, ancora, dist) {
   if (!a || a.fila.length >= FILA_MAX) return -Infinity;   // fila cheia: nem considera
   const ganho = efeitosFinais(g, def).felicidade || 0;
   const preferencia = PREFERENCIA_INTENSIDADE * Math.abs(diferencaIntensidade(g, def));
-  const andar = dist / VELOCIDADE * FELIC_POR_ATIVIDADE.andar;
+  const andar = dist / g.velocidade * FELIC_POR_ATIVIDADE.andar;   // quem anda devagar "sente" mais a distância
   const esperar = esperaEstimada(a) * FELIC_POR_ATIVIDADE.esperar;
   return ganho - preferencia - andar - esperar - FELIC_POR_DOLAR * precoUso(ancora, servico);
 }

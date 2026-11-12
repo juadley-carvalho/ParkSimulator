@@ -33,6 +33,16 @@ function aplicar(gx, gy) {
     if (!cobrar(CUSTO_TERRENO[chave] || 0)) return;
     mapa[gy][gx] = chave;
     if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto
+    // Um caminho novo pode fechar o último lado livre de um banco vizinho: ele não tem mais onde ficar
+    if (chave === 'CAMINHO')
+      for (const [dx, dy] of VIZINHOS) {
+        const nx = gx + dx, ny = gy + dy;
+        if (!dentroDoMapa(nx, ny) || typeof objetos[ny][nx] !== 'string') continue;
+        if (ficaSobreCaminho(objetos[ny][nx]) && !ladosSemCaminho(nx, ny).length) {
+          avisar(`${OBJETOS[objetos[ny][nx]].nome} removido: o caminho fechou todos os lados`);
+          removerObjeto(nx, ny);   // devolve o reembolso normal da demolição
+        }
+      }
   } else if (camada === 'objeto') {
     if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
   } else {

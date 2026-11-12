@@ -32,9 +32,16 @@ const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto
 // do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
 function finInicial() {
   return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-           visitantesMes: 0, balanco: null, aviso: '', tAviso: -99 };
+           visitantesMes: 0, entradasMes: 0, recusasMes: 0, balanco: null, aviso: '', tAviso: -99 };
 }
 const fin = finInicial();
+
+// Dados do parque em si (janela "Parque")
+function parqueInicial() { return { nome: NOME_PARQUE_PADRAO, precoEntrada: PRECO_ENTRADA_PADRAO }; }
+const parque = parqueInicial();
+
+// Nome para exibir: o campo pode estar vazio enquanto o jogador digita
+function nomeDoParque() { return parque.nome.trim() || NOME_PARQUE_PADRAO; }
 
 const convidados = [];
 
@@ -63,6 +70,12 @@ const dentroDoMapa = (gx, gy) => gx >= 0 && gy >= 0 && gx < MAPA && gy < MAPA;
 const ehCaminho = (gx, gy) => dentroDoMapa(gx, gy) && mapa[gy][gx] === 'CAMINHO';
 
 function ehEntrada(gx, gy) { return gx === ENTRADA.gx && gy === ENTRADA.gy; }
+
+// Lados do tile (como [dx, dy] de VIZINHOS) que NÃO se ligam a outro caminho: a borda do caminho.
+// É onde ficam os bancos (um em cada lado livre), como os acessórios de caminho em jogos do gênero.
+function ladosSemCaminho(gx, gy) {
+  return VIZINHOS.filter(([dx, dy]) => !ehCaminho(gx + dx, gy + dy));
+}
 
 // Interrompe o que o convidado estava fazendo: volta a passear e decide tudo de novo no próximo tile
 function soltarConvidado(g) {
