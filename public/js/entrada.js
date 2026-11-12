@@ -45,6 +45,9 @@ function atualizarEntrada(dt) {
   }
   tChegada -= dt;
   if (tChegada > 0) return;
-  if (convidados.length < MAX_CONVIDADOS) { semear(1, [ENTRADA.gx, ENTRADA.gy]); tChegada = aleatorio(3, 8); }
+  if (convidados.length < MAX_CONVIDADOS) {
+    semear(1, [ENTRADA.gx, ENTRADA.gy]); tChegada = aleatorio(3, 8);
+    fin.visitantesMes++;   // base para avaliar receita por visitante (e, no futuro, o preço da entrada)
+  }
   else tChegada = 2;                                   // parque lotado: tenta de novo logo
 }

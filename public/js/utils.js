@@ -19,3 +19,14 @@ const custoDe = chave => (ECONOMIA[chave] || {}).custo || 0;
 const $ = id => document.getElementById(id);
 
 function chaveAtr(gx, gy) { return gx + ',' + gy; }
+
+// fin.mes é um contador que só cresce (1, 2, 3...). Daqui saem o nome do mês e o ano:
+// mês 1 = Janeiro do Ano 1, mês 13 = Janeiro do Ano 2. O "% 12" (resto da divisão) dá a volta no ano.
+function nomeDoMes(mes) {
+  return `${NOMES_MESES[(mes - 1) % 12]}, Ano ${Math.floor((mes - 1) / 12) + 1}`;
+}
+
+// Dia (1..DIAS_POR_MES) a partir dos segundos já corridos no mês
+function diaDoMes(tMes) {
+  return Math.min(DIAS_POR_MES, Math.floor(tMes / SEG_POR_MES * DIAS_POR_MES) + 1);
+}

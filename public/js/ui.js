@@ -64,11 +64,13 @@ function atualizarPainelObj() {
   const brinquedo = Object.values(OBJETOS[objetos[gy][gx]].servicos).find(s => s.intensidade);
   $('oStats').innerHTML = `Receita total: ${moeda(d.receita)}<br>Usos: ${d.usos}<br>Manutenção: ${moeda(manut)}/mês` +
     (brinquedo ? `<br>Intensidade: ${brinquedo.intensidade}/10` : '') +
-    (atr ? `<br>Fila: ${atr.fila.length}/${FILA_MAX} · A bordo: ${atr.passageiros.length}` : '');
+    (atr ? `<br>Fila: ${atr.fila.length}/${FILA_MAX} · A bordo: ${atr.passageiros.length}` +
+           `<br>Espera estimada: ${Math.ceil(esperaEstimada(atr))}s` : '');
 }
 
 function atualizarFinancasUI() {
-  $('finTxt').textContent = `💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)} · Mês ${fin.mes}`;
+  $('finTxt').textContent = `📅 Dia ${diaDoMes(fin.tMes)} de ${nomeDoMes(fin.mes)} · ` +
+                            `💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
   $('finTxt').style.color = fin.caixa < 0 ? '#e53935' : '';
   $('finAviso').textContent = tempo - fin.tAviso < 2.5 ? fin.aviso : '';
   if (!$('modalFin').classList.contains('aberto')) return;
@@ -78,8 +80,15 @@ function atualizarFinancasUI() {
     `Juros no próximo fechamento: ${moeda(fin.divida * fin.juros)}<br>` +
     `Manutenção mensal: ${moeda(custoManutencaoMensal())}`;
   const b = fin.balanco;
-  $('balanco').innerHTML = `Receita do mês em andamento: ${moeda(fin.receitaMes)}<br>` + (b
-    ? `Mês ${b.mes}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)} = <b>${moeda(b.receita - b.manut - b.juros)}</b>`
+  // Receita por visitante: quanto cada cliente rende, em média. Comparada com o custo fixo do mês
+  // (manutenção + juros), mostra quantos visitantes são precisos para não ter prejuízo.
+  const porVisitante = (receita, visitantes) => visitantes ? moeda(receita / visitantes) : '–';
+  $('balanco').innerHTML =
+    `${nomeDoMes(fin.mes)} (em andamento, dia ${diaDoMes(fin.tMes)}/${DIAS_POR_MES}): receita ${moeda(fin.receitaMes)} · ` +
+    `${fin.visitantesMes} visitantes · ${porVisitante(fin.receitaMes, fin.visitantesMes)} por visitante<br>` + (b
+    ? `${nomeDoMes(b.mes)}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)} = ` +
+      `<b>${moeda(b.receita - b.manut - b.juros)}</b><br>` +
+      (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '')
     : 'Nenhum mês fechado ainda.');
 }
 

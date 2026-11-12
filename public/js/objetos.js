@@ -9,7 +9,9 @@ const OBJETOS = {
   ARVORE:  { categoria: 'cenario', icone: '🌳', nome: 'Árvore',  cor: '#3e8e3e', desenhar: desenharArvore },
   // "servicos": o que o objeto oferece. Cada serviço tem atividade, duração (s) e efeitos nas necessidades;
   // brinquedos também têm "intensidade" (1 a 10).
-  BANCO:   { categoria: 'cenario', icone: '🪑', nome: 'Banco',   cor: '#8b5a2b', desenhar: desenharBanco,
+  // "sobreCaminho": só pode ficar SOBRE um caminho (e o caminho embaixo não pode ser apagado).
+  // Os demais objetos nunca ficam sobre caminho: bloqueariam a passagem dos convidados.
+  BANCO:   { categoria: 'cenario', icone: '🪑', nome: 'Banco',   cor: '#8b5a2b', desenhar: desenharBanco, sobreCaminho: true,
              servicos: { descanso: { atividade: 'sentar', duracao: 6, efeitos: { energia: +40, nausea: -35 } } } },
   BARRACA: { categoria: 'servicos', icone: '🍔', nome: 'Barraca', cor: '#d9534f', desenhar: desenharBarraca,
              servicos: { comida: { atividade: 'comer', duracao: 3, efeitos: { fome: -60, banheiro: +12 } },
@@ -59,16 +61,19 @@ function objetoEm(gx, gy) {
   return { gx: c.ancora.gx, gy: c.ancora.gy, chave: objetos[c.ancora.gy][c.ancora.gx] };
 }
 
-// Valida a pegada inteira (já na orientação rot): dentro do mapa, sem água, sem outros objetos.
+function ficaSobreCaminho(chave) { return !!OBJETOS[chave].sobreCaminho; }
+
+// Valida a pegada inteira (já na orientação rot): dentro do mapa, sem água, sem outros objetos,
+// e no tipo de chão certo (caminho para quem é "sobreCaminho", fora do caminho para o resto).
 function podeConstruir(chave, gx, gy, rot = 0) {
   const { w, h } = tamanhoDe(chave, rot);
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) {
       const x = gx + i, y = gy + j;
       if (!dentroDoMapa(x, y) || mapa[y][x] === 'AGUA' || objetos[y][x] || ehEntrada(x, y)) return false;
-      if (ehGrande(chave) && mapa[y][x] === 'CAMINHO') return false;   // atrações não ficam sobre caminhos
+      if ((mapa[y][x] === 'CAMINHO') !== ficaSobreCaminho(chave)) return false;
     }
-  return !(chave === 'BANCO' && mapa[gy][gx] !== 'CAMINHO');          // regra do banco
+  return true;
 }
 
 function construir(chave, gx, gy, rot = 0) {
@@ -91,6 +96,9 @@ function removerObjeto(gx, gy) {
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) objetos[o.gy + j][o.gx + i] = null;
   desmontarAtracao(o.gx, o.gy);
+  // Quem estava usando um serviço simples deste objeto (comendo, sentado...) é interrompido
+  for (const g of convidados)
+    if (g.estado === 'usando' && g.uso.ancora && g.uso.ancora.gx === o.gx && g.uso.ancora.gy === o.gy) soltarConvidado(g);
   gestao.delete(chaveAtr(o.gx, o.gy));
   rotacoes.delete(chaveAtr(o.gx, o.gy));
   fin.caixa = arred(fin.caixa + custoDe(o.chave) * REEMBOLSO);   // reembolso parcial

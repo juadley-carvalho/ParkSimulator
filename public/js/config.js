@@ -45,7 +45,12 @@ const CUSTO_TERRENO = { GRAMA: 0, CAMINHO: 10, AGUA: 25 };   // cobrado ao troca
 
 const REEMBOLSO = 0.5;                                     // fração do custo devolvida ao demolir
 
-const SEG_POR_MES = 120;                                   // duração de um "mês" do jogo, em segundos reais
+// Calendário: o jogo começa em Janeiro do Ano 1. Um mês dura SEG_POR_MES segundos reais
+// (5 min: um ano ≈ 1 hora) e tem DIAS_POR_MES dias (então um dia = 10 s).
+const SEG_POR_MES = 300;
+const DIAS_POR_MES = 30;
+const NOMES_MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 const LIMITE_EMPRESTIMO = 20000, PARCELA = 1000;
 
@@ -59,14 +64,31 @@ const VIZINHOS = [[1, 0], [-1, 0], [0, 1], [0, -1]];     // direita, esquerda, b
 // Quanto a felicidade cai por segundo, conforme a atividade atual
 const FELIC_POR_ATIVIDADE = { andar: 0.8, comer: 0.3, beber: 0.3, sentar: 0.2, banheiro: 0.5, brinquedo: 0, esperar: 1.0 };
 
+// A partir desta urgência o convidado sai procurando o serviço
+const LIMIAR_URGENCIA = 0.6;
+
+// Felicidade a partir da qual (para baixo) ele procura um brinquedo
+const FELIC_BUSCA_DIVERSAO = 55;
+
 // Urgência (0..1) de cada serviço, calculada a partir das necessidades
 const URGENCIA = {
   banheiro: n => n.banheiro / 100,
   comida:   n => n.fome / 100,
   bebida:   n => n.sede / 100,
   descanso: n => Math.max((100 - n.energia) / 100, n.nausea / 100),
-  diversao: n => (100 - n.felicidade) / 100,
+  // Escala para que felicidade = FELIC_BUSCA_DIVERSAO dê exatamente LIMIAR_URGENCIA (e 1 = bem infeliz)
+  diversao: n => Math.min(1, LIMIAR_URGENCIA * (100 - n.felicidade) / (100 - FELIC_BUSCA_DIVERSAO)),
 };
+
+// Atratividade de um brinquedo = felicidade LÍQUIDA que o convidado espera ganhar com ele, em pontos.
+// Ele compara todos os brinquedos alcançáveis e vai ao de maior atratividade (não mais ao mais perto):
+//   ganho de felicidade (já com a penalidade de intensidade, ver efeitosFinais)
+//   − PREFERENCIA_INTENSIDADE por ponto de diferença entre a intensidade e a tolerância dele
+//   − o que ele perde de felicidade andando até lá e esperando na fila (mesmas taxas de FELIC_POR_ATIVIDADE)
+//   − FELIC_POR_DOLAR por dólar do ingresso
+// Se nenhum brinquedo tiver atratividade > 0, ele não vai a nenhum (fila longa demais, caro demais...).
+const PREFERENCIA_INTENSIDADE = 3;
+const FELIC_POR_DOLAR = 1;
 
 const ICONES = { comida: '🍔', bebida: '🥤', descanso: '💤', banheiro: '🚻', diversao: '🎠', saida: '👋' };
 

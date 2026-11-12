@@ -58,10 +58,6 @@ function pegadaConfere(chave, gx, gy, rot) {
   return true;
 }
 
-function soltarConvidado(g) {
-  g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
-}
-
 // Em duas etapas: 1) valida e monta tudo à parte (se algo estiver errado, lança erro e o jogo
 // atual fica intacto); 2) só então substitui o estado.
 function aplicarJogo(doc) {
@@ -89,6 +85,7 @@ function aplicarJogo(doc) {
   novoObjetos.forEach((l, gy) => { objetos[gy] = l; });
 
   const f = e.fin || {};
+  Object.assign(fin, finInicial());   // parte dos padrões (fin é const: mutamos, não reatribuímos)
   for (const k of Object.keys(fin)) if (typeof f[k] === typeof fin[k]) fin[k] = f[k];
   fin.aviso = ''; fin.tAviso = -99;
   tempo = num(e.tempo, 0);
@@ -102,7 +99,13 @@ function aplicarJogo(doc) {
   const baseN = { fome: 0, sede: 0, banheiro: 0, nausea: 0, energia: 100, felicidade: 100 };
   const porIndice = (Array.isArray(e.convidados) ? e.convidados : []).map(s => {
     if (!s || !Number.isFinite(s.x) || !Number.isFinite(s.y)) return null;
-    return { ...base, ...s, n: { ...baseN, ...s.n }, evitar: { ...s.evitar } };
+    // Necessidades e números: um valor que não seja número (save editado à mão) viraria NaN e
+    // "contaminaria" todas as contas seguintes. Cada campo é conferido e cai no padrão.
+    const sn = s.n || {};
+    const n = Object.fromEntries(Object.entries(baseN).map(([c, padrao]) => [c, limitar(num(sn[c], padrao))]));
+    return { ...base, ...s, n, evitar: { ...s.evitar },
+             dinheiro: Math.max(0, num(s.dinheiro, base.dinheiro)), tolerancia: num(s.tolerancia, base.tolerancia),
+             paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0) };
   });
   convidados.length = 0;
   porIndice.forEach(g => { if (g) convidados.push(g); });
@@ -211,7 +214,7 @@ function iniciarSalvar() {
     const titulo = document.createElement('b'); titulo.textContent = s.nome || s.id;
     const detalhe = document.createElement('small');
     const r = s.resumo || {};
-    detalhe.textContent = `${new Date(s.salvoEm).toLocaleString('pt-BR')} · Mês ${r.mes ?? '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados`;
+    detalhe.textContent = `${new Date(s.salvoEm).toLocaleString('pt-BR')} · ${r.mes ? nomeDoMes(r.mes) : '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados`;
     info.append(titulo, detalhe);
 
     const carregar = document.createElement('button'); carregar.className = 'btn'; carregar.textContent = 'Carregar';

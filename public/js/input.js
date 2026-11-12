@@ -19,13 +19,17 @@ function centralizar() {
 // Única função que altera os dados. Aqui ficam as regras do jogo.
 function aplicar(gx, gy) {
   const { camada, chave } = ferramenta;   // precisa vir ANTES de usar "chave" na linha abaixo
-  if (!dentroDoMapa(gx, gy) || (chave === 'BANCO' && mapa[gy][gx] !== 'CAMINHO')) return;
+  if (!dentroDoMapa(gx, gy)) return;
   if (camada === 'inspecionar') { selecionar(gx, gy); return; }
   if (camada === 'terreno') {
     const o = objetoEm(gx, gy);
-    if (chave === 'CAMINHO' && o && ehGrande(o.chave)) return;   // atração ocupa o chão: sem caminho por baixo
     if (mapa[gy][gx] === chave) return;                  // nada a mudar, nada a cobrar
     if (ehEntrada(gx, gy)) { avisar('A entrada não pode ser alterada'); return; }
+    // Água "afoga" qualquer objeto (abaixo). Grama/caminho não podem deixar o objeto no chão errado:
+    // nada fica sobre o caminho (bloquearia a passagem), exceto quem é "sobreCaminho" (o banco).
+    if (o && chave !== 'AGUA' && (chave === 'CAMINHO') !== ficaSobreCaminho(o.chave)) {
+      avisar(`${OBJETOS[o.chave].nome} está aqui: demola antes de trocar o chão`); return;
+    }
     if (!cobrar(CUSTO_TERRENO[chave] || 0)) return;
     mapa[gy][gx] = chave;
     if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto
@@ -90,7 +94,11 @@ function iniciarEntradaUsuario() {
                          (obj ? ` · ${OBJETOS[obj].nome}` : '');
     } else info.textContent = '–';
   });
-  canvas.addEventListener('pointerup', () => { modo = null; canvas.classList.remove('dragging'); });
+  // "pointercancel": o navegador pode cancelar o ponteiro (alt+tab, gesto do sistema, toque).
+  // Sem tratá-lo, o modo "pintar" ficaria preso e o próximo movimento continuaria construindo.
+  const soltar = () => { modo = null; canvas.classList.remove('dragging'); };
+  canvas.addEventListener('pointerup', soltar);
+  canvas.addEventListener('pointercancel', soltar);
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const novo = Math.min(3, Math.max(0.3, camera.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));

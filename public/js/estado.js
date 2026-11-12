@@ -27,8 +27,14 @@ const atracoes = new Map();
 const rotacoes = new Map();   // âncora -> 1 (objeto girado 90°); ausente = orientação original
 const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto que oferece serviços)
 
-const fin = { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-              balanco: null, aviso: '', tAviso: -99 };
+// Finanças no início de um jogo novo. É uma função (uma "fábrica") para que o carregamento possa
+// partir de um objeto limpo: campos que um save antigo não tem ficam com o padrão, não com o valor
+// do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
+function finInicial() {
+  return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
+           visitantesMes: 0, balanco: null, aviso: '', tAviso: -99 };
+}
+const fin = finInicial();
 
 const convidados = [];
 
@@ -57,3 +63,8 @@ const dentroDoMapa = (gx, gy) => gx >= 0 && gy >= 0 && gx < MAPA && gy < MAPA;
 const ehCaminho = (gx, gy) => dentroDoMapa(gx, gy) && mapa[gy][gx] === 'CAMINHO';
 
 function ehEntrada(gx, gy) { return gx === ENTRADA.gx && gy === ENTRADA.gy; }
+
+// Interrompe o que o convidado estava fazendo: volta a passear e decide tudo de novo no próximo tile
+function soltarConvidado(g) {
+  g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
+}

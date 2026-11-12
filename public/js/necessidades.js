@@ -26,39 +26,67 @@ function usar(g, dt) {
   g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
 }
 
-// Algum objeto no tile (x, y) ou ao lado oferece esse serviço? Devolve a definição ou null.
-function servicoPerto(x, y, servico, g = null) {   // g (opcional): só devolve o que ele paga e aceita
+// Objetos no tile (x, y) ou ao lado que oferecem esse serviço: lista de { def, ancora }.
+// g (opcional): só devolve o que ele pode pagar e aceita.
+function servicosPerto(x, y, servico, g = null) {
+  const achados = [];
   for (const [dx, dy] of [[0, 0], ...VIZINHOS]) {
     const nx = x + dx, ny = y + dy;
     if (!dentroDoMapa(nx, ny)) continue;
     const o = objetoEm(nx, ny);
     const def = o && OBJETOS[o.chave].servicos && OBJETOS[o.chave].servicos[servico];
     if (def && (!g || (precoUso({ gx: o.gx, gy: o.gy }, servico) <= g.dinheiro && aceitaIntensidade(g, def))))
-      return { def, ancora: { gx: o.gx, gy: o.gy } };
+      achados.push({ def, ancora: { gx: o.gx, gy: o.gy } });
   }
-  return null;
+  return achados;
 }
 
-// BFS apenas sobre CAMINHOS até o ponto de acesso mais próximo de um serviço.
-// Devolve { passo, def }; passo = próximo tile da rota, ou null se ele já está no ponto de acesso.
+// Felicidade líquida esperada do brinquedo para este convidado (ver PREFERENCIA_INTENSIDADE em config.js).
+// dist = tiles de caminho até o ponto de acesso.
+function atratividade(g, servico, def, ancora, dist) {
+  const a = atracoes.get(chaveAtr(ancora.gx, ancora.gy));
+  if (!a || a.fila.length >= FILA_MAX) return -Infinity;   // fila cheia: nem considera
+  const ganho = efeitosFinais(g, def).felicidade || 0;
+  const preferencia = PREFERENCIA_INTENSIDADE * Math.abs(diferencaIntensidade(g, def));
+  const andar = dist / VELOCIDADE * FELIC_POR_ATIVIDADE.andar;
+  const esperar = esperaEstimada(a) * FELIC_POR_ATIVIDADE.esperar;
+  return ganho - preferencia - andar - esperar - FELIC_POR_DOLAR * precoUso(ancora, servico);
+}
+
+// BFS apenas sobre CAMINHOS. Serviço simples (sem fila): o ponto de acesso mais PRÓXIMO.
+// Atração com fila: percorre toda a rede de caminhos e escolhe a de maior atratividade (> 0).
+// Devolve { passo, def, ancora }; passo = próximo tile da rota, ou null se ele já está no ponto de acesso.
 function buscarServico(sx, sy, servico, g = null) {
   const k = (x, y) => y * MAPA + x;
   const pai = new Map([[k(sx, sy), null]]);
+  const dist = new Map([[k(sx, sy), 0]]);
   const fila = [[sx, sy]];
+  const vistos = new Set();   // âncoras já avaliadas: a primeira vez é sempre pelo acesso mais próximo (BFS)
+  let melhor = null;
+  // Reconstrói a rota de trás para frente até achar o primeiro passo
+  const resultado = r => {
+    let cur = [r.x, r.y], p = pai.get(k(r.x, r.y));
+    while (p && pai.get(k(p[0], p[1]))) { cur = p; p = pai.get(k(p[0], p[1])); }
+    return { passo: (r.x === sx && r.y === sy) ? null : cur, def: r.def, ancora: r.ancora };
+  };
   for (let i = 0; i < fila.length; i++) {
     const [x, y] = fila[i];
-    const achado = servicoPerto(x, y, servico, g);   // { def, ancora } ou null
-    if (achado) {
-      let cur = [x, y], p = pai.get(k(x, y));
-      while (p && pai.get(k(p[0], p[1]))) { cur = p; p = pai.get(k(p[0], p[1])); }
-      return { passo: (x === sx && y === sy) ? null : cur, def: achado.def, ancora: achado.ancora };
+    for (const achado of servicosPerto(x, y, servico, g)) {
+      const ka = chaveAtr(achado.ancora.gx, achado.ancora.gy);
+      if (vistos.has(ka)) continue;
+      vistos.add(ka);
+      if (!achado.def.capacidade || !g) return resultado({ ...achado, x, y });   // o mais perto serve
+      const nota = atratividade(g, servico, achado.def, achado.ancora, dist.get(k(x, y)));
+      if (nota > 0 && (!melhor || nota > melhor.nota)) melhor = { ...achado, x, y, nota };
     }
     for (const [dx, dy] of VIZINHOS) {
       const nx = x + dx, ny = y + dy;
-      if (ehCaminho(nx, ny) && !pai.has(k(nx, ny))) { pai.set(k(nx, ny), [x, y]); fila.push([nx, ny]); }
+      if (ehCaminho(nx, ny) && !pai.has(k(nx, ny))) {
+        pai.set(k(nx, ny), [x, y]); dist.set(k(nx, ny), dist.get(k(x, y)) + 1); fila.push([nx, ny]);
+      }
     }
   }
-  return null;
+  return melhor ? resultado(melhor) : null;
 }
 
 // Chamada quando o convidado chega ao ponto de acesso. Devolve false se desistiu.
@@ -79,12 +107,12 @@ function iniciarServico(g, servico, r) {
   return true;
 }
 
-// Escolhe a necessidade mais urgente (>= 0.6) que ele consiga atender. Devolve true se agiu.
+// Escolhe a necessidade mais urgente (>= LIMIAR_URGENCIA) que ele consiga atender. Devolve true se agiu.
 function decidirNecessidade(g, cx, cy) {
   if (decidirSaida(g, cx, cy)) return true;   // ir embora tem prioridade sobre qualquer necessidade
   const candidatas = Object.entries(URGENCIA)
     .map(([servico, calc]) => [servico, calc(g.n)])
-    .filter(([s, u]) => u >= 0.6 && tempo >= (g.evitar[s] || 0))
+    .filter(([s, u]) => u >= LIMIAR_URGENCIA && tempo >= (g.evitar[s] || 0))
     .sort((a, b) => b[1] - a[1]);
   for (const [servico] of candidatas) {
     const r = buscarServico(cx, cy, servico, g);   // só considera o que ele pode pagar e aceita

@@ -14,6 +14,14 @@ function novaAtracao(chave, gx, gy) {
   return { chave, ancora: { gx, gy }, fila: [], passageiros: [], fase: 'carregando', tCarga: 0, resta: 0, angulo: 0 };
 }
 
+// Estimativa (segundos) de quanto quem entrar agora na fila espera até embarcar: o fim da corrida
+// atual, mais uma corrida inteira (com o tempo de carga) para cada leva completa de gente à frente.
+function esperaEstimada(a) {
+  const def = defDeFila(a.chave);
+  const corridaAtual = a.fase === 'rodando' ? a.resta : 0;
+  return corridaAtual + Math.floor(a.fila.length / def.capacidade) * (def.duracao + TEMPO_CARGA);
+}
+
 // Livra todo mundo (fila e passageiros) quando a atração é demolida
 function desmontarAtracao(gx, gy) {
   const a = atracoes.get(chaveAtr(gx, gy));
