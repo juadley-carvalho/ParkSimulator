@@ -352,9 +352,13 @@ function desenhar() {
       const rot = rotacaoDe(gx, gy);
       const { w, h } = tamanhoDe(obj, rot);
       const c = gradeParaMundo(gx + w / 2, gy + h / 2);   // centro da PEGADA do objeto
-      // profundidade = tile mais à frente da pegada
+      // Profundidade = CENTRO da pegada (gx + w/2) + (gy + h/2), na mesma escala dos convidados (g.x + g.y).
+      // Não use o tile mais à frente: numa pegada 4x3, uma árvore encostada no lado esquerdo, À FRENTE
+      // da atração, tinha profundidade menor e era coberta por ela. O centro fica entre os vizinhos de
+      // trás (até gx+gy+max(w,h)-1) e os da frente (a partir de gx+gy+min(w,h)+1) sempre que |w - h| <= 1.
+      // Pegadas mais alongadas que isso precisariam de uma ordenação topológica (comparar retângulos).
       const atr = atracoes.get(chaveAtr(gx, gy));   // estado da fila (ou undefined)
-      itens.push({ prof: (gx + w - 1) + (gy + h - 1) + 1,
+      itens.push({ prof: gx + gy + (w + h) / 2,
         desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot, { gx, gy }); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
     }
   for (const g of convidados) if (g.estado !== 'brincando') itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });

@@ -69,6 +69,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   PEGADA e `ancora` = `{gx, gy}` (para olhar os vizinhos, como o banco).
 - Desenho por ordem de profundidade (algoritmo do pintor): todo o terreno, depois objetos e convidados numa lista
   ordenada por `x + y`. Ao desenhar, use `ctx.save()/restore()` se mudar estilos (eles persistem entre itens).
+  A profundidade de um objeto é o CENTRO da pegada (`gx + gy + (w + h)/2`), não o tile da frente (isso cobria
+  árvores encostadas à esquerda). Só é correto com `|w − h| ≤ 1`: atração mais alongada exige ordenação topológica.
 - Convidado: campos em `semear`. Estados: `andando | usando | esperando | brincando`. Necessidades em `g.n`:
   fome, sede, banheiro, nausea (100 = pior) e energia, felicidade (100 = melhor).
 
