@@ -78,6 +78,9 @@ const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entr
 
 const MAX_CONVIDADOS = 40;
 
+// Tecla que gira 90° o objeto que está sendo posicionado (só muda algo em objetos não quadrados).
+const TECLA_GIRAR = 'z';
+
 // Intensidade (brinquedos) x tolerância (convidados), ambas de 1 a 10.
 // O convidado aceita brinquedos até JANELA_INTENSIDADE pontos acima ou abaixo da sua tolerância.
 // Com a felicidade em DESESPERO_FELICIDADE ou menos, aceita qualquer um, mas paga por cada ponto

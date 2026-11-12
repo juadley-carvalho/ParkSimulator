@@ -21,6 +21,7 @@ npm start       # http://localhost:3000
 | Pintar terreno / construir | botão esquerdo (arraste para pintar vários tiles) |
 | Mover o mapa | botão do meio pressionado |
 | Zoom | roda do mouse |
+| Girar a atração antes de construir | tecla **Z** (muda a tecla em `TECLA_GIRAR`, `config.js`) |
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
 | Salvar e carregar o parque | botão **Salvar / Carregar** |
@@ -74,6 +75,7 @@ Os arquivos são scripts clássicos que compartilham o mesmo escopo global. Cada
 
 Cada save é um arquivo `saves/<id>.json`, onde o id vem do nome digitado (`"Meu Parque"` vira `meu-parque`). Ele guarda o terreno, os objetos, preços e receitas, filas das atrações, finanças e todos os convidados, com o que cada um está fazendo.
 
+- A orientação dos objetos girados fica em `estado.rotacoes` (campo opcional: saves anteriores a ele carregam normalmente, sem giros).
 - O arquivo tem um campo `versao`. **Ao mudar a estrutura do estado do jogo, aumente `VERSAO_SAVE` em `salvar.js`** e acrescente a conversão em `migrar()`, para os saves antigos continuarem abrindo.
 - Ao carregar, o save é validado antes de tocar no jogo: se estiver inválido, o parque atual fica intacto. Terrenos e objetos que não existem mais viram grama e vazio, e campos novos de convidado ganham valores padrão.
 - A gravação é atômica (arquivo temporário + renomear), então uma queda no meio não corrompe o save anterior.

@@ -30,7 +30,7 @@ function aplicar(gx, gy) {
     mapa[gy][gx] = chave;
     if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto
   } else if (camada === 'objeto') {
-    if (podeConstruir(chave, gx, gy) && cobrar(custoDe(chave))) construir(chave, gx, gy); // não se constrói na água
+    if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
   } else {
     removerObjeto(gx, gy);                              // demolir
   }
@@ -50,7 +50,21 @@ function pintarLinha(a, b) {
 }
 
 // Liga os eventos de mouse/toque ao canvas (chamada uma vez, em main.js)
+// Gira 90° o objeto que está sendo posicionado. Em objetos quadrados a pegada é a mesma,
+// então não há o que girar.
+function girarObjeto() {
+  if (ferramenta.camada !== 'objeto') return;
+  if (!rotacionavel(ferramenta.chave)) { avisar(`${OBJETOS[ferramenta.chave].nome} não precisa ser girado`); return; }
+  rotacaoAtual = rotacaoAtual ? 0 : 1;
+}
+
 function iniciarEntradaUsuario() {
+  window.addEventListener('keydown', e => {
+    if ((e.key || '').toLowerCase() !== TECLA_GIRAR || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;   // digitando em um campo
+    girarObjeto();
+  });
+
   canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); }); // sem autoscroll
   canvas.addEventListener('pointerdown', e => {
     if (e.button === 1) { modo = 'mover'; canvas.classList.add('dragging'); }

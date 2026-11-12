@@ -106,10 +106,10 @@ function desenharCarrossel(cx, cy, atr) {
 // Roda-gigante (3x2 tiles): o aro fica num plano vertical paralelo ao eixo gx, com um apoio
 // na frente e outro atrás. Um círculo nesse plano vira uma elipse inclinada na tela; as
 // cabines giram com o aro, mas ficam sempre penduradas na vertical.
-function desenharRodaGigante(cx, cy, atr) {
+function desenharRodaGigante(cx, cy, atr, rot = 0) {
   const R = 52, hub = R + 22, N = 8;
-  const D = { x: 0.894, y: 0.447 };   // direção do eixo gx na tela (vetor unitário)
-  const P = { x: -14, y: 7 };         // meio tile de profundidade (eixo gy), para a frente
+  const D = { x: rot ? -0.894 : 0.894, y: 0.447 };   // rot = 1: o plano da roda segue o eixo gy   // direção do eixo gx na tela (vetor unitário)
+  const P = { x: rot ? 14 : -14, y: 7 };         // meio tile de profundidade (eixo gy), para a frente
   // (h, v) = posição no plano da roda: h ao longo do aro, v para cima; lado: -1 trás, 0 meio, +1 frente
   const pt = (h, v, lado) => ({ x: cx + h * D.x + lado * P.x, y: cy + h * D.y + lado * P.y - v });
   const ang = atr ? atr.angulo : 0;
@@ -117,7 +117,7 @@ function desenharRodaGigante(cx, cy, atr) {
   const CORES = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da', '#ec407a'];
   const noAro = i => { const a = ang + i * 2 * Math.PI / N; return pt(R * Math.cos(a), hub + R * Math.sin(a), 0); };
 
-  caixaRet(cx, cy, 3, 2, 4, '#9e9e9e', '#757575', '#616161');   // plataforma de embarque
+  caixaRet(cx, cy, rot ? 2 : 3, rot ? 3 : 2, 4, '#9e9e9e', '#757575', '#616161');   // plataforma de embarque
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -155,8 +155,8 @@ function desenharRodaGigante(cx, cy, atr) {
 // Montanha-russa (4x3 tiles): circuito fechado em elipse com três colinas, apoios e um trem
 // de 3 vagões. A posição do trem é a fração da volta (atr.angulo / 2π). Trilho, apoios e vagões
 // entram numa lista ordenada pela profundidade no chão, para se cobrirem corretamente.
-function desenharMontanhaRussa(cx, cy, atr) {
-  const w = 4, h = 3, N = 96;
+function desenharMontanhaRussa(cx, cy, atr, rot = 0) {
+  const [w, h] = rot ? [3, 4] : [4, 3], N = 96;
   const ex = { x: TILE_W / 2 * w / 2, y: TILE_H / 2 * w / 2 };    // meio comprimento ao longo de gx
   const ey = { x: -TILE_W / 2 * h / 2, y: TILE_H / 2 * h / 2 };   // meia profundidade ao longo de gy
   const colina = (t, centro, largura) => Math.exp(-(((t - centro) / largura) ** 2));
@@ -222,9 +222,9 @@ function desenharBarracaBebidas(cx, cy) {
 // Navio pirata (3x2 tiles): um barco pendurado por braços que balança como pêndulo entre dois pórticos.
 // O ângulo é amplitude * sen(atr.angulo). A amplitude sobe e desce ao longo da corrida e fica pequena
 // (balanço suave) enquanto embarca. Como na roda-gigante, o plano do movimento é paralelo ao eixo gx.
-function desenharNavioPirata(cx, cy, atr) {
+function desenharNavioPirata(cx, cy, atr, rot = 0) {
   const H = 78, L = 52;                                       // altura do eixo e comprimento dos braços
-  const D = { x: 0.894, y: 0.447 }, P = { x: -14, y: 7 };    // eixo gx na tela / meio tile de profundidade
+  const D = { x: rot ? -0.894 : 0.894, y: 0.447 }, P = { x: rot ? 14 : -14, y: 7 };    // eixo gx na tela / meio tile de profundidade
   const pt = (h, v, lado) => ({ x: cx + h * D.x + lado * P.x, y: cy + h * D.y + lado * P.y - v });
   const duracao = OBJETOS.NAVIO_PIRATA.servicos.diversao.duracao;
   const progresso = atr && atr.fase === 'rodando' ? 1 - atr.resta / duracao : 0;
@@ -235,7 +235,7 @@ function desenharNavioPirata(cx, cy, atr) {
   const ocupadas = atr ? atr.passageiros.length : 0;
   const linha = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
 
-  caixaRet(cx, cy, 3, 2, 4, '#4aa3d8', '#2f7fb0', '#276a96');   // "mar" sob o barco
+  caixaRet(cx, cy, rot ? 2 : 3, rot ? 3 : 2, 4, '#4aa3d8', '#2f7fb0', '#276a96');   // "mar" sob o barco
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const portico = lado => {
@@ -333,12 +333,13 @@ function desenhar() {
     for (let gx = 0; gx < MAPA; gx++) {
       const obj = objetos[gy][gx];
       if (typeof obj !== 'string') continue;   // vazio, ou célula secundária de um objeto grande
-      const { w, h } = tamanhoDe(obj);
+      const rot = rotacaoDe(gx, gy);
+      const { w, h } = tamanhoDe(obj, rot);
       const c = gradeParaMundo(gx + w / 2, gy + h / 2);   // centro da PEGADA do objeto
       // profundidade = tile mais à frente da pegada
       const atr = atracoes.get(chaveAtr(gx, gy));   // estado da fila (ou undefined)
       itens.push({ prof: (gx + w - 1) + (gy + h - 1) + 1,
-        desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
+        desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
     }
   for (const g of convidados) if (g.estado !== 'brincando') itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });
@@ -350,8 +351,8 @@ function desenhar() {
     ctx.globalAlpha = 0.5;
     // Prévia da PEGADA inteira: verde/amarelo se dá para construir, vermelho se não
     const objFerr = ferramenta.camada === 'objeto' ? ferramenta.chave : null;
-    const { w, h } = objFerr ? tamanhoDe(objFerr) : { w: 1, h: 1 };
-    const valido = !objFerr || podeConstruir(objFerr, hover.gx, hover.gy);
+    const { w, h } = objFerr ? tamanhoDe(objFerr, rotacaoAtual) : { w: 1, h: 1 };   // a prévia mostra a pegada girada
+    const valido = !objFerr || podeConstruir(objFerr, hover.gx, hover.gy, rotacaoAtual);
     ctx.globalAlpha = 1;
     for (let j = 0; j < h; j++)
       for (let i = 0; i < w; i++) {

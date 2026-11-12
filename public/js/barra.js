@@ -19,6 +19,7 @@ function dicaDoObjeto(chave) {
   const partes = [`${o.nome}: custa ${moeda(custoDe(chave))}`];
   if (eco.manutencao) partes.push(`manutenção ${moeda(eco.manutencao)}/mês`);
   if (tam.w * tam.h > 1) partes.push(`ocupa ${tam.w}×${tam.h} tiles`);
+  if (rotacionavel(chave)) partes.push(`tecla ${TECLA_GIRAR.toUpperCase()} gira antes de construir`);
   const brinquedo = o.servicos && Object.values(o.servicos).find(s => s.intensidade);
   if (brinquedo) partes.push(`intensidade ${brinquedo.intensidade}/10`, `${brinquedo.capacidade} lugares`);
   return partes.join(' · ');
@@ -63,7 +64,11 @@ function criarCartao(it) {
   b.title = it.dica || it.nome;
   b.append(el('span', 'ic', it.icone), el('span', 'nm', it.nome), el('span', 'pr', preco));
   b.addEventListener('click', () => {
-    if (it.acao) it.acao(); else ferramenta = { camada: it.camada, chave: it.chave };
+    if (it.acao) it.acao();
+    else {
+      if (ferramenta.camada !== it.camada || ferramenta.chave !== it.chave) rotacaoAtual = 0;   // objeto novo começa sem giro
+      ferramenta = { camada: it.camada, chave: it.chave };
+    }
     atualizarBarra();
   });
   ITENS_BARRA.push({ el: b, ...it });

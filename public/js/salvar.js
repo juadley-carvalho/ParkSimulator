@@ -20,6 +20,7 @@ function serializarJogo() {
     estado: {
       mapa, objetos, fin, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
+      rotacoes: Object.fromEntries(rotacoes),
       atracoes: Object.fromEntries([...atracoes].map(([k, a]) =>
         [k, { ...a, fila: comoIndices(a.fila), passageiros: comoIndices(a.passageiros) }])),
       // "def" aponta para o catálogo (que não é dado de jogo): é refeito a partir do serviço e da âncora
@@ -43,6 +44,19 @@ function matrizValida(m) {
 }
 
 const num = (v, padrao) => (Number.isFinite(v) ? v : padrao);
+
+// A âncora está em (gx, gy) e todas as outras células da pegada (na orientação rot) apontam para ela?
+function pegadaConfere(chave, gx, gy, rot) {
+  const { w, h } = tamanhoDe(chave, rot);
+  for (let j = 0; j < h; j++)
+    for (let i = 0; i < w; i++) {
+      if (!dentroDoMapa(gx + i, gy + j)) return false;
+      const c = objetos[gy + j][gx + i];
+      const certo = (i === 0 && j === 0) ? c === chave : (c && typeof c !== 'string' && c.ancora.gx === gx && c.ancora.gy === gy);
+      if (!certo) return false;
+    }
+  return true;
+}
 
 function soltarConvidado(g) {
   g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
@@ -100,6 +114,14 @@ function aplicarJogo(doc) {
     const o = dentroDoMapa(gx, gy) ? objetoEm(gx, gy) : null;
     if (o && o.gx === gx && o.gy === gy && OBJETOS[o.chave].servicos && d)
       gestao.set(k, { precos: { ...d.precos }, receita: num(d.receita, 0), usos: num(d.usos, 0) });
+  }
+
+  // Rotações: só de objetos que existem, são girável e cuja pegada girada confere com as células salvas
+  rotacoes.clear();
+  for (const [k, r] of Object.entries(e.rotacoes || {})) {
+    const [gx, gy] = k.split(',').map(Number);
+    const o = dentroDoMapa(gx, gy) ? objetoEm(gx, gy) : null;
+    if (r === 1 && o && o.gx === gx && o.gy === gy && rotacionavel(o.chave) && pegadaConfere(o.chave, gx, gy, 1)) rotacoes.set(k, 1);
   }
 
   // Atrações: religa as filas aos convidados pelos índices

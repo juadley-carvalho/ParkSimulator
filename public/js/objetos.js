@@ -39,7 +39,15 @@ const OBJETOS = {
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
-function tamanhoDe(chave) { return OBJETOS[chave].tam || { w: 1, h: 1 }; }
+// Pegada em tiles. Girado 90° (rot = 1), largura e profundidade trocam de lugar.
+function tamanhoDe(chave, rot = 0) {
+  const t = OBJETOS[chave].tam || { w: 1, h: 1 };
+  return rot ? { w: t.h, h: t.w } : t;
+}
+// Só objetos não quadrados mudam de pegada ao girar
+function rotacionavel(chave) { const t = tamanhoDe(chave); return t.w !== t.h; }
+// Orientação do objeto cuja âncora é (gx, gy): 0 = original, 1 = girado
+function rotacaoDe(gx, gy) { return rotacoes.get(chaveAtr(gx, gy)) || 0; }
 
 function ehGrande(chave) { const { w, h } = tamanhoDe(chave); return w * h > 1; }
 
@@ -51,9 +59,9 @@ function objetoEm(gx, gy) {
   return { gx: c.ancora.gx, gy: c.ancora.gy, chave: objetos[c.ancora.gy][c.ancora.gx] };
 }
 
-// Valida a pegada inteira: dentro do mapa, sem água, sem outros objetos.
-function podeConstruir(chave, gx, gy) {
-  const { w, h } = tamanhoDe(chave);
+// Valida a pegada inteira (já na orientação rot): dentro do mapa, sem água, sem outros objetos.
+function podeConstruir(chave, gx, gy, rot = 0) {
+  const { w, h } = tamanhoDe(chave, rot);
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) {
       const x = gx + i, y = gy + j;
@@ -63,11 +71,13 @@ function podeConstruir(chave, gx, gy) {
   return !(chave === 'BANCO' && mapa[gy][gx] !== 'CAMINHO');          // regra do banco
 }
 
-function construir(chave, gx, gy) {
-  const { w, h } = tamanhoDe(chave);
+function construir(chave, gx, gy, rot = 0) {
+  const giro = rot && rotacionavel(chave) ? 1 : 0;
+  const { w, h } = tamanhoDe(chave, giro);
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++)
       objetos[gy + j][gx + i] = (i === 0 && j === 0) ? chave : { ancora: { gx, gy } };
+  if (giro) rotacoes.set(chaveAtr(gx, gy), 1);
   if (ehAtracaoComFila(chave)) atracoes.set(chaveAtr(gx, gy), novaAtracao(chave, gx, gy));
   if (OBJETOS[chave].servicos)
     gestao.set(chaveAtr(gx, gy), { precos: { ...(PRECO_PADRAO[chave] || {}) }, receita: 0, usos: 0 });
@@ -77,10 +87,11 @@ function construir(chave, gx, gy) {
 function removerObjeto(gx, gy) {
   const o = objetoEm(gx, gy);
   if (!o) return;
-  const { w, h } = tamanhoDe(o.chave);
+  const { w, h } = tamanhoDe(o.chave, rotacaoDe(o.gx, o.gy));   // a pegada depende de como ele foi girado
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) objetos[o.gy + j][o.gx + i] = null;
   desmontarAtracao(o.gx, o.gy);
   gestao.delete(chaveAtr(o.gx, o.gy));
+  rotacoes.delete(chaveAtr(o.gx, o.gy));
   fin.caixa = arred(fin.caixa + custoDe(o.chave) * REEMBOLSO);   // reembolso parcial
 }
