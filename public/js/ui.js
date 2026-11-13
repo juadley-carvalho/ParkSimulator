@@ -50,7 +50,7 @@ function selecionarObjeto(k) {
   painelObj.innerHTML = `<div class='painel-topo'><span>${OBJETOS[chave].icone} ${OBJETOS[chave].nome}</span>` +
     `<button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
     Object.entries(OBJETOS[chave].servicos).map(([s, def]) =>
-      `<div class='linha'><span>${def.nome || NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.5' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
+      `<div class='linha'><span>${def.nome || NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.1' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
     `<div id='oStats'></div>`;
   painelObj.querySelector('.fechar').addEventListener('click', () => { selObj = null; });
   // Os campos só são criados aqui; o loop atualiza apenas o texto das estatísticas

@@ -29,14 +29,14 @@ const CATEGORIAS = [
 const ECONOMIA = {          // custo = construção; manutencao = por mês
   ARVORE:    { custo: 30,   manutencao: 2 },
   BANCO:     { custo: 60,   manutencao: 5 },
-  BARRACA:   { custo: 500,  manutencao: 80 },
+  BARRACA:   { custo: 350,  manutencao: 80 },
   BANHEIRO:  { custo: 350,  manutencao: 50 },
-  CARROSSEL: { custo: 3000, manutencao: 200 },
-  RODA_GIGANTE: { custo: 5000, manutencao: 300 },
-  MONTANHA_RUSSA: { custo: 12000, manutencao: 600 },
+  CARROSSEL: { custo: 800, manutencao: 100 },
+  RODA_GIGANTE: { custo: 700, manutencao: 100 },
+  MONTANHA_RUSSA: { custo: 1200, manutencao: 200 },
   BARRACA_BEBIDAS: { custo: 350, manutencao: 40 },
-  NAVIO_PIRATA: { custo: 7500, manutencao: 350 },
-  BARRACA_SORVETE: { custo: 400, manutencao: 45 },
+  NAVIO_PIRATA: { custo: 900, manutencao: 120 },
+  BARRACA_SORVETE: { custo: 400, manutencao: 60 },
   BARCOS: { custo: 750, manutencao: 90 },
 };
 
