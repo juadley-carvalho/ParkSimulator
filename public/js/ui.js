@@ -27,6 +27,9 @@ function atualizarPainel() {
     document.getElementById('estado').textContent =
       `Na fila ${iconeDoUso(g)} (paciência: ${Math.max(0, Math.ceil(g.paciencia - g.uso.espera))}s)`;
   if (g.estado === 'brincando') document.getElementById('estado').textContent = 'No brinquedo 🎠';
+  // Última queixa enquanto o balão está na tela
+  if (g.pensamento && tempo < g.pensamento.ate)
+    document.getElementById('estado').textContent += ` · 💭 "${PENSAMENTOS[g.pensamento.tipo].texto}"`;
 }
 
 function selecionar(gx, gy) {
@@ -72,7 +75,7 @@ function atualizarPainelObj() {
 
 function atualizarFinancasUI() {
   $('finTxt').textContent = `🎡 ${nomeDoParque()} · 📅 Dia ${diaDoMes(fin.tMes)} de ${nomeDoMes(fin.mes)} · ` +
-                            `💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
+                            `⭐ ${Math.round(avaliacao.nota)} · 💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
   $('finTxt').style.color = fin.caixa < 0 ? '#e53935' : '';
   $('finAviso').textContent = tempo - fin.tAviso < 2.5 ? fin.aviso : '';
   if (!$('modalFin').classList.contains('aberto')) return;
@@ -106,14 +109,47 @@ function atualizarParqueUI() {
     `Entraram: ${fin.visitantesMes} · Desistiram no portão: ${fin.recusasMes}` +
     (tentaram ? ` (${Math.round(fin.recusasMes / tentaram * 100)}%)` : '') + '<br>' +
     `Receita das entradas: ${moeda(fin.entradasMes)}`;
+  $('parqueDica').textContent = `Cobrado na chegada. Com a avaliação atual, cada convidado só entra se a entrada ` +
+    `custar até ${Math.round(fracaoMaxEntrada() * 100)}% do dinheiro que trouxe; o que pagar no portão não gasta lá dentro.`;
+  atualizarNotaUI();
+  atualizarQueixasUI();
+}
+
+// Cor da nota: de vermelho (0) a verde (máxima), como as barras do convidado
+const corDaNota = nota => `hsl(${Math.round(120 * nota / NOTA_MAX)} 65% 45%)`;
+
+// Nota, barra e as partes que a compõem (de onde vêm os pontos e onde se perde)
+function atualizarNotaUI() {
+  const nota = Math.round(avaliacao.nota);
+  const linhas = partesDaAvaliacao()
+    .filter(p => p.max || p.pontos < 0)   // penalidade zerada não aparece
+    .map(p => `<div class='nota-parte${p.pontos < 0 ? ' negativa' : ''}'><span>${p.icone} ${p.nome}</span>` +
+              `<span>${Math.round(p.pontos)}${p.max ? ' / ' + p.max : ''}</span></div>`).join('');
+  $('parqueNota').innerHTML =
+    `<div class='nota-topo'><span class='nota-valor'>${nota}</span><span class='dica'>de ${NOTA_MAX}</span></div>` +
+    `<div class='nota-barra'><i style='width:${nota / NOTA_MAX * 100}%;background:${corDaNota(nota)}'></i></div>` + linhas +
+    `<div class='dica'>Efeitos: até ${maxConvidados()} convidados ao mesmo tempo · chegadas ` +
+    `${escalaChegada() < 1 ? 'mais rápidas' : escalaChegada() > 1 ? 'mais lentas' : 'no ritmo normal'} ` +
+    `(${(1 / escalaChegada()).toFixed(1).replace('.', ',')}×).</div>`;
+}
+
+// Queixas do mês em andamento e do último mês fechado, da mais comum para a menos comum
+function atualizarQueixasUI() {
+  const lista = queixas => {
+    const q = queixasOrdenadas(queixas).slice(0, 5);
+    return q.length ? q.map(([t, n]) => `${PENSAMENTOS[t].icone} ${PENSAMENTOS[t].texto}: <b>${n}</b>`).join('<br>') : 'Nenhuma 🙂';
+  };
+  const b = fin.balanco;
+  $('parqueQueixas').innerHTML = `<b>${nomeDoMes(fin.mes)}</b> (até agora):<br>${lista(fin.queixasMes)}` +
+    (b ? `<div class='dica'>${nomeDoMes(b.mes)}: ${queixasOrdenadas(b.queixas).slice(0, 3)
+      .map(([t, n]) => `${PENSAMENTOS[t].icone} ${n}`).join(' · ') || 'nenhuma queixa'}` +
+      (b.nota != null ? ` · avaliação no fechamento: ${b.nota}` : '') + '</div>' : '');
 }
 
 // Liga os campos da janela "Parque" (chamada uma vez, em iniciarUI)
 function iniciarParqueUI() {
   const nome = $('inNomeParque'), preco = $('inPrecoEntrada');
   nome.maxLength = NOME_PARQUE_MAX;
-  $('parqueDica').textContent = `Cobrado na chegada. Cada convidado só entra se a entrada custar até ` +
-    `${Math.round(FRACAO_MAX_ENTRADA * 100)}% do dinheiro que trouxe; o que pagar no portão não gasta lá dentro.`;
   $('btnParque').addEventListener('click', () => {
     // Preenchidos só ao abrir, para o loop não sobrescrever o que está sendo digitado
     nome.value = parque.nome;

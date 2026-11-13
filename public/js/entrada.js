@@ -25,7 +25,10 @@ function passoAteEntrada(sx, sy) {
 // Quem está sem dinheiro ou infeliz decide ir embora. Ao pisar na entrada, marca g.foi.
 function decidirSaida(g, cx, cy) {
   if (!g.saindo) {
-    if (g.n.felicidade <= 10 || g.dinheiro < 2) g.saindo = true; else return false;
+    if (g.n.felicidade <= 10) { g.saindo = true; avaliacao.infelizes++; pensar(g, 'embora'); }   // conta contra a avaliação
+    else if (g.dinheiro < 2) g.saindo = true;   // gastou tudo: sai sem reclamar
+    else return false;
+    avaliacao.saidas++;
   }
   if (ehEntrada(cx, cy)) { g.foi = true; return true; }
   const p = passoAteEntrada(cx, cy);
@@ -45,13 +48,17 @@ function atualizarEntrada(dt) {
   }
   tChegada -= dt;
   if (tChegada > 0) return;
-  if (convidados.length < MAX_CONVIDADOS) {
-    tChegada = aleatorio(3, 8);
+  // A avaliação do parque decide o limite de gente e o ritmo de chegada (ver avaliacao.js)
+  if (convidados.length < maxConvidados()) {
+    tChegada = aleatorio(3, 8) * escalaChegada();
     semear(1, [ENTRADA.gx, ENTRADA.gy]);
     const g = convidados[convidados.length - 1];
-    if (parque.precoEntrada > g.dinheiro * FRACAO_MAX_ENTRADA) {   // achou caro: dá meia-volta no portão
+    avaliacao.chegadas++;
+    if (parque.precoEntrada > g.dinheiro * fracaoMaxEntrada()) {   // achou caro: dá meia-volta no portão
       convidados.pop();
       fin.recusasMes++;
+      avaliacao.recusas++;
+      registrarQueixa('entrada');
       return;
     }
     pagarEntrada(g);

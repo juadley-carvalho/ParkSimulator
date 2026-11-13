@@ -116,7 +116,7 @@ function decidirNecessidade(g, cx, cy) {
     .sort((a, b) => b[1] - a[1]);
   for (const [servico] of candidatas) {
     const r = buscarServico(cx, cy, servico, g);   // só considera o que ele pode pagar e aceita
-    if (!r) continue;   // não existe (ou não há caminho até) esse serviço: tenta o próximo
+    if (!r) { queixarDaFalta(g, cx, cy, servico); continue; }   // não existe, não alcança ou não pode pagar: tenta o próximo
     g.objetivo = servico;
     if (r.passo) { g.alvo = { gx: r.passo[0], gy: r.passo[1] }; g.anterior = { gx: cx, gy: cy }; g.resgate = false; }
     else if (!iniciarServico(g, servico, r)) { g.objetivo = null; continue; }
@@ -124,6 +124,17 @@ function decidirNecessidade(g, cx, cy) {
   }
   g.objetivo = null;
   return false;
+}
+
+// Necessidade urgente sem serviço que ele possa usar: reclama. Se o serviço existe e é alcançável,
+// mas ele não pode pagar, a queixa é o preço. Só fome, sede e banheiro geram queixa (diversão sem
+// opção boa, por exemplo, é só fila longa ou nada que combine com ele). A busca extra (sem filtro de
+// preço) só roda quando a queixa vai mesmo contar.
+const QUEIXA_DA_FALTA = { comida: 'fome', bebida: 'sede', banheiro: 'banheiro' };
+function queixarDaFalta(g, cx, cy, servico) {
+  const tipo = QUEIXA_DA_FALTA[servico];
+  if (!tipo || tempo < (g.pensou[tipo] || 0) || tempo < (g.pensou.caro || 0)) return;
+  pensar(g, buscarServico(cx, cy, servico) ? 'caro' : tipo);
 }
 
 // ---------- Intensidade x tolerância ----------

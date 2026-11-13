@@ -18,7 +18,7 @@ function serializarJogo() {
     versao: VERSAO_SAVE,
     resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length },
     estado: {
-      mapa, objetos, fin, parque, tempo, tChegada, stats,
+      mapa, objetos, fin, parque, avaliacao, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
       rotacoes: Object.fromEntries(rotacoes),
       atracoes: Object.fromEntries([...atracoes].map(([k, a]) =>
@@ -58,6 +58,11 @@ function pegadaConfere(chave, gx, gy, rot) {
   return true;
 }
 
+// Objeto { chave: número } vindo de um arquivo: descarta o que não for número finito
+function soNumeros(o) {
+  return Object.fromEntries(Object.entries(o && typeof o === 'object' ? o : {}).filter(([, v]) => Number.isFinite(v)));
+}
+
 // Em duas etapas: 1) valida e monta tudo à parte (se algo estiver errado, lança erro e o jogo
 // atual fica intacto); 2) só então substitui o estado.
 function aplicarJogo(doc) {
@@ -88,6 +93,7 @@ function aplicarJogo(doc) {
   Object.assign(fin, finInicial());   // parte dos padrões (fin é const: mutamos, não reatribuímos)
   for (const k of Object.keys(fin)) if (typeof f[k] === typeof fin[k]) fin[k] = f[k];
   fin.aviso = ''; fin.tAviso = -99;
+  fin.queixasMes = soNumeros(f.queixasMes);   // objeto vindo do arquivo: só contagens válidas
   // Parque: save antigo (sem "parque") fica com os padrões
   const p = e.parque || {};
   Object.assign(parque, parqueInicial());
@@ -100,7 +106,8 @@ function aplicarJogo(doc) {
 
   // Convidados: completa campos que um save antigo possa não ter e descarta os inválidos.
   const base = { ox: 0, oy: 0, alvo: null, anterior: null, resgate: false, estado: 'andando', objetivo: null, uso: null,
-                 dinheiro: 50, tolerancia: 5, paciencia: 35, evitar: {}, saindo: false, foi: false, cor: 'hsl(200 70% 55%)' };
+                 dinheiro: 50, tolerancia: 5, paciencia: 35, evitar: {}, pensou: {}, pensamento: null,
+                 saindo: false, foi: false, cor: 'hsl(200 70% 55%)' };
   const baseN = { fome: 0, sede: 0, banheiro: 0, nausea: 0, energia: 100, felicidade: 100 };
   const porIndice = (Array.isArray(e.convidados) ? e.convidados : []).map(s => {
     if (!s || !Number.isFinite(s.x) || !Number.isFinite(s.y)) return null;
@@ -108,7 +115,8 @@ function aplicarJogo(doc) {
     // "contaminaria" todas as contas seguintes. Cada campo é conferido e cai no padrão.
     const sn = s.n || {};
     const n = Object.fromEntries(Object.entries(baseN).map(([c, padrao]) => [c, limitar(num(sn[c], padrao))]));
-    return { ...base, ...s, n, evitar: { ...s.evitar },
+    const pens = s.pensamento && PENSAMENTOS[s.pensamento.tipo] && Number.isFinite(s.pensamento.ate) ? { tipo: s.pensamento.tipo, ate: s.pensamento.ate } : null;
+    return { ...base, ...s, n, evitar: { ...s.evitar }, pensou: soNumeros(s.pensou), pensamento: pens,
              dinheiro: Math.max(0, num(s.dinheiro, base.dinheiro)), tolerancia: num(s.tolerancia, base.tolerancia),
              paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0),
              velocidade: num(s.velocidade, VELOCIDADE) > 0 ? num(s.velocidade, VELOCIDADE) : VELOCIDADE };
@@ -159,6 +167,15 @@ function aplicarJogo(doc) {
       if (OBJETOS[c].servicos && !gestao.has(k)) gestao.set(k, { precos: { ...(PRECO_PADRAO[c] || {}) }, receita: 0, usos: 0 });
       if (ehAtracaoComFila(c) && !atracoes.has(k)) atracoes.set(k, novaAtracao(c, gx, gy));
     }
+
+  // Avaliação: save antigo (sem ela) recalcula a partir do parque carregado
+  const av = e.avaliacao;
+  if (av && Number.isFinite(av.nota)) {
+    Object.assign(avaliacao, avaliacaoInicial());
+    avaliacao.nota = Math.max(0, Math.min(NOTA_MAX, av.nota));
+    avaliacao.alvo = Math.max(0, Math.min(NOTA_MAX, num(av.alvo, avaliacao.nota)));
+    for (const k of ['saidas', 'infelizes', 'chegadas', 'recusas']) avaliacao[k] = Math.max(0, num(av[k], 0));
+  } else iniciarAvaliacao();
 
   // Refaz o "def" do serviço em uso (ver serializarJogo) e solta quem ficou em estado incoerente
   for (const g of convidados) {

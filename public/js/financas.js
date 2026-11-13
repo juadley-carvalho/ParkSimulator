@@ -51,8 +51,8 @@ function fecharMes() {
   const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal();
   fin.caixa = arred(fin.caixa - juros - manut);
   fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, visitantes: fin.visitantesMes,
-                  entradas: fin.entradasMes, recusas: fin.recusasMes };
-  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.mes++;
+                  entradas: fin.entradasMes, recusas: fin.recusasMes, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
+  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.queixasMes = {}; fin.mes++;
 }
 
 function atualizarFinancas(dt) {

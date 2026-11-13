@@ -26,6 +26,7 @@ function loop(t) {
   atualizarAtracoes(dt);
   atualizarFinancas(dt);
   atualizarEntrada(dt);
+  atualizarAvaliacao(dt);
   desenhar();
   qtd.textContent = `${convidados.length} (saíram: ${stats.sairam})`;
   atualizarPainel();
@@ -38,6 +39,7 @@ function loop(t) {
 
 // ---------- Partida ----------
 montarMapaInicial();
+iniciarAvaliacao();
 iniciarUI();
 iniciarSalvar();
 iniciarMusica();

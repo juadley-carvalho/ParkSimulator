@@ -42,6 +42,7 @@ function atualizarAtracoes(dt) {
       if (g.uso.espera > g.paciencia) {
         a.fila.splice(a.fila.indexOf(g), 1);
         g.n.felicidade = limitar(g.n.felicidade - 10);
+        pensar(g, 'fila');
         g.evitar[g.uso.servico] = tempo + 40;
         g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
       }
@@ -70,6 +71,7 @@ function atualizarAtracoes(dt) {
       if (a.resta <= 0) {
         for (const g of a.passageiros) {
           for (const [campo, v] of Object.entries(efeitosFinais(g, def))) g.n[campo] = limitar(g.n[campo] + v);
+          if (excessoIntensidade(g, def) > 0 && diferencaIntensidade(g, def) > 0) pensar(g, 'intenso');
           g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
         }
         a.passageiros = []; a.fase = 'carregando'; a.tCarga = 0;

@@ -50,6 +50,7 @@ public/
     convidados.js    criação e movimentação
     entrada.js       entrada/saída do parque
     financas.js      caixa, empréstimo, cobranças, fechamento do mês
+    avaliacao.js     avaliação do parque (nota 0–999) e pensamentos/queixas dos convidados
     ui.js            painéis de detalhes e tela de finanças
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves

@@ -106,17 +106,19 @@ const TEMPO_CARGA = 5;     // segundos esperando passageiros antes de partir mei
 
 const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entram e saem (já é CAMINHO)
 
-const MAX_CONVIDADOS = 40;
+// Limite de convidados ao mesmo tempo: depende da avaliação do parque (ver avaliacao.js)
+const CONVIDADOS_MIN = 25, CONVIDADOS_MAX = 80;
 
 // Volume da música de fundo (0 a 1). As faixas são os .mp3 de public/musicas (ver musica.js).
 const VOLUME_MUSICA = 0.35;
 
 // Parque: nome e ingresso (editáveis na janela "Parque"). O ingresso é cobrado na chegada, e o
-// convidado só entra se ele custar até FRACAO_MAX_ENTRADA do dinheiro que trouxe (com $100, até $30).
+// convidado só entra se ele custar até uma fração do dinheiro que trouxe: de FRACAO_ENTRADA_MIN (parque
+// com avaliação 0) a FRACAO_ENTRADA_MAX (avaliação máxima). Com avaliação 500 e $100 no bolso, até $30.
 // Preço alto = menos gente entrando e menos dinheiro sobrando para os brinquedos e barracas.
 const NOME_PARQUE_PADRAO = 'Meu parque', NOME_PARQUE_MAX = 30;
 const PRECO_ENTRADA_PADRAO = 0;
-const FRACAO_MAX_ENTRADA = 0.3;
+const FRACAO_ENTRADA_MIN = 0.15, FRACAO_ENTRADA_MAX = 0.45;
 
 // Tecla que gira 90° a atração que está sendo posicionada (4 posições).
 const TECLA_GIRAR = 'z';
@@ -129,3 +131,39 @@ const JANELA_INTENSIDADE = 2;
 const DESESPERO_FELICIDADE = 25;
 const PENALIDADE_FELIC_POR_PONTO = 5;
 const NAUSEA_POR_PONTO = 6;
+
+// ---------- Avaliação do parque (0 a NOTA_MAX, ver avaliacao.js) ----------
+// A nota é a SOMA de partes; cada fator vale até o seu peso em pontos. Penalidades descontam.
+const NOTA_MAX = 999, NOTA_INICIAL = 500;
+const AVALIACAO = {
+  felicidade: 400,      // felicidade média dos convidados (0..100) x 4
+  porTipoAtracao: 40,   // variedade: cada TIPO diferente de atração (o 2º carrossel não conta)...
+  variedade: 200,       // ... até este total
+  servicos: 150,        // dividido entre os serviços de SERVICOS_AVALIADOS que existem no parque
+  necessidades: 250,    // quão longe do pior estão fome, sede, banheiro e náusea, em média
+  // Penalidades por PROPORÇÃO (contar por cabeça saturaria: a maioria das visitas termina por tédio):
+  infelizes: 150,       // fração das saídas recentes que foram por infelicidade x 150
+  recusas: 100,         // fração das chegadas recentes que desistiram no portão x 100
+  amostraMinima: 10,    // denominador mínimo: o 1º convidado infeliz não vale 100%
+  // Sem convidados no parque, os fatores que dependem deles usam estes valores neutros
+  felicidadeNeutra: 60, necessidadesNeutras: 0.6,
+};
+const SERVICOS_AVALIADOS = ['comida', 'bebida', 'banheiro', 'descanso'];
+const INTERVALO_AVALIACAO = 5;   // s entre um cálculo e outro
+const SUAVIZAR_AVALIACAO = 15;   // s: a nota mostrada persegue a calculada, sem saltos
+// Ritmo de chegada: o intervalo sorteado (3 a 8 s) é multiplicado por 2^((500 - nota) / 500):
+// nota 0 = 2x mais lento, 500 = normal, 999 = quase 2x mais rápido.
+
+// ---------- Pensamentos (balão sobre a cabeça e queixas do mês) ----------
+const PENSAMENTOS = {
+  fila:     { icone: '😤', texto: 'Que fila demorada!' },
+  fome:     { icone: '🍔', texto: 'Estou com fome e não acho comida' },
+  sede:     { icone: '🥤', texto: 'Estou com sede e não acho bebida' },
+  banheiro: { icone: '🚻', texto: 'Preciso de um banheiro!' },
+  caro:     { icone: '💸', texto: 'Está tudo caro demais!' },
+  intenso:  { icone: '🤢', texto: 'Esse brinquedo foi intenso demais!' },
+  entrada:  { icone: '🎟️', texto: 'Ingresso caro demais!' },
+  embora:   { icone: '😞', texto: 'Este parque é chato, vou embora' },
+};
+const DURACAO_PENSAMENTO = 3;     // s que o balão fica na tela
+const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA queixa (senão contaria a cada tile)

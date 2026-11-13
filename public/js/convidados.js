@@ -24,6 +24,8 @@ function semear(n, ponto) {
       tolerancia: Math.round((aleatorio(1, 10) + aleatorio(1, 10)) / 2),   // intensidade preferida, 1 a 10 (média de 2 sorteios: concentra no meio)
       paciencia: aleatorio(25, 45),               // segundos que aguenta numa fila
       evitar: {},                                 // serviço -> instante até o qual ele não tenta de novo
+      pensou: {},                                 // queixa -> instante até o qual ela não conta de novo
+      pensamento: null,                           // { tipo, ate }: balão sobre a cabeça (ver pensar)
       n: { fome: aleatorio(10, 50), sede: aleatorio(10, 50), banheiro: aleatorio(0, 30),
            nausea: aleatorio(0, 10), energia: aleatorio(60, 100), felicidade: aleatorio(60, 100) },
       cor: `hsl(${Math.floor(Math.random() * 360)} 70% 55%)`,

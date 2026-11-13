@@ -34,8 +34,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 ## Arquitetura (o que não é óbvio)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
-  `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas, ui,
-  barra, salvar, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas,
+  avaliacao, ui, barra, salvar, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -46,7 +46,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - `mapa`, `objetos` etc. são `const` **mutadas no lugar**: não reatribua (veja `aplicarJogo`, que copia linha a linha).
 - Responsabilidades: `estado` dados · `iso` grade↔tela · `desenho` canvas · `objetos` catálogo e regras de construção ·
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
-  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `ui` painéis de detalhes e janelas de
+  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota do parque e pensamentos · `ui` painéis de detalhes e janelas de
   finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `input` mouse/teclado/câmera.
 
 ## Interface (style.css)
@@ -98,11 +98,22 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Convidados** andam a `VELOCIDADE` ±15% (`g.velocidade`, sorteada em `semear`); a atratividade usa a velocidade dele.
 - **Parque** (janela 🎡, `parque` em estado.js): nome (até 30 caracteres, só via `textContent`/`document.title`) e
   preço de entrada (padrão $0). O ingresso é cobrado na chegada (`pagarEntrada`); quem acha caro (preço >
-  30% do dinheiro que trouxe, `FRACAO_MAX_ENTRADA`) desiste no portão (`fin.recusasMes`). Na simulação o
-  lucro mensal é máximo perto de $20 ($0: +$450 · $10: +$760 · $20: +$930 · $30: +$390).
-- **Chegada/saída**: convidados entram pela `ENTRADA` (tile da borda, protegido) a cada 3–8 s (máx 40) com $30–150.
+  `fracaoMaxEntrada()` do dinheiro que trouxe: 15% a 45% conforme a avaliação, 30% com nota 500) desiste no portão
+  (`fin.recusasMes`). Com a regra antiga (30% fixo) o lucro mensal era máximo perto de $20.
+- **Chegada/saída**: convidados entram pela `ENTRADA` (tile da borda, protegido) a cada 3–8 s × `escalaChegada()` (máx
+  `maxConvidados()`: 25 a 80, ambos pela avaliação) com $30–150.
   Saem se felicidade ≤ 10 ou dinheiro < $2, andando até a entrada. Só andam em CAMINHO; se o chão some, BFS até o
   caminho mais próximo (atravessa grama, nunca água).
+- **Avaliação** (0–999, `avaliacao` em estado.js, avaliacao.js): soma de partes (`partesDaAvaliacao`, pesos em
+  `AVALIACAO`): felicidade média ×4 (400) + 40 por TIPO de atração (até 200) + serviços existentes entre comida,
+  bebida, banheiro e descanso (150) + necessidades em dia (250) − fração das saídas recentes por infelicidade ×150 −
+  fração das chegadas recusadas no portão ×100. Sem convidados, valores neutros (felicidade 60). Recalculada a cada
+  5 s; a nota exibida persegue o alvo (suavização). As contagens das penalidades decaem (meia-vida ≈ 0,7 mês). Penalidade
+  por cabeça (proposta original) saturava: ~85% das visitas terminam por felicidade ≤ 10. Parque inicial: ≈ 590.
+- **Pensamentos** (`PENSAMENTOS` em config.js): `pensar(g, tipo)` mostra um balão por 3 s e soma em `fin.queixasMes`
+  (o balanço do mês guarda `queixas` e `nota`); a mesma queixa do mesmo convidado só conta de novo após 30 s
+  (`g.pensou`). Gatilhos: saiu da fila (fila), necessidade urgente sem serviço (fome/sede/banheiro, ou caro se existe
+  mas ele não pode pagar), brinquedo intenso demais, saiu infeliz (embora), desistiu no portão (entrada, sem balão).
 - **Necessidades**: a cada tile novo, `decidirNecessidade`: urgência ≥ `LIMIAR_URGENCIA` (0.6) → BFS só por caminhos
   até um objeto vizinho que ofereça o serviço, que o convidado pague e aceite. Serviço simples: o mais próximo.
   Atração com fila: a de maior `atratividade` > 0 (felicidade líquida: ganho − preferência de intensidade − custo
@@ -138,6 +149,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   Atração nova: trate `rot` (0–3) no desenho com `direcoesDe`/`vetorTela` e ponha um portal (`desenharPortalAtracao`).
 - **Novo terreno**: `TIPOS` (com `icone`) + `CUSTO_TERRENO`. **Nova categoria da barra**: `CATEGORIAS`.
 - **Novo serviço/necessidade**: `URGENCIA`, `ICONES`, `FELIC_POR_ATIVIDADE` (config.js) e `atualizarNecessidades`.
+- **Nova queixa**: entrada em `PENSAMENTOS` e uma chamada `pensar(g, tipo)` no gatilho. **Novo fator da nota**: mais
+  uma parte em `partesDaAvaliacao` (a janela do parque lista as partes sozinha).
 - **Mudou o formato do save**: aumente `VERSAO_SAVE` e converta em `migrar()` (salvar.js). Campo opcional novo com
   padrão sensato não exige migração, mas convidados novos precisam de um padrão em `base` (em `aplicarJogo`).
 - Estado novo que referencie convidados/objetos deve ser serializado com índices/chaves em `serializarJogo`/`aplicarJogo`.
@@ -156,7 +169,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   e abrir o jogo no navegador, exercitando o que mudou (construir, salvar/carregar, deixar convidados andarem).
 - Headless sem navegador: jsdom com **stub de canvas** (um `Proxy` que aceita qualquer chamada, e `measureText`),
   `requestAnimationFrame = () => 0` (o loop real roda durante `await` e invalida comparações), `fetch` injetado.
-  Simule com `window.eval` chamando `atualizar`, `atualizarAtracoes`, `atualizarFinancas`, `atualizarEntrada` com
+  Simule com `window.eval` chamando `atualizar`, `atualizarAtracoes`, `atualizarFinancas`, `atualizarEntrada`, `atualizarAvaliacao` com
   `dt = 0.1`. Invariantes úteis: convidado `esperando`/`brincando` pertence a uma fila/atração; `usando` tem `uso.def`.
 - Para ver o desenho de verdade: `canvas` (node-canvas) ligado ao jsdom, ou puppeteer. Rode o servidor e o teste no
   mesmo comando se o shell não mantiver processos em segundo plano.

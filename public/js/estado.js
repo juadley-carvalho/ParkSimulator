@@ -32,7 +32,7 @@ const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto
 // do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
 function finInicial() {
   return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-           visitantesMes: 0, entradasMes: 0, recusasMes: 0, balanco: null, aviso: '', tAviso: -99 };
+           visitantesMes: 0, entradasMes: 0, recusasMes: 0, queixasMes: {}, balanco: null, aviso: '', tAviso: -99 };
 }
 const fin = finInicial();
 
@@ -42,6 +42,13 @@ const parque = parqueInicial();
 
 // Nome para exibir: o campo pode estar vazio enquanto o jogador digita
 function nomeDoParque() { return parque.nome.trim() || NOME_PARQUE_PADRAO; }
+
+// Avaliação do parque (ver avaliacao.js). nota = a mostrada; alvo = a última calculada.
+// saidas/infelizes e chegadas/recusas = contagens recentes que "esquecem" aos poucos (penalidades).
+function avaliacaoInicial() {
+  return { nota: NOTA_INICIAL, alvo: NOTA_INICIAL, tCalculo: 0, saidas: 0, infelizes: 0, chegadas: 0, recusas: 0 };
+}
+const avaliacao = avaliacaoInicial();
 
 const convidados = [];
 

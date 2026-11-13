@@ -572,6 +572,22 @@ function desenharConvidado(g) {
   // Ícone acima da cabeça: o que ele está fazendo ou indo buscar
   const icone = g.estado === 'usando' ? iconeDoUso(g) : g.objetivo && ICONES[g.objetivo];
   if (icone) { ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(icone, x, y - 22); }
+  if (g.pensamento && tempo < g.pensamento.ate) desenharBalao(x, y - (icone ? 36 : 24), PENSAMENTOS[g.pensamento.tipo].icone);
+}
+
+// Balão de pensamento: retângulo arredondado branco com "rabinho" apontando para a cabeça.
+// (bx, by) = ponta do rabinho. roundRect é recente: sem ele, um retângulo simples serve.
+function desenharBalao(bx, by, icone) {
+  const w = 22, h = 18, x0 = bx - w / 2, y0 = by - h - 4;
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x0, y0, w, h, 6); else ctx.rect(x0, y0, w, h);
+  ctx.fill(); ctx.stroke();
+  poligono([{ x: bx - 3, y: y0 + h - 0.5 }, { x: bx + 3, y: y0 + h - 0.5 }, { x: bx, y: by }], '#fff');
+  ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(icone, bx, y0 + h / 2 + 1);
+  ctx.restore();
 }
 
 function corDaFerramenta() {
