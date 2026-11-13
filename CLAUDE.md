@@ -35,7 +35,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
   `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas, ui,
-  barra, salvar, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  barra, salvar, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -63,10 +63,15 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - Isometria 2:1, losango 64×32: `gradeParaMundo` / `telaParaGrade` (iso.js). Com coordenadas fracionárias,
   `gradeParaMundo(gx + 0.5, gy + 0.5)` é o centro do tile; convidados têm x, y contínuos.
 - Mapas indexados pela âncora, chave `"gx,gy"` (`chaveAtr`): `atracoes` (fila, passageiros, fase, ângulo), `gestao`
-  (preços, receita, usos de todo objeto com serviços) e `rotacoes` (objetos girados 90°).
-- Objetos grandes: `tam: {w,h}` no catálogo. Girar (tecla Z, `TECLA_GIRAR`) troca w/h via `tamanhoDe(chave, rot)`;
-  só objetos não quadrados giram. Funções de desenho recebem `(cx, cy, atr, rot, ancora)`, com (cx, cy) = centro da
-  PEGADA e `ancora` = `{gx, gy}` (para olhar os vizinhos, como o banco).
+  (preços, receita, usos de todo objeto com serviços) e `rotacoes` (1, 2 ou 3 = girado 90°, 180°, 270°).
+- Objetos grandes: `tam: {w,h}` no catálogo. Só atrações giram (`rotacionavel`): tecla Z (`TECLA_GIRAR`) cicla
+  `rot` 0→1→2→3; rot ímpar troca w/h (`tamanhoDe(chave, rot)`). `direcoesDe(rot)` dá `eixo` (comprimento) e `frente`
+  (lado da entrada), em direções da grade: frente +gy, +gx, −gy, −gx. No desenho, o portal de entrada (ou a estação
+  da montanha-russa, na ponta +eixo) mostra a orientação; frente para −gx/−gy (`frenteAtras`) é desenhada ANTES do corpo.
+  Roda e navio usam `planoDaAtracao`: girar 180° = inverter o eixo (são simétricos no próprio plano). A prévia
+  desenha um "fantasma" do objeto girado. A orientação é só visual: a fila aceita qualquer caminho encostado.
+  Funções de desenho recebem `(cx, cy, atr, rot, ancora)`, com (cx, cy) = centro da PEGADA e `ancora` = `{gx, gy}`
+  (para olhar os vizinhos, como o banco); na prévia `atr` = undefined e `ancora` = null.
 - Desenho por ordem de profundidade (algoritmo do pintor): todo o terreno, depois objetos e convidados numa lista
   ordenada por `x + y`. Ao desenhar, use `ctx.save()/restore()` se mudar estilos (eles persistem entre itens).
   A profundidade de um objeto é o CENTRO da pegada (`gx + gy + (w + h)/2`), não o tile da frente (isso cobria
@@ -98,8 +103,9 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   até um objeto vizinho que ofereça o serviço, que o convidado pague e aceite. Serviço simples: o mais próximo.
   Atração com fila: a de maior `atratividade` > 0 (felicidade líquida: ganho − preferência de intensidade − custo
   de andar e de esperar `esperaEstimada` − preço; pesos em config.js). Diversão é buscada com felicidade ≤ 55.
-  Serviço = `servicos` no catálogo (atividade, duração, efeitos; `capacidade` = tem fila). Fome/sede satisfeitas
-  aumentam o banheiro.
+  Serviço = `servicos` no catálogo (atividade, duração, efeitos; `capacidade` = tem fila; opcionais `nome` e `icone`
+  trocam o rótulo do preço e o ícone sobre a cabeça, ver `iconeDoUso`). Fome/sede satisfeitas aumentam o banheiro.
+  A sorveteria oferece `comida` (mais leve, mas também tira sede e dá felicidade): compete com a barraca pela distância.
 - **Intensidade x tolerância (1–10)**: aceita brinquedo até ±2 pontos; com felicidade ≤ 25 aceita qualquer um, pagando
   por ponto excedente −5 felicidade e +6 náusea (se mais intenso que o suportável). Ver `efeitosFinais`.
 - **Filas**: máx 12; paciência 25–45 s; o ingresso é cobrado no embarque; parte lotada ou 5 s após o 1º passageiro.
@@ -109,8 +115,9 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 |---|---|---|---|---|
 | ARVORE | 1×1 | $30 / $2 | | |
 | BANCO | 1×1 | $60 / $5 | grátis | só sobre CAMINHO |
-| BARRACA | 1×1 | $500 / $80 | comida $4, bebida $2 | |
+| BARRACA (de comida) | 1×1 | $500 / $80 | comida $4 | |
 | BARRACA_BEBIDAS | 1×1 | $350 / $40 | bebida $3 | |
+| BARRACA_SORVETE | 1×1 | $400 / $45 | sorvete $3 | |
 | BANHEIRO | 1×1 | $350 / $50 | grátis | |
 | CARROSSEL | 2×2 | $3.000 / $200 | $5 | 5 · 6 · 8 s |
 | NAVIO_PIRATA | 3×2 | $7.500 / $350 | $7 | 7 · 10 · 18 s |
@@ -123,7 +130,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - **Novo objeto**: (1) `desenhar...(cx, cy, atr, rot)` em desenho.js; (2) entrada em `OBJETOS` com `categoria`, `icone`,
   `nome`, `cor`, `desenhar`, e opcionais `tam`, `altura` (posição do rótulo da fila), `servicos`, `sobreCaminho`; (3) custo/manutenção
   em `ECONOMIA` e preços em `PRECO_PADRAO`. Cartão da barra, construção, painel de preços e save funcionam sozinhos.
-  Objeto direcional e não quadrado: trate `rot` no desenho (plano do movimento segue gx ou gy).
+  Atração nova: trate `rot` (0–3) no desenho com `direcoesDe`/`vetorTela` e ponha um portal (`desenharPortalAtracao`).
 - **Novo terreno**: `TIPOS` (com `icone`) + `CUSTO_TERRENO`. **Nova categoria da barra**: `CATEGORIAS`.
 - **Novo serviço/necessidade**: `URGENCIA`, `ICONES`, `FELIC_POR_ATIVIDADE` (config.js) e `atualizarNecessidades`.
 - **Mudou o formato do save**: aumente `VERSAO_SAVE` e converta em `migrar()` (salvar.js). Campo opcional novo com
@@ -131,6 +138,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Estado novo que referencie convidados/objetos deve ser serializado com índices/chaves em `serializarJogo`/`aplicarJogo`.
 
 ## Save/Load
+- Música de fundo: `.mp3` em `public/musicas/` (o servidor lista em `GET /api/musicas`); `musica.js` toca em ordem
+  embaralhada; botão 🎵 liga/desliga (preferência no `localStorage`). O navegador só toca após o 1º clique/tecla.
 - API: `GET /api/saves`, `GET|PUT|DELETE /api/saves/:id`. Só `armazenamento.js` sabe que os saves são arquivos JSON
   (trocar por SQLite = reescrever só ele). Id `[a-z0-9-]{1,40}`; gravação atômica (temporário + rename).
 - `aplicarJogo` valida tudo **antes** de alterar o jogo (save inválido não estraga o parque); chaves desconhecidas
@@ -158,6 +167,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   redistribui o gasto entre os objetos, sem aumentar o total (simulação: ~$8,4/s antes e depois da atratividade).
 
 ## Ideias / backlog
+- Fila das atrações entrando só pelo portal (hoje a orientação é visual); volume da música na interface.
 - Chegadas e tolerância ao preço de entrada dependentes da avaliação do parque; autosave; mais atrações (trem, casa
   mal-assombrada, tiro ao alvo); capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).

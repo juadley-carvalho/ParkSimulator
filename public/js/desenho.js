@@ -82,21 +82,100 @@ function desenharBanco(cx, cy, atr, rot, ancora) {
   pecas.sort((a, b) => a.prof - b.prof).forEach(p => p.desenhar());   // algoritmo do pintor, dentro do tile
 }
 
+// Barraca de comida (1x1): quiosque com telhado vermelho e um hambúrguer gigante no topo.
 function desenharBarraca(cx, cy) {
   const topo = caixa(cx, cy, 0.7, 22, '#f2e6d0', '#e0d2b8', '#c9b99c');
   const pico = { x: cx, y: cy - 22 - 20 };
   poligono([topo[3], topo[2], pico], '#d9534f');   // telhado esquerdo
   poligono([topo[1], topo[2], pico], '#a93a37');   // telhado direito
+  // Hambúrguer, de baixo para cima (cada camada cobre a anterior): pão, carne, queijo, alface, pão com gergelim
+  const y = pico.y - 4;
+  const elipse = (dy, rx, ry, cor, ini = 0, fim = Math.PI * 2) => {
+    ctx.fillStyle = cor; ctx.beginPath(); ctx.ellipse(cx, y + dy, rx, ry, 0, ini, fim); ctx.fill();
+  };
+  elipse(2, 7, 3, '#d9963f');                       // pão de baixo
+  elipse(-1, 7.5, 2.6, '#6d3b1f');                  // carne
+  poligono([{ x: cx - 7, y: y - 3 }, { x: cx + 7, y: y - 3 }, { x: cx + 3, y: y + 1 }], '#ffca28');   // queijo
+  elipse(-3.5, 8, 1.8, '#7cb342');                  // alface
+  elipse(-4, 7, 6.5, '#f0b25a', Math.PI, 0);        // pão de cima (meia elipse)
+  ctx.fillStyle = '#fff8e1';                        // gergelim
+  for (const [dx, dy] of [[-3, -7], [1, -9], [3, -6], [-1, -5]]) ctx.fillRect(cx + dx, y + dy, 1.5, 1);
 }
 
+// Ponto a uma fração t do caminho entre a e b, "alt" pixels acima
+function entre(a, b, t, alt = 0) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t - alt }; }
+
+// Banheiro (1x1): casinha azul com telhado em pirâmide e uma porta em cada face visível,
+// com a plaquinha de cada lado (azul e rosa) acima dela.
 function desenharBanheiro(cx, cy) {
-  caixa(cx, cy, 0.6, 28, '#cfd8dc', '#90a4ae', '#78909c');
+  const alt = 26, s = 0.6;
+  caixa(cx, cy, s, alt, '#90caf9', '#64b5f6', '#42a5f5');
+  const hw = TILE_W / 2 * s, hh = TILE_H / 2 * s;
+  const esq = { x: cx - hw, y: cy }, baixo = { x: cx, y: cy + hh }, dir = { x: cx + hw, y: cy };
+  for (const [a, placa] of [[esq, '#1e88e5'], [dir, '#ec407a']]) {   // face esquerda e face direita
+    poligono([entre(a, baixo, 0.3), entre(a, baixo, 0.7), entre(a, baixo, 0.7, 17), entre(a, baixo, 0.3, 17)], '#eceff1', '#90a4ae');
+    const m = entre(a, baixo, 0.62, 8);             // maçaneta
+    ctx.fillStyle = '#546e7a'; ctx.fillRect(m.x - 0.75, m.y - 0.75, 1.5, 1.5);
+    const p = entre(a, baixo, 0.5, 21.5);           // placa
+    ctx.fillStyle = placa; ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  // Telhado: pirâmide um pouco maior que as paredes (beiral). Só as duas águas da frente aparecem.
+  const tw = TILE_W / 2 * 0.74, th = TILE_H / 2 * 0.74, base = cy - alt;
+  const pico = { x: cx, y: base - 16 };
+  poligono([{ x: cx - tw, y: base }, { x: cx, y: base + th }, pico], '#1565c0');
+  poligono([{ x: cx + tw, y: base }, { x: cx, y: base + th }, pico], '#0d47a1');
+}
+
+// Sorveteria (1x1): balcão rosa, toldo e uma casquinha gigante com duas bolas no topo.
+function desenharSorveteria(cx, cy) {
+  caixa(cx, cy, 0.6, 15, '#fce4ec', '#f8bbd0', '#f48fb1');                  // balcão
+  const base = cy - 15 - 6, hw = TILE_W / 2 * 0.74, hh = TILE_H / 2 * 0.74;    // toldo
+  const pico = { x: cx, y: base - 11 };
+  poligono([{ x: cx - hw, y: base }, { x: cx, y: base + hh }, pico], '#f06292');
+  poligono([{ x: cx + hw, y: base }, { x: cx, y: base + hh }, pico], '#c2185b');
+  const topoCone = pico.y - 9;
+  poligono([{ x: cx - 5, y: topoCone }, { x: cx + 5, y: topoCone }, { x: cx, y: pico.y + 2 }], '#d7a35b');   // casquinha
+  ctx.save();
+  ctx.strokeStyle = '#a8772f'; ctx.lineWidth = 0.8;                         // xadrez da casquinha
+  ctx.beginPath();
+  ctx.moveTo(cx - 3, topoCone); ctx.lineTo(cx + 1.5, pico.y - 3);
+  ctx.moveTo(cx + 3, topoCone); ctx.lineTo(cx - 1.5, pico.y - 3);
+  ctx.stroke();
+  ctx.restore();
+  const bola = (dy, r, cor) => { ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(cx, topoCone + dy, r, 0, Math.PI * 2); ctx.fill(); };
+  bola(-2.5, 5.5, '#f48fb1');                                               // morango
+  bola(-9, 4.5, '#a5d6a7');                                                 // menta
+  bola(-14, 1.6, '#e53935');                                                // cereja
+}
+
+// ---------- Orientação das atrações (rot = 0 a 3, ver direcoesDe em objetos.js) ----------
+// Vetor na TELA de uma direção da grade [dx, dy] com "n" tiles de comprimento
+function vetorTela([dx, dy], n = 1) { return gradeParaMundo(dx * n, dy * n); }
+
+// A frente está virada para trás (-gx ou -gy, longe da câmera)? Então a entrada fica atrás da atração
+// e precisa ser desenhada ANTES dela (algoritmo do pintor).
+function frenteAtras(rot) { const [dx, dy] = direcoesDe(rot).frente; return dx < 0 || dy < 0; }
+
+// Portal de entrada de uma atração: dois postes e uma faixa na cor da atração, na borda da frente.
+// "prof" = distância (tiles) do centro até a borda da frente; "desvio" = deslocamento ao longo do eixo.
+function desenharPortalAtracao(cx, cy, rot, prof, desvio, cor) {
+  const { eixo, frente } = direcoesDe(rot);
+  const f = vetorTela(frente, prof), d = vetorTela(eixo, desvio), m = vetorTela(eixo, 0.28), alt = 20;
+  const c = { x: cx + f.x + d.x, y: cy + f.y + d.y };
+  const A = { x: c.x - m.x, y: c.y - m.y }, B = { x: c.x + m.x, y: c.y + m.y };
+  ctx.fillStyle = '#eceff1';
+  for (const p of [A, B]) ctx.fillRect(p.x - 1.5, p.y - alt, 3, alt);
+  poligono([{ x: A.x, y: A.y - alt }, { x: B.x, y: B.y - alt }, { x: B.x, y: B.y - alt - 7 }, { x: A.x, y: A.y - alt - 7 }],
+           cor, 'rgba(0,0,0,0.35)');
 }
 
 // Carrossel animado: "tempo" (segundos) vem do loop. (cx, cy) = centro da pegada 2x2.
-function desenharCarrossel(cx, cy, atr) {
+// Redondo: girar só muda o lado do portal de entrada.
+function desenharCarrossel(cx, cy, atr, rot = 0) {
   const R = 1.9, alt = 38;
   caixa(cx, cy, R, 5, '#8e5bb5', '#5e3a80', '#4a2e66');   // plataforma
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 0.95, 0, OBJETOS.CARROSSEL.cor);
+  if (frenteAtras(rot)) portal();
   const CORES = ['#fff59d', '#ffab91', '#90caf9', '#a5d6a7', '#f48fb1', '#ce93d8'];
   // Cavalos giram numa elipse (círculo achatado pela isometria). Os de trás são desenhados
   // antes do poste e os da frente depois, para o poste ficar entre eles.
@@ -117,15 +196,25 @@ function desenharCarrossel(cx, cy, atr) {
   const pico = { x: cx, y: by - 24 };
   poligono([{ x: cx - hw, y: by }, { x: cx, y: by + hh }, pico], '#e53935');   // telhado esquerdo
   poligono([{ x: cx + hw, y: by }, { x: cx, y: by + hh }, pico], '#b71c1c');   // telhado direito
+  if (!frenteAtras(rot)) portal();
 }
 
-// Roda-gigante (3x2 tiles): o aro fica num plano vertical paralelo ao eixo gx, com um apoio
+// Plano de uma atração "chata" (roda-gigante, navio): D = direção do eixo na tela (vetor unitário),
+// P = quase meio tile na direção perpendicular, SEMPRE apontando para a câmera, para que o lado -1
+// (desenhado primeiro) seja mesmo o de trás. Como a roda e o navio são simétricos em relação ao
+// próprio plano, girar 180° equivale a inverter o sentido do eixo: a roda gira ao contrário, a bandeira
+// do navio aponta para o outro lado e o portal de entrada vai para a outra face.
+function planoDaAtracao(rot) {
+  const e = vetorTela(direcoesDe(rot).eixo), n = Math.hypot(e.x, e.y);
+  return { D: { x: e.x / n, y: e.y / n }, P: { x: rot % 2 ? 14 : -14, y: 7 } };
+}
+
+// Roda-gigante (3x2 tiles): o aro fica num plano vertical paralelo ao eixo da atração, com um apoio
 // na frente e outro atrás. Um círculo nesse plano vira uma elipse inclinada na tela; as
 // cabines giram com o aro, mas ficam sempre penduradas na vertical.
 function desenharRodaGigante(cx, cy, atr, rot = 0) {
   const R = 52, hub = R + 22, N = 8;
-  const D = { x: rot ? -0.894 : 0.894, y: 0.447 };   // rot = 1: o plano da roda segue o eixo gy   // direção do eixo gx na tela (vetor unitário)
-  const P = { x: rot ? 14 : -14, y: 7 };         // meio tile de profundidade (eixo gy), para a frente
+  const { D, P } = planoDaAtracao(rot);
   // (h, v) = posição no plano da roda: h ao longo do aro, v para cima; lado: -1 trás, 0 meio, +1 frente
   const pt = (h, v, lado) => ({ x: cx + h * D.x + lado * P.x, y: cy + h * D.y + lado * P.y - v });
   const ang = atr ? atr.angulo : 0;
@@ -133,7 +222,9 @@ function desenharRodaGigante(cx, cy, atr, rot = 0) {
   const CORES = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da', '#ec407a'];
   const noAro = i => { const a = ang + i * 2 * Math.PI / N; return pt(R * Math.cos(a), hub + R * Math.sin(a), 0); };
 
-  caixaRet(cx, cy, rot ? 2 : 3, rot ? 3 : 2, 4, '#9e9e9e', '#757575', '#616161');   // plataforma de embarque
+  caixaRet(cx, cy, rot % 2 ? 2 : 3, rot % 2 ? 3 : 2, 4, '#9e9e9e', '#757575', '#616161');   // plataforma de embarque
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 0.92, 0.85, OBJETOS.RODA_GIGANTE.cor);
+  if (frenteAtras(rot)) portal();
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -166,15 +257,18 @@ function desenharRodaGigante(cx, cy, atr, rot = 0) {
   ctx.fillStyle = '#b0bec5'; ctx.beginPath(); ctx.arc(H0.x, H0.y, 5, 0, Math.PI * 2); ctx.fill();   // eixo
   apoio(1);                                                     // apoio da frente
   ctx.restore();
+  if (!frenteAtras(rot)) portal();
 }
 
-// Montanha-russa (4x3 tiles): circuito fechado em elipse com três colinas, apoios e um trem
-// de 3 vagões. A posição do trem é a fração da volta (atr.angulo / 2π). Trilho, apoios e vagões
-// entram numa lista ordenada pela profundidade no chão, para se cobrirem corretamente.
+// Montanha-russa (4x3 tiles): circuito fechado em elipse com três colinas, apoios, uma estação coberta
+// e um trem de 3 vagões. A posição do trem é a fração da volta (atr.angulo / 2π). Trilho, apoios, estação
+// e vagões entram numa lista ordenada pela profundidade no chão, para se cobrirem corretamente.
+// Girar muda o eixo da elipse e o lado da estação (que fica na ponta "+eixo", em t = 0).
 function desenharMontanhaRussa(cx, cy, atr, rot = 0) {
-  const [w, h] = rot ? [3, 4] : [4, 3], N = 96;
-  const ex = { x: TILE_W / 2 * w / 2, y: TILE_H / 2 * w / 2 };    // meio comprimento ao longo de gx
-  const ey = { x: -TILE_W / 2 * h / 2, y: TILE_H / 2 * h / 2 };   // meia profundidade ao longo de gy
+  const [w, h] = rot % 2 ? [3, 4] : [4, 3], N = 96;
+  const { eixo, frente } = direcoesDe(rot);
+  const ex = vetorTela(eixo, 2);      // meio comprimento (4 tiles / 2), ao longo do eixo
+  const ey = vetorTela(frente, 1.5);  // meia profundidade (3 tiles / 2), na direção da frente
   const colina = (t, centro, largura) => Math.exp(-(((t - centro) / largura) ** 2));
   const altura = t => 8 + 60 * colina(t, 0.25, 0.12) + 34 * colina(t, 0.6, 0.08) + 20 * colina(t, 0.85, 0.06);
   // Ponto do circuito (t de 0 a 1). "chao" é a posição do ponto no chão: serve para ordenar o desenho.
@@ -198,6 +292,21 @@ function desenharMontanhaRussa(cx, cy, atr, rot = 0) {
       ctx.beginPath(); ctx.moveTo(A.x, A.y + 2); ctx.lineTo(A.x, A.chao); ctx.stroke();
     } });
   }
+
+  // Estação em t = 0 (ponta do eixo, parte baixa do trilho): 4 postes e um telhado listrado.
+  // Ali o trilho corre na direção da "frente", então o telhado se estende nessa direção.
+  const E = ponto(0), ao = vetorTela(frente, 0.55), atraves = vetorTela(eixo, 0.3), altE = 30;
+  const canto = (a, b, up) => ({ x: E.x + a * ao.x + b * atraves.x, y: E.chao + a * ao.y + b * atraves.y - up });
+  itens.push({ d: E.chao + 0.6, f: () => {
+    ctx.strokeStyle = '#eceff1'; ctx.lineWidth = 2;
+    for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const c0 = canto(a, b, 0), c1 = canto(a, b, altE);
+      ctx.beginPath(); ctx.moveTo(c0.x, c0.y); ctx.lineTo(c1.x, c1.y); ctx.stroke();
+    }
+    for (let k = 0; k < 4; k++)                       // telhado em 4 faixas, vermelho e branco
+      poligono([canto(-1 + k / 2, -1, altE), canto(-1 + (k + 1) / 2, -1, altE),
+                canto(-1 + (k + 1) / 2, 1, altE), canto(-1 + k / 2, 1, altE)], k % 2 ? '#fafafa' : '#e53935');
+  } });
 
   const volta = atr ? (atr.angulo / (2 * Math.PI)) % 1 : 0;
   const ocupadas = atr ? atr.passageiros.length : 0;
@@ -237,10 +346,10 @@ function desenharBarracaBebidas(cx, cy) {
 
 // Navio pirata (3x2 tiles): um barco pendurado por braços que balança como pêndulo entre dois pórticos.
 // O ângulo é amplitude * sen(atr.angulo). A amplitude sobe e desce ao longo da corrida e fica pequena
-// (balanço suave) enquanto embarca. Como na roda-gigante, o plano do movimento é paralelo ao eixo gx.
+// (balanço suave) enquanto embarca. Como na roda-gigante, o plano do movimento é paralelo ao eixo da atração.
 function desenharNavioPirata(cx, cy, atr, rot = 0) {
   const H = 78, L = 52;                                       // altura do eixo e comprimento dos braços
-  const D = { x: rot ? -0.894 : 0.894, y: 0.447 }, P = { x: rot ? 14 : -14, y: 7 };    // eixo gx na tela / meio tile de profundidade
+  const { D, P } = planoDaAtracao(rot);
   const pt = (h, v, lado) => ({ x: cx + h * D.x + lado * P.x, y: cy + h * D.y + lado * P.y - v });
   const duracao = OBJETOS.NAVIO_PIRATA.servicos.diversao.duracao;
   const progresso = atr && atr.fase === 'rodando' ? 1 - atr.resta / duracao : 0;
@@ -251,7 +360,9 @@ function desenharNavioPirata(cx, cy, atr, rot = 0) {
   const ocupadas = atr ? atr.passageiros.length : 0;
   const linha = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
 
-  caixaRet(cx, cy, rot ? 2 : 3, rot ? 3 : 2, 4, '#4aa3d8', '#2f7fb0', '#276a96');   // "mar" sob o barco
+  caixaRet(cx, cy, rot % 2 ? 2 : 3, rot % 2 ? 3 : 2, 4, '#4aa3d8', '#2f7fb0', '#276a96');   // "mar" sob o barco
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 0.92, 0.95, OBJETOS.NAVIO_PIRATA.cor);
+  if (frenteAtras(rot)) portal();
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const portico = lado => {
@@ -282,6 +393,7 @@ function desenharNavioPirata(cx, cy, atr, rot = 0) {
   }
   portico(1);                                                   // pórtico da frente
   ctx.restore();
+  if (!frenteAtras(rot)) portal();
 }
 
 // Portão: dois postes nas laterais do caminho e uma viga no alto
@@ -318,7 +430,7 @@ function desenharConvidado(g) {
     ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.stroke();
   }
   // Ícone acima da cabeça: o que ele está fazendo ou indo buscar
-  const icone = g.estado === 'usando' ? ICONES[g.uso.servico] : g.objetivo && ICONES[g.objetivo];
+  const icone = g.estado === 'usando' ? iconeDoUso(g) : g.objetivo && ICONES[g.objetivo];
   if (icone) { ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(icone, x, y - 22); }
 }
 
@@ -383,5 +495,13 @@ function desenhar() {
         ctx.globalAlpha = 1;
         poligono(pts, null, valido ? '#ffe14d' : '#b71c1c');
       }
+    // "Fantasma" do objeto sobre a pegada: mostra para onde ele vai ficar virado antes de construir
+    if (objFerr) {
+      const c = gradeParaMundo(hover.gx + w / 2, hover.gy + h / 2);
+      ctx.save();
+      ctx.globalAlpha = valido ? 0.7 : 0.35;
+      OBJETOS[objFerr].desenhar(c.x, c.y, undefined, rotacaoAtual, null);
+      ctx.restore();
+    }
   }
 }

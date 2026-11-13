@@ -20,12 +20,12 @@ function atualizarPainel() {
   }
   const g = selecionado;
   document.getElementById('estado').textContent =
-    g.estado === 'usando' ? `Usando ${ICONES[g.uso.servico]} (${Math.ceil(g.uso.resta)}s)` :
+    g.estado === 'usando' ? `Usando ${iconeDoUso(g)} (${Math.ceil(g.uso.resta)}s)` :
     g.objetivo ? `Indo: ${ICONES[g.objetivo]}` : 'Passeando';
   document.getElementById('dinheiro').textContent = `Dinheiro: ${moeda(g.dinheiro)} · Tolerância: ${g.tolerancia}/10`;
   if (g.estado === 'esperando')
     document.getElementById('estado').textContent =
-      `Na fila ${ICONES[g.uso.servico]} (paciência: ${Math.max(0, Math.ceil(g.paciencia - g.uso.espera))}s)`;
+      `Na fila ${iconeDoUso(g)} (paciência: ${Math.max(0, Math.ceil(g.paciencia - g.uso.espera))}s)`;
   if (g.estado === 'brincando') document.getElementById('estado').textContent = 'No brinquedo 🎠';
 }
 
@@ -46,8 +46,8 @@ function selecionarObjeto(k) {
   const chave = objetos[gy][gx], d = gestao.get(k);
   painelObj.innerHTML = `<div class='painel-topo'><span>${OBJETOS[chave].icone} ${OBJETOS[chave].nome}</span>` +
     `<button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
-    Object.keys(OBJETOS[chave].servicos).map(s =>
-      `<div class='linha'><span>${NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.5' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
+    Object.entries(OBJETOS[chave].servicos).map(([s, def]) =>
+      `<div class='linha'><span>${def.nome || NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.5' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
     `<div id='oStats'></div>`;
   painelObj.querySelector('.fechar').addEventListener('click', () => { selObj = null; });
   // Os campos só são criados aqui; o loop atualiza apenas o texto das estatísticas

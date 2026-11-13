@@ -64,12 +64,11 @@ function pintarLinha(a, b) {
 }
 
 // Liga os eventos de mouse/toque ao canvas (chamada uma vez, em main.js)
-// Gira 90° o objeto que está sendo posicionado. Em objetos quadrados a pegada é a mesma,
-// então não há o que girar.
+// Gira 90° a atração que está sendo posicionada: 0 → 1 → 2 → 3 → 0. O resto (%) faz a volta.
 function girarObjeto() {
   if (ferramenta.camada !== 'objeto') return;
-  if (!rotacionavel(ferramenta.chave)) { avisar(`${OBJETOS[ferramenta.chave].nome} não precisa ser girado`); return; }
-  rotacaoAtual = rotacaoAtual ? 0 : 1;
+  if (!rotacionavel(ferramenta.chave)) { avisar(`${OBJETOS[ferramenta.chave].nome}: só as atrações giram`); return; }
+  rotacaoAtual = (rotacaoAtual + 1) % 4;
 }
 
 function iniciarEntradaUsuario() {

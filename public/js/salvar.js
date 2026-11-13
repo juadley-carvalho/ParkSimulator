@@ -125,12 +125,14 @@ function aplicarJogo(doc) {
       gestao.set(k, { precos: { ...d.precos }, receita: num(d.receita, 0), usos: num(d.usos, 0) });
   }
 
-  // Rotações: só de objetos que existem, são girável e cuja pegada girada confere com as células salvas
+  // Rotações (1 a 3; saves antigos só têm 1): só de objetos que existem, giram e cuja pegada girada
+  // confere com as células salvas
   rotacoes.clear();
   for (const [k, r] of Object.entries(e.rotacoes || {})) {
     const [gx, gy] = k.split(',').map(Number);
     const o = dentroDoMapa(gx, gy) ? objetoEm(gx, gy) : null;
-    if (r === 1 && o && o.gx === gx && o.gy === gy && rotacionavel(o.chave) && pegadaConfere(o.chave, gx, gy, 1)) rotacoes.set(k, 1);
+    if ([1, 2, 3].includes(r) && o && o.gx === gx && o.gy === gy && rotacionavel(o.chave) && pegadaConfere(o.chave, gx, gy, r))
+      rotacoes.set(k, r);
   }
 
   // Atrações: religa as filas aos convidados pelos índices

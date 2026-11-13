@@ -10,13 +10,16 @@
 //   GET    /api/saves/:id    devolve um save completo
 //   PUT    /api/saves/:id    cria ou substitui um save
 //   DELETE /api/saves/:id    apaga um save
+//   GET    /api/musicas      lista os .mp3 de public/musicas (música de fundo)
 
 const path = require('path');
+const fs = require('fs/promises');
 const express = require('express');
 const armazenamento = require('./armazenamento');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const MUSICAS_DIR = path.join(PUBLIC_DIR, 'musicas');
 const { erro } = armazenamento;
 
 const app = express();
@@ -53,6 +56,14 @@ api.put('/saves/:id', rota(async (req, res) => {
 api.delete('/saves/:id', rota(async (req, res) => {
   await armazenamento.apagar(req.params.id);
   res.status(204).end();
+}));
+
+// Músicas de fundo: o navegador não consegue listar uma pasta sozinho, então o servidor diz
+// quais .mp3 existem em public/musicas (os arquivos em si são servidos como estáticos).
+api.get('/musicas', rota(async (req, res) => {
+  let nomes = [];
+  try { nomes = await fs.readdir(MUSICAS_DIR); } catch (e) { if (e.code !== 'ENOENT') throw e; }   // sem pasta: lista vazia
+  res.json(nomes.filter(n => n.toLowerCase().endsWith('.mp3')).sort((a, b) => a.localeCompare(b)));
 }));
 
 api.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));

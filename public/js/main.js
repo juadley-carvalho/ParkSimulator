@@ -40,6 +40,7 @@ function loop(t) {
 montarMapaInicial();
 iniciarUI();
 iniciarSalvar();
+iniciarMusica();
 montarBarra();
 iniciarEntradaUsuario();
 ajustarTamanho();

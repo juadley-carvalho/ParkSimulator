@@ -36,9 +36,10 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   MONTANHA_RUSSA: { custo: 12000, manutencao: 600 },
   BARRACA_BEBIDAS: { custo: 350, manutencao: 40 },
   NAVIO_PIRATA: { custo: 7500, manutencao: 350 },
+  BARRACA_SORVETE: { custo: 400, manutencao: 45 },
 };
 
-const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4, bebida: 2 },
+const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_SORVETE: { comida: 3 },
                       BANHEIRO: { banheiro: 0 }, CARROSSEL: { diversao: 5 },
                       RODA_GIGANTE: { diversao: 6 },
                       MONTANHA_RUSSA: { diversao: 8 },
@@ -94,6 +95,7 @@ const URGENCIA = {
 const PREFERENCIA_INTENSIDADE = 3;
 const FELIC_POR_DOLAR = 1;
 
+// Ícones por serviço. Um serviço do catálogo pode trocar o seu com "icone" (ver iconeDoUso).
 const ICONES = { comida: '🍔', bebida: '🥤', descanso: '💤', banheiro: '🚻', diversao: '🎠', saida: '👋' };
 
 const FILA_MAX = 12;       // acima disso, quem chega desiste e tenta outra coisa
@@ -104,6 +106,9 @@ const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entr
 
 const MAX_CONVIDADOS = 40;
 
+// Volume da música de fundo (0 a 1). As faixas são os .mp3 de public/musicas (ver musica.js).
+const VOLUME_MUSICA = 0.35;
+
 // Parque: nome e ingresso (editáveis na janela "Parque"). O ingresso é cobrado na chegada, e o
 // convidado só entra se ele custar até FRACAO_MAX_ENTRADA do dinheiro que trouxe (com $100, até $30).
 // Preço alto = menos gente entrando e menos dinheiro sobrando para os brinquedos e barracas.
@@ -111,7 +116,7 @@ const NOME_PARQUE_PADRAO = 'Meu parque', NOME_PARQUE_MAX = 30;
 const PRECO_ENTRADA_PADRAO = 0;
 const FRACAO_MAX_ENTRADA = 0.3;
 
-// Tecla que gira 90° o objeto que está sendo posicionado (só muda algo em objetos não quadrados).
+// Tecla que gira 90° a atração que está sendo posicionada (4 posições).
 const TECLA_GIRAR = 'z';
 
 // Intensidade (brinquedos) x tolerância (convidados), ambas de 1 a 10.

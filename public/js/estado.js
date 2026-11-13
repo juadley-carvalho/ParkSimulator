@@ -24,7 +24,7 @@ const objetos = criarMatriz(MAPA, null);
 // Estado das atrações com fila, indexado pela âncora ("gx,gy").
 const atracoes = new Map();
 
-const rotacoes = new Map();   // âncora -> 1 (objeto girado 90°); ausente = orientação original
+const rotacoes = new Map();   // âncora -> 1, 2 ou 3 (girado 90°, 180°, 270°); ausente = orientação original
 const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto que oferece serviços)
 
 // Finanças no início de um jogo novo. É uma função (uma "fábrica") para que o carregamento possa
@@ -59,7 +59,7 @@ let tChegada = 1;                           // segundos até a próxima chegada
 let tAnterior = 0;
 
 let ferramenta = { camada: 'terreno', chave: 'CAMINHO' };
-let rotacaoAtual = 0;   // rotação (0 ou 1) do objeto que o jogador está posicionando
+let rotacaoAtual = 0;   // rotação (0 a 3) da atração que o jogador está posicionando
 
 let modo = null;                 // null | 'mover' (botão do meio) | 'pintar' (botão esquerdo)
 

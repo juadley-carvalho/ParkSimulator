@@ -32,3 +32,7 @@ function nomeDoMes(mes) {
 function diaDoMes(tMes) {
   return Math.min(DIAS_POR_MES, Math.floor(tMes / SEG_POR_MES * DIAS_POR_MES) + 1);
 }
+
+// Ícone do que o convidado está usando: o do serviço no catálogo, se tiver ("icone"), senão o padrão
+// do tipo de serviço (ICONES). Assim a sorveteria mostra 🍦 mesmo sendo um serviço de "comida".
+function iconeDoUso(g) { return (g.uso && g.uso.def && g.uso.def.icone) || ICONES[g.uso.servico]; }

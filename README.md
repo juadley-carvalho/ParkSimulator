@@ -29,13 +29,14 @@ npm start       # http://localhost:3000
 ## Estrutura
 
 ```
-server.js            servidor Express: arquivos estáticos e API de saves
+server.js            servidor Express: arquivos estáticos, API de saves e lista de músicas
 armazenamento.js     camada de armazenamento dos saves (arquivos JSON em ./saves)
 saves/               criada automaticamente; um arquivo .json por save (fora do git)
 package.json
 public/
   index.html         estrutura da página e ordem dos scripts
-  css/style.css      estilos e tema claro/escuro
+  css/style.css      estilos (tema de jogo)
+  musicas/           coloque aqui .mp3 para a música de fundo (ver LEIA-ME.md)
   js/
     config.js        constantes e balanceamento (custos, preços, juros, taxas)
     utils.js         funções genéricas (moeda, aleatório, ...)
@@ -52,6 +53,7 @@ public/
     ui.js            painéis de detalhes e tela de finanças
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves
+    musica.js        música de fundo (playlist embaralhada, botão 🎵)
     input.js         mouse/toque, câmera, regras das ferramentas
     main.js          mapa inicial, loop do jogo e partida
 ```
@@ -75,7 +77,7 @@ Os arquivos são scripts clássicos que compartilham o mesmo escopo global. Cada
 
 Cada save é um arquivo `saves/<id>.json`, onde o id vem do nome digitado (`"Meu Parque"` vira `meu-parque`). Ele guarda o terreno, os objetos, preços e receitas, filas das atrações, finanças e todos os convidados, com o que cada um está fazendo.
 
-- A orientação dos objetos girados fica em `estado.rotacoes` (campo opcional: saves anteriores a ele carregam normalmente, sem giros).
+- A orientação das atrações giradas fica em `estado.rotacoes` (1, 2 ou 3; campo opcional: saves anteriores a ele carregam normalmente, sem giros).
 - O arquivo tem um campo `versao`. **Ao mudar a estrutura do estado do jogo, aumente `VERSAO_SAVE` em `salvar.js`** e acrescente a conversão em `migrar()`, para os saves antigos continuarem abrindo.
 - Ao carregar, o save é validado antes de tocar no jogo: se estiver inválido, o parque atual fica intacto. Terrenos e objetos que não existem mais viram grama e vazio, e campos novos de convidado ganham valores padrão.
 - A gravação é atômica (arquivo temporário + renomear), então uma queda no meio não corrompe o save anterior.
@@ -89,6 +91,7 @@ Cada save é um arquivo `saves/<id>.json`, onde o id vem do nome digitado (`"Meu
 | GET | `/api/saves/:id` | devolve um save completo |
 | PUT | `/api/saves/:id` | cria ou substitui (corpo: `versao`, `nome`, `resumo`, `estado`) |
 | DELETE | `/api/saves/:id` | apaga |
+| GET | `/api/musicas` | lista os `.mp3` de `public/musicas` |
 
 O id só aceita letras minúsculas, números e hífen. Para trocar o armazenamento (por exemplo, SQLite), reescreva só o `armazenamento.js`, mantendo `listar`, `ler`, `gravar` e `apagar`.
 

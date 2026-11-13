@@ -13,10 +13,9 @@ const OBJETOS = {
   // Os demais objetos nunca ficam sobre caminho: bloqueariam a passagem dos convidados.
   BANCO:   { categoria: 'cenario', icone: '🪑', nome: 'Banco',   cor: '#8b5a2b', desenhar: desenharBanco, sobreCaminho: true,
              servicos: { descanso: { atividade: 'sentar', duracao: 6, efeitos: { energia: +40, nausea: -35 } } } },
-  BARRACA: { categoria: 'servicos', icone: '🍔', nome: 'Barraca', cor: '#d9534f', desenhar: desenharBarraca,
-             servicos: { comida: { atividade: 'comer', duracao: 3, efeitos: { fome: -60, banheiro: +12 } },
-                         bebida: { atividade: 'beber', duracao: 2, efeitos: { sede: -60, banheiro: +8 } } } },
-  BANHEIRO: { categoria: 'servicos', icone: '🚻', nome: 'Banheiro', cor: '#90a4ae', desenhar: desenharBanheiro,
+  BARRACA: { categoria: 'servicos', icone: '🍔', nome: 'Barraca de comida', cor: '#d9534f', desenhar: desenharBarraca,
+             servicos: { comida: { atividade: 'comer', duracao: 3, efeitos: { fome: -60, banheiro: +12 } } } },
+  BANHEIRO: { categoria: 'servicos', icone: '🚻', nome: 'Banheiro', cor: '#42a5f5', desenhar: desenharBanheiro,
              servicos: { banheiro: { atividade: 'banheiro', duracao: 4, efeitos: { banheiro: -100 } } } },
   // "tam": pegada em tiles (padrão 1x1). A âncora é o tile de trás (menor gx e gy).
   CARROSSEL: { categoria: 'atracoes', icone: '🎠', nome: 'Carrossel', cor: '#ab47bc', tam: { w: 2, h: 2 }, desenhar: desenharCarrossel,
@@ -31,25 +30,43 @@ const OBJETOS = {
   MONTANHA_RUSSA: { categoria: 'atracoes', icone: '🎢', nome: 'Montanha-russa', cor: '#e53935', tam: { w: 4, h: 3 }, altura: 120, desenhar: desenharMontanhaRussa,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 12, duracao: 25, voltas: 2, intensidade: 8,
                                      efeitos: { felicidade: +45, nausea: +30, energia: -15 } } } },
-  // Só bebidas, mas mais eficiente que a barraca comum (e ainda alivia um pouco a náusea).
+  // Só bebidas: mata mais a sede que um lanche e ainda alivia um pouco a náusea.
   BARRACA_BEBIDAS: { categoria: 'servicos', icone: '🥤', nome: 'Barraca de bebidas', cor: '#29b6f6', desenhar: desenharBarracaBebidas,
              servicos: { bebida: { atividade: 'beber', duracao: 2, efeitos: { sede: -80, banheiro: +10, nausea: -10 } } } },
   // Intensidade 7: fica entre o carrossel (5) e a montanha-russa (8). "giro" = velocidade do balanço (rad/s).
   NAVIO_PIRATA: { categoria: 'atracoes', icone: '🏴‍☠️', nome: 'Navio pirata', cor: '#8d5a2b', tam: { w: 3, h: 2 }, altura: 105, desenhar: desenharNavioPirata,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 10, duracao: 18, intensidade: 7, giro: { parado: 0.6, rodando: 2.0 },
                                      efeitos: { felicidade: +40, nausea: +20, energia: -12 } } } },
+  // Sorvete: um lanche leve. É um serviço de "comida" (quem tem fome pode escolher o mais perto entre
+  // ela e a barraca), mata menos a fome, mas também refresca (sede) e alegra. "nome" e "icone" no serviço
+  // trocam o rótulo do preço e o ícone sobre a cabeça (senão seriam os de comida: 🍔).
+  BARRACA_SORVETE: { categoria: 'servicos', icone: '🍦', nome: 'Sorveteria', cor: '#f48fb1', desenhar: desenharSorveteria,
+             servicos: { comida: { atividade: 'comer', duracao: 2, nome: 'Sorvete', icone: '🍦',
+                                   efeitos: { fome: -30, sede: -25, felicidade: +8, banheiro: +6 } } } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
-// Pegada em tiles. Girado 90° (rot = 1), largura e profundidade trocam de lugar.
+// Rotação "rot" = 0 a 3, em passos de 90°. Nas rotações ímpares (1 e 3), largura e profundidade
+// trocam de lugar; nas pares (0 e 2) a pegada é a mesma e só muda para onde a atração está virada.
 function tamanhoDe(chave, rot = 0) {
   const t = OBJETOS[chave].tam || { w: 1, h: 1 };
-  return rot ? { w: t.h, h: t.w } : t;
+  return rot % 2 ? { w: t.h, h: t.w } : t;
 }
-// Só objetos não quadrados mudam de pegada ao girar
-function rotacionavel(chave) { const t = tamanhoDe(chave); return t.w !== t.h; }
-// Orientação do objeto cuja âncora é (gx, gy): 0 = original, 1 = girado
+// As atrações giram nas 4 posições (até as quadradas: muda o lado da entrada)
+function rotacionavel(chave) { return OBJETOS[chave].categoria === 'atracoes'; }
+// Orientação do objeto cuja âncora é (gx, gy): 0 = original, 1 a 3 = girado 90°, 180°, 270°
 function rotacaoDe(gx, gy) { return rotacoes.get(chaveAtr(gx, gy)) || 0; }
+
+// Para onde a atração está virada, em direções da grade. "eixo" = direção do comprimento (o plano
+// da roda-gigante, o balanço do navio, o lado da estação da montanha-russa); "frente" = lado da entrada.
+// Cada rotação gira os dois 90°: a frente passa por +gy, +gx, -gy, -gx (sentido horário na tela).
+const DIRECOES_ROT = [
+  { eixo: [1, 0],  frente: [0, 1] },
+  { eixo: [0, -1], frente: [1, 0] },
+  { eixo: [-1, 0], frente: [0, -1] },
+  { eixo: [0, 1],  frente: [-1, 0] },
+];
+function direcoesDe(rot) { return DIRECOES_ROT[((rot % 4) + 4) % 4]; }
 
 function ehGrande(chave) { const { w, h } = tamanhoDe(chave); return w * h > 1; }
 
@@ -78,12 +95,12 @@ function podeConstruir(chave, gx, gy, rot = 0) {
 }
 
 function construir(chave, gx, gy, rot = 0) {
-  const giro = rot && rotacionavel(chave) ? 1 : 0;
+  const giro = rotacionavel(chave) ? ((rot % 4) + 4) % 4 : 0;
   const { w, h } = tamanhoDe(chave, giro);
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++)
       objetos[gy + j][gx + i] = (i === 0 && j === 0) ? chave : { ancora: { gx, gy } };
-  if (giro) rotacoes.set(chaveAtr(gx, gy), 1);
+  if (giro) rotacoes.set(chaveAtr(gx, gy), giro);
   if (ehAtracaoComFila(chave)) atracoes.set(chaveAtr(gx, gy), novaAtracao(chave, gx, gy));
   if (OBJETOS[chave].servicos)
     gestao.set(chaveAtr(gx, gy), { precos: { ...(PRECO_PADRAO[chave] || {}) }, receita: 0, usos: 0 });
