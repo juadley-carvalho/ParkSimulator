@@ -27,9 +27,13 @@ function aplicar(gx, gy) {
     if (ehEntrada(gx, gy)) { avisar('A entrada não pode ser alterada'); return; }
     // Água "afoga" qualquer objeto (abaixo). Grama/caminho não podem deixar o objeto no chão errado:
     // nada fica sobre o caminho (bloquearia a passagem), exceto quem é "sobreCaminho" (o banco).
-    if (o && chave !== 'AGUA' && (chave === 'CAMINHO') !== ficaSobreCaminho(o.chave)) {
+    // Brinquedo aquático: a água sob ele não pode virar grama/caminho
+    if (o && chave !== 'AGUA' && (ficaNaAgua(o.chave) || (chave === 'CAMINHO') !== ficaSobreCaminho(o.chave))) {
       avisar(`${OBJETOS[o.chave].nome} está aqui: demola antes de trocar o chão`); return;
     }
+    // ... nem a dos canais por onde os barcos saem e voltam
+    const canal = mapa[gy][gx] === 'AGUA' && donoDoCanal(gx, gy);
+    if (canal) { avisar(`Os barcos do ${OBJETOS[canal.chave].nome} passam por aqui: o canal precisa ser de água`); return; }
     if (!cobrar(CUSTO_TERRENO[chave] || 0)) return;
     mapa[gy][gx] = chave;
     if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto

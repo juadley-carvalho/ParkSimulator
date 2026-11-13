@@ -43,6 +43,15 @@ const OBJETOS = {
   BARRACA_SORVETE: { categoria: 'servicos', icone: '🍦', nome: 'Sorveteria', cor: '#f48fb1', desenhar: desenharSorveteria,
              servicos: { comida: { atividade: 'comer', duracao: 2, nome: 'Sorvete', icone: '🍦',
                                    efeitos: { fome: -30, sede: -25, felicidade: +8, banheiro: +6 } } } },
+  // Brinquedo aquático: "naAgua" = a pegada inteira fica na ÁGUA (o contrário dos outros objetos) e a
+  // fileira logo à frente (saída dos barcos) e a logo atrás (por onde eles voltam) têm de ser água livre:
+  // são os "canais" (canaisDe). Os convidados embarcam pelas laterais, onde fica o caminho da fila.
+  // Intensidade 3: entre a roda-gigante (2) e o carrossel (5); com 2 dividiria o mesmo público da roda.
+  // 4 barcos de 2 lugares; "voltas: 1" faz o passeio terminar exatamente com os barcos nas vagas.
+  BARCOS: { categoria: 'atracoes', icone: '🚣', nome: 'Passeio de barco', cor: '#00acc1', tam: { w: 3, h: 2 }, altura: 62,
+            naAgua: true, desenhar: desenharPasseioBarco,
+            servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 16, voltas: 1, intensidade: 3,
+                                    efeitos: { felicidade: +28, nausea: +8, energia: -6 } } } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
@@ -80,16 +89,50 @@ function objetoEm(gx, gy) {
 
 function ficaSobreCaminho(chave) { return !!OBJETOS[chave].sobreCaminho; }
 
-// Valida a pegada inteira (já na orientação rot): dentro do mapa, sem água, sem outros objetos,
-// e no tipo de chão certo (caminho para quem é "sobreCaminho", fora do caminho para o resto).
+function ficaNaAgua(chave) { return !!OBJETOS[chave].naAgua; }
+
+// Canais de um objeto "naAgua" com âncora (gx, gy) girado "rot": a fileira de tiles logo à frente da
+// pegada (saída dos barcos) e a logo atrás (entrada deles). Cada célula da pegada cuja vizinha na
+// direção da frente fica FORA da pegada está na borda da frente; o mesmo para trás, com -frente.
+function canaisDe(chave, gx, gy, rot = 0) {
+  if (!ficaNaAgua(chave)) return [];
+  const { w, h } = tamanhoDe(chave, rot), [fx, fy] = direcoesDe(rot).frente, canais = [];
+  const dentro = (x, y) => x >= gx && x < gx + w && y >= gy && y < gy + h;
+  for (let j = 0; j < h; j++)
+    for (let i = 0; i < w; i++)
+      for (const s of [1, -1]) {
+        const x = gx + i + s * fx, y = gy + j + s * fy;
+        if (!dentro(x, y)) canais.push({ gx: x, gy: y, frente: s === 1 });
+      }
+  return canais;
+}
+
+// O tile (gx, gy) é canal de algum brinquedo aquático já construído? Devolve a âncora dele, ou null.
+// (Poucos brinquedos no mapa: percorrer todos a cada consulta é barato.)
+function donoDoCanal(gx, gy) {
+  for (const a of atracoes.values()) {
+    if (!ficaNaAgua(a.chave)) continue;
+    const { gx: ax, gy: ay } = a.ancora;
+    if (canaisDe(a.chave, ax, ay, rotacaoDe(ax, ay)).some(c => c.gx === gx && c.gy === gy)) return { gx: ax, gy: ay, chave: a.chave };
+  }
+  return null;
+}
+
+// Valida a pegada inteira (já na orientação rot): dentro do mapa, sem outros objetos e no chão certo:
+// água para quem é "naAgua"; caminho para quem é "sobreCaminho"; grama para o resto.
 function podeConstruir(chave, gx, gy, rot = 0) {
-  const { w, h } = tamanhoDe(chave, rot);
+  const { w, h } = tamanhoDe(chave, rot), naAgua = ficaNaAgua(chave);
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) {
       const x = gx + i, y = gy + j;
-      if (!dentroDoMapa(x, y) || mapa[y][x] === 'AGUA' || objetos[y][x] || ehEntrada(x, y)) return false;
-      if ((mapa[y][x] === 'CAMINHO') !== ficaSobreCaminho(chave)) return false;
+      if (!dentroDoMapa(x, y) || objetos[y][x] || ehEntrada(x, y)) return false;
+      if ((mapa[y][x] === 'AGUA') !== naAgua) return false;
+      if (naAgua ? donoDoCanal(x, y) : (mapa[y][x] === 'CAMINHO') !== ficaSobreCaminho(chave)) return false;
     }
+  // Canais na frente e atrás: dentro do mapa, de água e sem objeto (podem ser divididos com outro
+  // brinquedo aquático: os dois só precisam que a água continue lá)
+  for (const c of canaisDe(chave, gx, gy, rot))
+    if (!dentroDoMapa(c.gx, c.gy) || mapa[c.gy][c.gx] !== 'AGUA' || objetos[c.gy][c.gx]) return false;
   // Quem fica sobre o caminho é desenhado nas bordas livres: num cruzamento (4 lados ligados) não cabe
   return !ficaSobreCaminho(chave) || ladosSemCaminho(gx, gy).length > 0;
 }

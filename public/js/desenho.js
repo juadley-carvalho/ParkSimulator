@@ -396,6 +396,97 @@ function desenharNavioPirata(cx, cy, atr, rot = 0) {
   if (!frenteAtras(rot)) portal();
 }
 
+// Passeio de barco (3x2, na água): píeres de madeira nas duas laterais (onde os convidados embarcam,
+// com toldo listrado) e um píer central; entre eles, 4 vagas com um barco cada, de proa para a frente.
+// Na corrida os barcos saem pela frente, somem no canal (o passeio pelo lago) e voltam pelos fundos
+// até a vaga. Tudo é desenhado num sistema local: "a" = tiles ao longo do eixo, "f" = tiles para a frente.
+const VAGAS_BARCO = [-0.9, -0.36, 0.36, 0.9];
+const CORES_BARCO = [['#e53935', '#a32020'], ['#fdd835', '#c49000'], ['#43a047', '#2a6e2d'], ['#1e88e5', '#125a9e']];
+
+// Posição de um barco no passeio: "p" = progresso da corrida (0 a 1). Cada barco sai com um pequeno
+// atraso (ordem) e todos terminam exatamente na vaga (f = 0) quando p chega a 1.
+function trajetoDoBarco(p, ordem) {
+  const q = Math.min(1, Math.max(0, (p - 0.04 * ordem) / 0.88));
+  const lim = v => Math.min(1, Math.max(0, v));
+  if (q <= 0.4) { const t = q / 0.4, f = 2 * t * t; return { f, alfa: 1 - lim((f - 1.25) / 0.5), andando: q > 0 }; }   // acelera para fora
+  if (q < 0.6) return { f: 0, alfa: 0, andando: true };                                                         // passeando pelo lago
+  const t = (q - 0.6) / 0.4, f = -2 + 2 * (1 - (1 - t) ** 2);                                                 // volta freando
+  return { f, alfa: lim((f + 1.75) / 0.5), andando: q < 1 };
+}
+
+function desenharPasseioBarco(cx, cy, atr, rot = 0) {
+  const { eixo, frente } = direcoesDe(rot);
+  const E = vetorTela(eixo), F = vetorTela(frente);
+  const P = (a, f, alt = 0) => ({ x: cx + E.x * a + F.x * f, y: cy + E.y * a + F.y * f - alt });
+  const prof = (a, f) => (eixo[0] + eixo[1]) * a + (frente[0] + frente[1]) * f;   // profundidade local (gx + gy)
+  // Retângulo deitado de a0..a1 por f0..f1, na altura alt
+  const ret = (a0, a1, f0, f1, alt) => [P(a0, f0, alt), P(a1, f0, alt), P(a1, f1, alt), P(a0, f1, alt)];
+  // Laje (píer) com espessura: as quatro faces laterais numa cor só e a tampa por cima
+  const laje = (a0, a1, f0, f1, alt, corTopo, corLado) => {
+    const b = ret(a0, a1, f0, f1, 0), t = ret(a0, a1, f0, f1, alt);
+    for (let i = 0; i < 4; i++) poligono([b[i], b[(i + 1) % 4], t[(i + 1) % 4], t[i]], corLado);
+    poligono(t, corTopo);
+  };
+  ctx.save();
+  poligono(ret(-1.5, 1.5, -1, 1, 0), 'rgba(13,71,161,0.25)');   // água da doca, um pouco mais funda
+  laje(-0.07, 0.07, -0.75, 0.75, 3, '#b07a45', '#7a5230');       // píer central
+  for (const s of [-1, 1]) {
+    laje(s * 1.18, s * 1.5, -1, 1, 4, '#c08a55', '#7a5230');      // píeres de embarque
+    ctx.strokeStyle = 'rgba(90,55,25,0.5)'; ctx.lineWidth = 1;
+    for (let f = -0.75; f < 1; f += 0.25) {                       // tábuas
+      const a = P(s * 1.18, f, 4), b = P(s * 1.5, f, 4);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+  }
+
+  // Barcos e toldos entram numa lista ordenada pela profundidade local (o pintor, dentro da atração)
+  const itens = [];
+  const p = atr && atr.fase === 'rodando' ? atr.angulo / (2 * Math.PI) : 0;
+  const ocupadas = atr ? atr.passageiros.length : 0;
+  VAGAS_BARCO.forEach((a, i) => {
+    const { f, alfa, andando } = trajetoDoBarco(p, [1, 0, 2, 3][i]);
+    if (alfa <= 0) return;
+    itens.push({ prof: prof(a, f), desenhar: () => {
+      ctx.globalAlpha = alfa;
+      const alt = 1 + Math.sin(tempo * 2.2 + i * 1.7);   // balança na água
+      if (andando) {                                     // marola atrás da popa
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5;
+        for (const s of [-1, 1]) {
+          const u = P(a + s * 0.18, f - 0.36), v = P(a + s * 0.36, f - 0.8);
+          ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(v.x, v.y); ctx.stroke();
+        }
+      }
+      const forma = [[-0.2, -0.36], [0.2, -0.36], [0.2, 0.16], [0, 0.4], [-0.2, 0.16]];   // proa pontuda
+      const base = forma.map(([da, df]) => P(a + da, f + df, alt)), topo = forma.map(([da, df]) => P(a + da, f + df, alt + 6));
+      const [cor, escura] = CORES_BARCO[i];
+      for (let k = 0; k < forma.length; k++) poligono([base[k], base[(k + 1) % 5], topo[(k + 1) % 5], topo[k]], escura);
+      poligono(topo, cor, 'rgba(0,0,0,0.3)');
+      poligono([P(a - 0.13, f - 0.27, alt + 6), P(a + 0.13, f - 0.27, alt + 6), P(a + 0.13, f + 0.1, alt + 6), P(a - 0.13, f + 0.1, alt + 6)], '#eceff1');   // assento
+      const nesse = Math.min(2, Math.max(0, ocupadas - 2 * i));   // 2 lugares por barco
+      for (let k = 0; k < nesse; k++) {
+        const c = P(a + (k ? 0.07 : -0.07), f - 0.08, alt + 6);
+        ctx.fillStyle = k ? '#7e57c2' : '#ff7043'; ctx.fillRect(c.x - 2, c.y - 6, 4, 6);
+        ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(c.x, c.y - 8, 2.4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    } });
+  });
+  for (const s of [-1, 1])
+    itens.push({ prof: prof(s * 1.34, 0) + 0.01, desenhar: () => {   // toldo sobre o píer de embarque
+      ctx.fillStyle = '#eceff1';
+      // Só sobre o píer (estreito e baixo), para não esconder os barcos das vagas vizinhas
+      for (const f of [-0.6, 0.6]) { const b = P(s * 1.34, f, 4); ctx.fillRect(b.x - 1, b.y - 18, 2, 18); }
+      for (let k = 0; k < 6; k++) {                                   // listras na cor da atração
+        const f0 = -0.75 + k / 4;
+        poligono(ret(s * 1.2, s * 1.5, f0, f0 + 1 / 4, 22), k % 2 ? '#ffffff' : OBJETOS.BARCOS.cor);
+      }
+      poligono(ret(s * 1.2, s * 1.5, -0.75, 0.75, 22), null, 'rgba(0,0,0,0.3)');
+    } });
+  itens.sort((x, y) => x.prof - y.prof);
+  for (const it of itens) it.desenhar();
+  ctx.restore();
+}
+
 // Portão de circo: duas torres listradas (vermelho e branco) com telhado de tenda e bandeirola,
 // um arco colorido entre elas com franja de lona e uma placa com o nome do parque.
 // As torres ficam nas laterais do caminho, ao longo de gx (o caminho de entrada corre ao longo de gy).
@@ -544,6 +635,17 @@ function desenhar() {
         ctx.globalAlpha = 1;
         poligono(pts, null, valido ? '#ffe14d' : '#b71c1c');
       }
+    // Brinquedo aquático: contorno tracejado dos canais (frente e fundos), que também precisam ser água livre
+    if (objFerr && ficaNaAgua(objFerr)) {
+      ctx.save();
+      ctx.setLineDash([6 / camera.zoom, 4 / camera.zoom]);
+      for (const c of canaisDe(objFerr, hover.gx, hover.gy, rotacaoAtual)) {
+        if (!dentroDoMapa(c.gx, c.gy)) continue;
+        const livre = mapa[c.gy][c.gx] === 'AGUA' && !objetos[c.gy][c.gx];
+        poligono(cantos(c.gx, c.gy), null, livre ? '#b2ebf2' : '#e53935');
+      }
+      ctx.restore();
+    }
     // "Fantasma" do objeto sobre a pegada: mostra para onde ele vai ficar virado antes de construir
     if (objFerr) {
       const c = gradeParaMundo(hover.gx + w / 2, hover.gy + h / 2);

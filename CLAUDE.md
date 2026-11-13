@@ -91,6 +91,10 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   passagem). Trocar grama/caminho sob um objeto é recusado; água afoga o objeto. Demolir solta quem o usava.
   O banco é desenhado em cada lado do tile NÃO ligado a outro caminho (`ladosSemCaminho`); sem lado livre
   (cruzamento) não se constrói, e um caminho novo que feche o último lado remove o banco (com reembolso).
+- **Brinquedo aquático** (`naAgua`, o passeio de barco): a pegada inteira é ÁGUA e os **canais** (`canaisDe`: a fileira
+  logo à frente, saída dos barcos, e a logo atrás, por onde voltam) têm de ser água sem objeto. Canal pode ser dividido
+  entre dois passeios, mas a pegada de um não pode cair no canal de outro (`donoDoCanal`). Trocar o chão sob ele ou
+  nos canais é recusado. A fila liga pelas laterais (caminho encostado). A prévia mostra os canais tracejados.
 - **Convidados** andam a `VELOCIDADE` ±15% (`g.velocidade`, sorteada em `semear`); a atratividade usa a velocidade dele.
 - **Parque** (janela 🎡, `parque` em estado.js): nome (até 30 caracteres, só via `textContent`/`document.title`) e
   preço de entrada (padrão $0). O ingresso é cobrado na chegada (`pagarEntrada`); quem acha caro (preço >
@@ -123,12 +127,13 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 | NAVIO_PIRATA | 3×2 | $7.500 / $350 | $7 | 7 · 10 · 18 s |
 | RODA_GIGANTE | 3×2 | $5.000 / $300 | $6 | 2 · 8 · 20 s |
 | MONTANHA_RUSSA | 4×3 | $12.000 / $600 | $8 | 8 · 12 · 25 s (2 voltas) |
+| BARCOS (passeio de barco) | 3×2 + canais | $750 / $90 | $4 | 3 · 8 (4 barcos) · 16 s (1 volta), só na água |
 
-Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes não ficam sobre CAMINHO nem água.
+Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes não ficam sobre CAMINHO nem água (exceto as `naAgua`).
 
 ## Como estender
 - **Novo objeto**: (1) `desenhar...(cx, cy, atr, rot)` em desenho.js; (2) entrada em `OBJETOS` com `categoria`, `icone`,
-  `nome`, `cor`, `desenhar`, e opcionais `tam`, `altura` (posição do rótulo da fila), `servicos`, `sobreCaminho`; (3) custo/manutenção
+  `nome`, `cor`, `desenhar`, e opcionais `tam`, `altura` (posição do rótulo da fila), `servicos`, `sobreCaminho`, `naAgua`; (3) custo/manutenção
   em `ECONOMIA` e preços em `PRECO_PADRAO`. Cartão da barra, construção, painel de preços e save funcionam sozinhos.
   Atração nova: trate `rot` (0–3) no desenho com `direcoesDe`/`vetorTela` e ponha um portal (`desenharPortalAtracao`).
 - **Novo terreno**: `TIPOS` (com `icone`) + `CUSTO_TERRENO`. **Nova categoria da barra**: `CATEGORIAS`.

@@ -37,13 +37,15 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   BARRACA_BEBIDAS: { custo: 350, manutencao: 40 },
   NAVIO_PIRATA: { custo: 7500, manutencao: 350 },
   BARRACA_SORVETE: { custo: 400, manutencao: 45 },
+  BARCOS: { custo: 750, manutencao: 90 },
 };
 
 const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_SORVETE: { comida: 3 },
                       BANHEIRO: { banheiro: 0 }, CARROSSEL: { diversao: 5 },
                       RODA_GIGANTE: { diversao: 6 },
                       MONTANHA_RUSSA: { diversao: 8 },
-                      BARRACA_BEBIDAS: { bebida: 3 }, NAVIO_PIRATA: { diversao: 7 } };
+                      BARRACA_BEBIDAS: { bebida: 3 }, NAVIO_PIRATA: { diversao: 7 },
+                      BARCOS: { diversao: 4 } };
 
 const CUSTO_TERRENO = { GRAMA: 0, CAMINHO: 10, AGUA: 25 };   // cobrado ao trocar o terreno do tile
 
