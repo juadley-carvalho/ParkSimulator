@@ -396,17 +396,66 @@ function desenharNavioPirata(cx, cy, atr, rot = 0) {
   if (!frenteAtras(rot)) portal();
 }
 
-// Portão: dois postes nas laterais do caminho e uma viga no alto
+// Portão de circo: duas torres listradas (vermelho e branco) com telhado de tenda e bandeirola,
+// um arco colorido entre elas com franja de lona e uma placa com o nome do parque.
+// As torres ficam nas laterais do caminho, ao longo de gx (o caminho de entrada corre ao longo de gy).
 function desenharPortao() {
   const c = gradeParaMundo(ENTRADA.gx + 0.5, ENTRADA.gy + 0.5);
-  const dx = TILE_W / 2 * 0.42, dy = TILE_H / 2 * 0.42, alt = 40;
-  const E = { x: c.x - dx, y: c.y - dy }, D = { x: c.x + dx, y: c.y + dy };
-  ctx.fillStyle = '#eceff1';
-  for (const p of [E, D]) ctx.fillRect(p.x - 3, p.y - alt, 6, alt);
-  poligono([{ x: E.x, y: E.y - alt }, { x: D.x, y: D.y - alt }, { x: D.x, y: D.y - alt - 10 }, { x: E.x, y: E.y - alt - 10 }], '#e53935');
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(c.x - 24, c.y - alt - 26, 48, 13);
-  ctx.fillStyle = '#fff'; ctx.font = `600 10px ${FONTE_JOGO}`; ctx.textAlign = 'center';
-  ctx.fillText('ENTRADA', c.x, c.y - alt - 16);
+  const u = vetorTela([1, 0], 0.42);                       // do centro até cada torre
+  const E = { x: c.x - u.x, y: c.y - u.y }, D = { x: c.x + u.x, y: c.y + u.y };
+  const altTorre = 40, r = 4.5;                            // altura e raio das torres
+  ctx.save();
+
+  // Torre: faixas horizontais alternadas, uma sombra no lado direito (volume) e uma tenda cônica no topo
+  const torre = p => {
+    for (let y = 0; y < altTorre; y += 6) {
+      ctx.fillStyle = (y / 6) % 2 ? '#fafafa' : '#e53935';
+      ctx.fillRect(p.x - r, p.y - Math.min(y + 6, altTorre), r * 2, Math.min(6, altTorre - y));
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(p.x + r * 0.2, p.y - altTorre, r * 0.8, altTorre);
+    const topo = p.y - altTorre, pico = { x: p.x, y: topo - 15 };
+    poligono([{ x: p.x - r - 3, y: topo }, { x: p.x + r + 3, y: topo }, pico], '#e53935');      // tenda
+    poligono([{ x: p.x - 2.5, y: topo }, { x: p.x + 2.5, y: topo }, pico], '#fafafa');           // gomo branco
+    ctx.fillStyle = '#e53935';                                                                   // franja
+    for (const dx of [-5, 0, 5]) { ctx.beginPath(); ctx.arc(p.x + dx, topo, 2.5, 0, Math.PI); ctx.fill(); }
+    // Bandeirola tremulando: a ponta sobe e desce com o tempo (mesmo relógio das animações)
+    ctx.strokeStyle = '#6d4c41'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pico.x, pico.y); ctx.lineTo(pico.x, pico.y - 7); ctx.stroke();
+    const onda = Math.sin(tempo * 5 + p.x) * 1.5;
+    poligono([{ x: pico.x, y: pico.y - 7 }, { x: pico.x + 8, y: pico.y - 5 + onda }, { x: pico.x, y: pico.y - 3 }], '#ffca28');
+  };
+
+  // Arco: faixa curva entre as torres, em gomos de cores alternadas, com franja pendurada embaixo.
+  // ponto(t, extra): t = 0 na torre esquerda, 1 na direita. O arco sai das torres abaixo do topo e
+  // sobe 28 px no meio, passando acima das tendas.
+  const ponto = (t, extra = 0) => ({ x: E.x + (D.x - E.x) * t, y: E.y + (D.y - E.y) * t - (altTorre - 14 + 28 * Math.sin(Math.PI * t)) - extra });
+  const arco = () => {
+    const N = 10, largura = 7;
+    for (let k = 0; k < N; k++) {
+      const a = k / N, b = (k + 1) / N;
+      poligono([ponto(a), ponto(b), ponto(b, largura), ponto(a, largura)], ['#ffca28', '#1e88e5', '#e53935', '#43a047'][k % 4]);
+    }
+    ctx.fillStyle = '#fafafa';                                                                   // franja de lona
+    for (let k = 0; k < N; k++) { const p = ponto((k + 0.5) / N); ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI); ctx.fill(); }
+  };
+
+  torre(E);
+  arco();
+  torre(D);
+
+  // Placa com o nome do parque no alto do arco. A fonte diminui para nomes longos (até 6 px);
+  // se ainda não couber, o nome é cortado com "…". Canvas desenha texto puro: não há risco de HTML aqui.
+  const meio = ponto(0.5, 7), larguraMax = 58;
+  let tam = 9, texto = nomeDoParque();
+  ctx.textAlign = 'center';
+  const medir = () => { ctx.font = `600 ${tam}px ${FONTE_JOGO}`; return ctx.measureText(texto).width; };
+  while (medir() > larguraMax && tam > 6) tam -= 0.5;
+  while (medir() > larguraMax && texto.length > 1) texto = texto.slice(0, -2) + '…';
+  const w = Math.max(30, medir() + 10), h = tam + 6;
+  ctx.fillStyle = '#7b1fa2'; ctx.fillRect(meio.x - w / 2, meio.y - h - 2, w, h);
+  ctx.strokeStyle = '#ffca28'; ctx.lineWidth = 1.2; ctx.strokeRect(meio.x - w / 2, meio.y - h - 2, w, h);
+  ctx.fillStyle = '#fff'; ctx.fillText(texto, meio.x, meio.y - 5);
+  ctx.restore();
 }
 
 function desenharFila(a, cx, cy, alt = 84) {
