@@ -16,6 +16,9 @@ function montarMapaInicial() {
   construir('MONTANHA_RUSSA', 2, 13);
   construir('NAVIO_PIRATA', 20, 10);
   construir('BARRACA_BEBIDAS', 13, 17);
+  construir('LIXEIRA', 14, 12);   // perto da comida e da bebida, onde o lixo nasce
+  construir('LIXEIRA', 12, 15);
+  contratarFaxineiro(12, 20);
 }
 
 function loop(t) {
@@ -24,6 +27,7 @@ function loop(t) {
   if (fase === 'jogando') {   // na tela inicial e no fim de um cenário, o tempo do parque para
     tempo += dt;
     atualizar(dt);
+    atualizarFuncionarios(dt);
     atualizarAtracoes(dt);
     atualizarFinancas(dt);
     atualizarEntrada(dt);

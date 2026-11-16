@@ -70,6 +70,13 @@ function objetoLiberado(chave) { return !partida.liberados || partida.liberados.
 
 const convidados = [];
 
+// Lixo e limpeza (ver lixo.js). sujeira: "gx,gy" -> lista de itens no chão { tipo, dx, dy, giro }
+// (tipo: papel, copo, palito ou vomito). lixeiras: âncora "gx,gy" -> itens dentro dela.
+const sujeira = new Map();
+const lixeiras = new Map();
+const funcionarios = [];   // faxineiros: { nome, x, y, alvo, tarefa, trabalho, recolheu, recolheuMes }
+let selFunc = null;        // faxineiro selecionado (painel com o botão Demitir)
+
 let tempo = 0;
 
 let selecionado = null;

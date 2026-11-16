@@ -55,11 +55,14 @@ function patrimonio() {
   return arred(fin.caixa - fin.divida + objetosValem);
 }
 
-// Fechamento do mês: cobra juros sobre a dívida e a manutenção (o caixa pode ficar negativo)
+function salariosMensais() { return funcionarios.length * LIXO.salario; }
+
+// Fechamento do mês: cobra juros sobre a dívida, a manutenção e os salários (o caixa pode ficar negativo)
 function fecharMes() {
-  const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal();
-  fin.caixa = arred(fin.caixa - juros - manut);
-  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, visitantes: fin.visitantesMes,
+  const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal(), salarios = salariosMensais();
+  fin.caixa = arred(fin.caixa - juros - manut - salarios);
+  for (const f of funcionarios) f.recolheuMes = 0;
+  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, salarios, visitantes: fin.visitantesMes,
                   entradas: fin.entradasMes, recusas: fin.recusasMes, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
   fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.queixasMes = {}; fin.mes++;
   objetivoNoFechamento(fin.balanco.mes);   // cenário: vitória ou fim do prazo (cenarios.js)

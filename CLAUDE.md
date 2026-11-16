@@ -35,7 +35,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
   `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas,
-  avaliacao, ui, barra, salvar, cenarios, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  avaliacao, lixo, ui, barra, salvar, cenarios, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -46,7 +46,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - `mapa`, `objetos` etc. são `const` **mutadas no lugar**: não reatribua (veja `aplicarJogo`, que copia linha a linha).
 - Responsabilidades: `estado` dados · `iso` grade↔tela · `desenho` canvas · `objetos` catálogo e regras de construção ·
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
-  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota do parque e pensamentos · `ui` painéis de detalhes e janelas de
+  movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota do parque e pensamentos ·
+  `lixo` sujeira no chão, lixeiras, vômito e faxineiros · `ui` painéis de detalhes e janelas de
   finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `cenarios` tela inicial,
   cenários, objetivos, vitória/derrota · `input` mouse/teclado/câmera.
 - **Fase** (`fase`, estado.js): `menu | jogando | vitoria | derrota`. O `loop` só chama os `atualizar*` em `jogando`
@@ -94,6 +95,17 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   não contar como lucro) vencem na hora; `nota` conta nos fechamentos e exige `meses` SEGUIDOS (`partida.sequencia`).
   Fechar o mês `prazo` sem cumprir = derrota. "N convidados ao mesmo tempo" é fácil demais no 1º mês (o limite vem da
   nota, que começa alta) e "nota num fechamento" também: por isso visitantes acumulados e meses seguidos.
+- **Lixo e limpeza** (`LIXO` em config.js, lixo.js): comer/beber deixa um `lixo` na mão (`lixo` no serviço do catálogo:
+  papel, copo, palito), segurado 8–30 s conforme `g.capricho`. A cada tile (`chegarNoTile`): lixeira no tile ou ao lado =
+  deposita; cheia = larga ao lado dela (transborda); tempo esgotado = chão (só CAMINHO, máx 4 por tile). Sem urgência,
+  desvia até lixeira com espaço a até 6 tiles (`irAteLixeira`). Náusea ≥ 40: 20% de chance por tile de vomitar.
+  Entrar em tile sujo: −3 felicidade (vômito −6) e queixa, no máximo 1 vez a cada 30 s (sem isso a felicidade despencava).
+  `sujeira` (Map "gx,gy" → itens) é desenhada logo após o terreno. **Lixeira**: $50, cap. 30, sobre caminho como o banco
+  mas sozinha no tile. **Faxineiro**: aba 👷 da barra (camada `contratar`, clique num caminho), $500 + $150/mês (no
+  fechamento, `fin.balanco.salarios`); demite pelo painel (Inspecionar). Tarefa = menor (distância − bônus): vômito −8,
+  lixeira ≥ 75% −4, lixo 0; reserva o alvo (`Set`) para dois não irem ao mesmo. No tile da lixeira, esvazia ANTES de
+  varrer (senão ficava preso: o transbordo repunha o lixo). Parque livre começa com 2 lixeiras e 1 faxineiro.
+  Calibragem (2 meses, parque livre): nada 411 · só lixeiras 403 (enchem) · só faxineiro 431 · lixeiras + 1 faxineiro 586.
 - **Calendário**: começa em Janeiro, Ano 1. Mês = 300 s (`SEG_POR_MES`, um ano ≈ 1 h) com 30 dias (1 dia = 10 s).
   `fin.mes` é um contador crescente; nome/ano saem de `nomeDoMes`, o dia de `diaDoMes(fin.tMes)` (utils.js).
 - **Finanças ($)**: caixa e dívida iniciais $15.000; empréstimo máx $20.000 em parcelas de $1.000; juros 3%/mês
@@ -121,7 +133,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Avaliação** (0–999, `avaliacao` em estado.js, avaliacao.js): soma de partes (`partesDaAvaliacao`, pesos em
   `AVALIACAO`): felicidade média ×4 (400) + 40 por TIPO de atração (até 200) + serviços existentes entre comida,
   bebida, banheiro e descanso (150) + necessidades em dia (250) − fração das saídas recentes por infelicidade ×150 −
-  fração das chegadas recusadas no portão ×100. Sem convidados, valores neutros (felicidade 60). Recalculada a cada
+  fração das chegadas recusadas no portão ×100 − sujeira (itens no chão por tile de caminho, vômito = 2) ×150. Sem convidados, valores neutros (felicidade 60). Recalculada a cada
   5 s; a nota exibida persegue o alvo (suavização). As contagens das penalidades decaem (meia-vida ≈ 0,7 mês). Penalidade
   por cabeça (proposta original) saturava: ~85% das visitas terminam por felicidade ≤ 10. Parque inicial: ≈ 590.
 - **Pensamentos** (`PENSAMENTOS` em config.js): `pensar(g, tipo)` mostra um balão por 3 s e soma em `fin.queixasMes`
@@ -144,6 +156,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 |---|---|---|---|---|
 | ARVORE | 1×1 | $30 / $2 | | |
 | BANCO | 1×1 | $60 / $5 | grátis | só sobre CAMINHO |
+| LIXEIRA | 1×1 | $50 / $3 | | só sobre CAMINHO; capacidade 30 |
 | BARRACA (de comida) | 1×1 | $350 / $80 | comida $4 | |
 | BARRACA_BEBIDAS | 1×1 | $350 / $40 | bebida $3 | |
 | BARRACA_SORVETE | 1×1 | $400 / $60 | sorvete $3 | |
@@ -163,6 +176,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   Atração nova: trate `rot` (0–3) no desenho com `direcoesDe`/`vetorTela` e ponha um portal (`desenharPortalAtracao`).
 - **Novo terreno**: `TIPOS` (com `icone`) + `CUSTO_TERRENO`. **Nova categoria da barra**: `CATEGORIAS`.
 - **Novo serviço/necessidade**: `URGENCIA`, `ICONES`, `FELIC_POR_ATIVIDADE` (config.js) e `atualizarNecessidades`.
+- **Novo lixo**: `lixo: 'tipo'` no serviço, desenho em `desenharSujeira`/`desenharConvidado` e o tipo em `TIPOS_SUJEIRA`.
 - **Nova queixa**: entrada em `PENSAMENTOS` e uma chamada `pensar(g, tipo)` no gatilho. **Novo fator da nota**: mais
   uma parte em `partesDaAvaliacao` (a janela do parque lista as partes sozinha).
 - **Novo cenário**: arquivo em `public/cenarios/` e o id em `CENARIOS` (a posição define o desbloqueio). Teste se o
@@ -186,7 +200,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   e abrir o jogo no navegador, exercitando o que mudou (construir, salvar/carregar, deixar convidados andarem).
 - Headless sem navegador: jsdom com **stub de canvas** (um `Proxy` que aceita qualquer chamada, e `measureText`),
   `requestAnimationFrame = () => 0` (o loop real roda durante `await` e invalida comparações), `fetch` injetado.
-  Simule com `window.eval` chamando `atualizar`, `atualizarAtracoes`, `atualizarFinancas`, `atualizarEntrada`, `atualizarAvaliacao` com
+  Simule com `window.eval` chamando `atualizar`, `atualizarFuncionarios`, `atualizarAtracoes`, `atualizarFinancas`, `atualizarEntrada`, `atualizarAvaliacao` com
   `dt = 0.1` (e `atualizarPartida`; o `loop` só atualiza com `fase === 'jogando'`). Cenários: `fetch` lendo de
   `public/`, `localStorage` falso; para calibrar um objetivo, monte o parque como um jogador faria e rode os meses. Invariantes úteis: convidado `esperando`/`brincando` pertence a uma fila/atração; `usando` tem `uso.def`.
 - Para ver o desenho de verdade: `canvas` (node-canvas) ligado ao jsdom, ou puppeteer. Rode o servidor e o teste no
@@ -199,6 +213,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Teste com loop real ligado compara estados em momentos diferentes; teste com objeto sem tile livre até o caminho
   (atração precisa de CAMINHO encostado em alguma célula da pegada) dá "ninguém usa".
 - Emojis da interface dependem da fonte do sistema operacional.
+- Efeito "por tile" sem intervalo (pisar no lixo) derruba a felicidade; teste de faxineiro com chegadas ligadas muda o
+  nível das lixeiras (use `tChegada = 1e9`).
 - Receita ≈ visitantes × dinheiro que trazem ($30–150): guardam até sair com < $2. Mudar só as preferências
   redistribui o gasto entre os objetos, sem aumentar o total (simulação: ~$8,4/s antes e depois da atratividade).
 

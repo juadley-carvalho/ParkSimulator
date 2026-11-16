@@ -43,6 +43,9 @@ function listaDeItens() {
   for (const [k, o] of Object.entries(OBJETOS))
     if (objetoLiberado(k)) itens.push({ categoria: o.categoria || 'cenario', nome: o.nome, icone: o.icone || '📦', camada: 'objeto', chave: k,
                  custo: custoDe(k), dica: dicaDoObjeto(k) });
+  itens.push({ categoria: 'funcionarios', nome: 'Faxineiro', icone: '🧹', camada: 'contratar', chave: 'FAXINEIRO',
+    custo: LIXO.contratacao, dica: `Clique num caminho para contratar: ${moeda(LIXO.contratacao)} + salário de ${moeda(LIXO.salario)}/mês. ` +
+      'Limpa vômito, recolhe lixo e esvazia lixeiras. Use Inspecionar para ver ou demitir.' });
   if (partida.modo === 'livre') itens.push(   // nos cenários, "+5 convidados" seria trapaça
     { categoria: 'teste', nome: '+5 convidados', icone: '👥', dica: 'Faz 5 convidados chegarem pela entrada',
       acao: () => semear(5, [ENTRADA.gx, ENTRADA.gy]) },

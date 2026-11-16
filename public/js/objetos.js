@@ -14,7 +14,8 @@ const OBJETOS = {
   BANCO:   { categoria: 'cenario', icone: '🪑', nome: 'Banco',   cor: '#8b5a2b', desenhar: desenharBanco, sobreCaminho: true,
              servicos: { descanso: { atividade: 'sentar', duracao: 6, efeitos: { energia: +40, nausea: -35 } } } },
   BARRACA: { categoria: 'servicos', icone: '🍔', nome: 'Barraca de comida', cor: '#d9534f', desenhar: desenharBarraca,
-             servicos: { comida: { atividade: 'comer', duracao: 3, efeitos: { fome: -60, banheiro: +12 } } } },
+             servicos: { comida: { atividade: 'comer', duracao: 3, lixo: 'papel', efeitos: { fome: -60, banheiro: +12 } } } },
+  // "lixo": o que sobra na mão do convidado depois de usar o serviço (ver lixo.js)
   BANHEIRO: { categoria: 'servicos', icone: '🚻', nome: 'Banheiro', cor: '#42a5f5', desenhar: desenharBanheiro,
              servicos: { banheiro: { atividade: 'banheiro', duracao: 4, efeitos: { banheiro: -100 } } } },
   // "tam": pegada em tiles (padrão 1x1). A âncora é o tile de trás (menor gx e gy).
@@ -32,7 +33,7 @@ const OBJETOS = {
                                      efeitos: { felicidade: +45, nausea: +30, energia: -15 } } } },
   // Só bebidas: mata mais a sede que um lanche e ainda alivia um pouco a náusea.
   BARRACA_BEBIDAS: { categoria: 'servicos', icone: '🥤', nome: 'Barraca de bebidas', cor: '#29b6f6', desenhar: desenharBarracaBebidas,
-             servicos: { bebida: { atividade: 'beber', duracao: 2, efeitos: { sede: -80, banheiro: +10, nausea: -10 } } } },
+             servicos: { bebida: { atividade: 'beber', duracao: 2, lixo: 'copo', efeitos: { sede: -80, banheiro: +10, nausea: -10 } } } },
   // Intensidade 7: fica entre o carrossel (5) e a montanha-russa (8). "giro" = velocidade do balanço (rad/s).
   NAVIO_PIRATA: { categoria: 'atracoes', icone: '🏴‍☠️', nome: 'Navio pirata', cor: '#8d5a2b', tam: { w: 3, h: 2 }, altura: 105, desenhar: desenharNavioPirata,
              servicos: { diversao: { atividade: 'brinquedo', capacidade: 10, duracao: 18, intensidade: 7, giro: { parado: 0.6, rodando: 2.0 },
@@ -41,7 +42,7 @@ const OBJETOS = {
   // ela e a barraca), mata menos a fome, mas também refresca (sede) e alegra. "nome" e "icone" no serviço
   // trocam o rótulo do preço e o ícone sobre a cabeça (senão seriam os de comida: 🍔).
   BARRACA_SORVETE: { categoria: 'servicos', icone: '🍦', nome: 'Sorveteria', cor: '#f48fb1', desenhar: desenharSorveteria,
-             servicos: { comida: { atividade: 'comer', duracao: 2, nome: 'Sorvete', icone: '🍦',
+             servicos: { comida: { atividade: 'comer', duracao: 2, nome: 'Sorvete', icone: '🍦', lixo: 'palito',
                                    efeitos: { fome: -30, sede: -25, felicidade: +8, banheiro: +6 } } } },
   // Brinquedo aquático: "naAgua" = a pegada inteira fica na ÁGUA (o contrário dos outros objetos) e a
   // fileira logo à frente (saída dos barcos) e a logo atrás (por onde eles voltam) têm de ser água livre:
@@ -52,6 +53,9 @@ const OBJETOS = {
             naAgua: true, desenhar: desenharPasseioBarco,
             servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 16, voltas: 1, intensidade: 3,
                                     efeitos: { felicidade: +28, nausea: +8, energia: -6 } } } },
+  // Lixeira: fica sobre o caminho, na borda (como o banco), mas sozinha no tile. "lixeira" = capacidade.
+  LIXEIRA: { categoria: 'cenario', icone: '🗑️', nome: 'Lixeira', cor: '#2e7d32', desenhar: desenharLixeira, sobreCaminho: true,
+             lixeira: { capacidade: LIXO.capacidadeLixeira } },
 };
 
 // Funções simples sobre objetos de vários tiles (ver o formato de "objetos" em estado.js).
@@ -145,6 +149,7 @@ function construir(chave, gx, gy, rot = 0) {
       objetos[gy + j][gx + i] = (i === 0 && j === 0) ? chave : { ancora: { gx, gy } };
   if (giro) rotacoes.set(chaveAtr(gx, gy), giro);
   if (ehAtracaoComFila(chave)) atracoes.set(chaveAtr(gx, gy), novaAtracao(chave, gx, gy));
+  if (OBJETOS[chave].lixeira) lixeiras.set(chaveAtr(gx, gy), 0);   // começa vazia
   if (OBJETOS[chave].servicos)
     gestao.set(chaveAtr(gx, gy), { precos: { ...(PRECO_PADRAO[chave] || {}) }, receita: 0, usos: 0 });
 }
@@ -161,6 +166,7 @@ function removerObjeto(gx, gy) {
   for (const g of convidados)
     if (g.estado === 'usando' && g.uso.ancora && g.uso.ancora.gx === o.gx && g.uso.ancora.gy === o.gy) soltarConvidado(g);
   gestao.delete(chaveAtr(o.gx, o.gy));
+  lixeiras.delete(chaveAtr(o.gx, o.gy));   // o que estava dentro vai junto
   rotacoes.delete(chaveAtr(o.gx, o.gy));
   fin.caixa = arred(fin.caixa + custoDe(o.chave) * REEMBOLSO);   // reembolso parcial
 }

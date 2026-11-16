@@ -23,6 +23,7 @@ const CATEGORIAS = [
   { id: 'cenario',     nome: 'Cenário',     icone: '🌳' },
   { id: 'servicos',    nome: 'Serviços',    icone: '🍔' },
   { id: 'atracoes',    nome: 'Atrações',    icone: '🎢' },
+  { id: 'funcionarios', nome: 'Funcionários', icone: '👷' },
   { id: 'teste',       nome: 'Teste',       icone: '🧪' },
 ];
 
@@ -38,6 +39,7 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   NAVIO_PIRATA: { custo: 900, manutencao: 120 },
   BARRACA_SORVETE: { custo: 400, manutencao: 60 },
   BARCOS: { custo: 750, manutencao: 90 },
+  LIXEIRA: { custo: 50, manutencao: 3 },
 };
 
 const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_SORVETE: { comida: 3 },
@@ -98,7 +100,7 @@ const PREFERENCIA_INTENSIDADE = 3;
 const FELIC_POR_DOLAR = 1;
 
 // Ícones por serviço. Um serviço do catálogo pode trocar o seu com "icone" (ver iconeDoUso).
-const ICONES = { comida: '🍔', bebida: '🥤', descanso: '💤', banheiro: '🚻', diversao: '🎠', saida: '👋' };
+const ICONES = { comida: '🍔', bebida: '🥤', descanso: '💤', banheiro: '🚻', diversao: '🎠', saida: '👋', lixo: '🗑️' };
 
 const FILA_MAX = 12;       // acima disso, quem chega desiste e tenta outra coisa
 
@@ -144,6 +146,8 @@ const AVALIACAO = {
   // Penalidades por PROPORÇÃO (contar por cabeça saturaria: a maioria das visitas termina por tédio):
   infelizes: 150,       // fração das saídas recentes que foram por infelicidade x 150
   recusas: 100,         // fração das chegadas recentes que desistiram no portão x 100
+  sujeira: 150,         // sujeira no chão (vômito vale 2 itens) por tile de caminho, x 150...
+  sujeiraSatura: 1,     // ... chegando ao máximo com 1 item por tile de caminho
   amostraMinima: 10,    // denominador mínimo: o 1º convidado infeliz não vale 100%
   // Sem convidados no parque, os fatores que dependem deles usam estes valores neutros
   felicidadeNeutra: 60, necessidadesNeutras: 0.6,
@@ -164,6 +168,9 @@ const PENSAMENTOS = {
   intenso:  { icone: '🤢', texto: 'Esse brinquedo foi intenso demais!' },
   entrada:  { icone: '🎟️', texto: 'Ingresso caro demais!' },
   embora:   { icone: '😞', texto: 'Este parque é chato, vou embora' },
+  sujeira:  { icone: '🗑️', texto: 'Que sujeira!' },
+  nojo:     { icone: '😖', texto: 'Que nojo, pisei em vômito!' },
+  enjoo:    { icone: '🤮', texto: 'Passei mal...' },
 };
 const DURACAO_PENSAMENTO = 3;     // s que o balão fica na tela
 const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA queixa (senão contaria a cada tile)
@@ -172,3 +179,19 @@ const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA qu
 // A ORDEM desta lista é a ordem de desbloqueio: concluir um cenário libera o seguinte.
 const CENARIOS = ['primeiro-parque', 'lagoa-azul', 'heranca-falida', 'so-ingresso'];
 const CHAVE_PROGRESSO = 'parque.cenariosConcluidos';   // localStorage: ids dos cenários já vencidos
+
+// ---------- Lixo, lixeiras e faxineiros (ver lixo.js) ----------
+const LIXO = {
+  // Quem come ou bebe fica com o lixo na mão e o segura de seguraMin a seguraMax segundos, conforme o
+  // "capricho" dele (0 a 1, sorteado na chegada). Se acha uma lixeira até "desvio" tiles de caminho, vai até ela.
+  seguraMin: 8, seguraMax: 30, desvio: 6,
+  maxPorTile: 4,                          // itens de sujeira num mesmo tile
+  capacidadeLixeira: 30, esvaziarEm: 0.75, // o faxineiro esvazia a partir de 75% da capacidade
+  pisarLixo: 3, pisarVomito: 6,           // felicidade perdida ao ENTRAR num tile sujo
+  nauseaVomito: 40, chanceVomito: 0.2,    // chance de vomitar a cada tile andado com náusea >= 40
+  aliviaVomito: 40, felicVomito: 5,       // depois de vomitar: menos náusea, um pouco menos de felicidade
+  tempoLixo: 1, tempoVomito: 3, tempoLixeira: 2,   // segundos de trabalho do faxineiro
+  // Prioridade do faxineiro: escolhe a tarefa de menor (distância − bônus): vômito "parece" 8 tiles mais perto
+  bonusVomito: 8, bonusLixeira: 4,
+  contratacao: 500, salario: 150, velocidade: 1.5,
+};

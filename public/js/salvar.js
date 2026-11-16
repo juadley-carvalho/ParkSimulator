@@ -21,6 +21,8 @@ function serializarJogo() {
       mapa, objetos, fin, parque, avaliacao, partida, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
       rotacoes: Object.fromEntries(rotacoes),
+      sujeira: Object.fromEntries(sujeira), lixeiras: Object.fromEntries(lixeiras),
+      funcionarios: funcionarios.map(f => ({ ...f, alvo: null })),   // o rumo é refeito no próximo quadro
       atracoes: Object.fromEntries([...atracoes].map(([k, a]) =>
         [k, { ...a, fila: comoIndices(a.fila), passageiros: comoIndices(a.passageiros) }])),
       // "def" aponta para o catálogo (que não é dado de jogo): é refeito a partir do serviço e da âncora
@@ -104,11 +106,11 @@ function aplicarJogo(doc) {
   tempo = num(e.tempo, 0);
   tChegada = num(e.tChegada, 1);
   stats.sairam = num(e.stats && e.stats.sairam, 0);
-  selecionado = null; selObj = null;
+  selecionado = null; selObj = null; selFunc = null;
 
   // Convidados: completa campos que um save antigo possa não ter e descarta os inválidos.
   const base = { ox: 0, oy: 0, alvo: null, anterior: null, resgate: false, estado: 'andando', objetivo: null, uso: null,
-                 dinheiro: 50, tolerancia: 5, paciencia: 35, evitar: {}, pensou: {}, pensamento: null,
+                 dinheiro: 50, tolerancia: 5, paciencia: 35, evitar: {}, pensou: {}, pensamento: null, lixo: null, capricho: 0.5,
                  saindo: false, foi: false, cor: 'hsl(200 70% 55%)' };
   const baseN = { fome: 0, sede: 0, banheiro: 0, nausea: 0, energia: 100, felicidade: 100 };
   const porIndice = (Array.isArray(e.convidados) ? e.convidados : []).map(s => {
@@ -118,7 +120,9 @@ function aplicarJogo(doc) {
     const sn = s.n || {};
     const n = Object.fromEntries(Object.entries(baseN).map(([c, padrao]) => [c, limitar(num(sn[c], padrao))]));
     const pens = s.pensamento && PENSAMENTOS[s.pensamento.tipo] && Number.isFinite(s.pensamento.ate) ? { tipo: s.pensamento.tipo, ate: s.pensamento.ate } : null;
-    return { ...base, ...s, n, evitar: { ...s.evitar }, pensou: soNumeros(s.pensou), pensamento: pens,
+    const lixo = s.lixo && ['papel', 'copo', 'palito'].includes(s.lixo.tipo) && Number.isFinite(s.lixo.ate) ? { tipo: s.lixo.tipo, ate: s.lixo.ate } : null;
+    return { ...base, ...s, n, evitar: { ...s.evitar }, pensou: soNumeros(s.pensou), pensamento: pens, lixo,
+             capricho: Math.max(0, Math.min(1, num(s.capricho, base.capricho))),
              dinheiro: Math.max(0, num(s.dinheiro, base.dinheiro)), tolerancia: num(s.tolerancia, base.tolerancia),
              paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0),
              velocidade: num(s.velocidade, VELOCIDADE) > 0 ? num(s.velocidade, VELOCIDADE) : VELOCIDADE };
@@ -169,6 +173,35 @@ function aplicarJogo(doc) {
       if (OBJETOS[c].servicos && !gestao.has(k)) gestao.set(k, { precos: { ...(PRECO_PADRAO[c] || {}) }, receita: 0, usos: 0 });
       if (ehAtracaoComFila(c) && !atracoes.has(k)) atracoes.set(k, novaAtracao(c, gx, gy));
     }
+
+  // Lixeiras: o nível de cada uma que existe (save antigo ou sem dado: vazia)
+  lixeiras.clear();
+  for (let gy = 0; gy < MAPA; gy++)
+    for (let gx = 0; gx < MAPA; gx++)
+      if (ehLixeira(objetos[gy][gx])) {
+        const v = (e.lixeiras || {})[chaveAtr(gx, gy)];
+        lixeiras.set(chaveAtr(gx, gy), Math.max(0, Math.min(capacidadeLixeira(gx, gy), Math.floor(num(v, 0)))));
+      }
+  // Sujeira: só itens conhecidos, sobre caminho, no máximo LIXO.maxPorTile por tile
+  sujeira.clear();
+  for (const [k, lista] of Object.entries(e.sujeira || {})) {
+    const [gx, gy] = k.split(',').map(Number);
+    if (!ehCaminho(gx, gy) || !Array.isArray(lista)) continue;
+    const itens = lista.filter(i => i && TIPOS_SUJEIRA.includes(i.tipo))
+      .map(i => ({ tipo: i.tipo, dx: Math.max(-0.3, Math.min(0.3, num(i.dx, 0))), dy: Math.max(-0.3, Math.min(0.3, num(i.dy, 0))), giro: num(i.giro, 0) }))
+      .slice(0, LIXO.maxPorTile);
+    if (itens.length) sujeira.set(chaveAtr(gx, gy), itens);
+  }
+  // Faxineiros: posição dentro do mapa; a tarefa é conferida de novo quando ele chegar a um tile
+  funcionarios.length = 0;
+  for (const f of Array.isArray(e.funcionarios) ? e.funcionarios : []) {
+    if (!f || !Number.isFinite(f.x) || !Number.isFinite(f.y) || !dentroDoMapa(Math.floor(f.x), Math.floor(f.y))) continue;
+    const numero = Number.isInteger(f.numero) && f.numero > 0 ? f.numero : funcionarios.length + 1;
+    const t = f.tarefa && Number.isInteger(f.tarefa.gx) && Number.isInteger(f.tarefa.gy) && dentroDoMapa(f.tarefa.gx, f.tarefa.gy) ? { gx: f.tarefa.gx, gy: f.tarefa.gy } : null;
+    funcionarios.push({ numero, nome: typeof f.nome === 'string' ? f.nome.slice(0, 30) : `Faxineiro ${numero}`, x: f.x, y: f.y,
+      alvo: null, anterior: null, tarefa: t, trabalho: Math.max(0, num(f.trabalho, 0)),
+      recolheu: Math.max(0, num(f.recolheu, 0)), recolheuMes: Math.max(0, num(f.recolheuMes, 0)) });
+  }
 
   // Avaliação: save antigo (sem ela) recalcula a partir do parque carregado
   const av = e.avaliacao;

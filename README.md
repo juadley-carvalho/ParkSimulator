@@ -25,6 +25,7 @@ npm start       # http://localhost:3000
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
 | Salvar e carregar o parque | botão **Salvar / Carregar** |
+| Contratar faxineiro | aba **👷 Funcionários** e clique num caminho; para demitir, **Inspecionar** o faxineiro |
 | Escolher cenário, modo livre ou carregar | tela inicial (botão **🏠** volta a ela e pausa o jogo) |
 
 ## Estrutura
@@ -53,6 +54,7 @@ public/
     entrada.js       entrada/saída do parque
     financas.js      caixa, empréstimo, cobranças, fechamento do mês
     avaliacao.js     avaliação do parque (nota 0–999) e pensamentos/queixas dos convidados
+    lixo.js          lixo e vômito no chão, lixeiras e faxineiros
     ui.js            painéis de detalhes e tela de finanças
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves

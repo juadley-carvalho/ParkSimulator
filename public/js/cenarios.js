@@ -75,6 +75,7 @@ function validarCenario(c) {
 function limparParque() {
   for (let gy = 0; gy < MAPA; gy++) { mapa[gy].fill('GRAMA'); objetos[gy].fill(null); }   // muta as linhas no lugar
   atracoes.clear(); gestao.clear(); rotacoes.clear(); convidados.length = 0;
+  sujeira.clear(); lixeiras.clear(); funcionarios.length = 0; selFunc = null;
   Object.assign(fin, finInicial()); Object.assign(parque, parqueInicial()); Object.assign(partida, partidaInicial());
   tempo = 0; tChegada = 1; stats.sairam = 0; selecionado = null; selObj = null;
   ferramenta = { camada: 'terreno', chave: 'CAMINHO' }; rotacaoAtual = 0;   // a anterior pode estar bloqueada no cenário novo

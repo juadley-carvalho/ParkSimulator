@@ -33,6 +33,7 @@ function partesDaAvaliacao() {
     { nome: 'Necessidades em dia', icone: '💧', pontos: emDia * A.necessidades, max: A.necessidades },
     { nome: 'Saíram infelizes', icone: '😞', pontos: -A.infelizes * proporcao(avaliacao.infelizes, avaliacao.saidas) },
     { nome: 'Desistiram no portão', icone: '🎟️', pontos: -A.recusas * proporcao(avaliacao.recusas, avaliacao.chegadas) },
+    { nome: 'Sujeira no chão', icone: '🗑️', pontos: -A.sujeira * fracaoSujeira() },
   ];
 }
 

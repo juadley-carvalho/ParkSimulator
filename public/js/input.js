@@ -36,6 +36,7 @@ function aplicar(gx, gy) {
     if (canal) { avisar(`Os barcos do ${OBJETOS[canal.chave].nome} passam por aqui: o canal precisa ser de água`); return; }
     if (!cobrar(CUSTO_TERRENO[chave] || 0)) return;
     mapa[gy][gx] = chave;
+    sujeira.delete(chaveAtr(gx, gy));                   // lixo só existe sobre caminho
     if (chave === 'AGUA') removerObjeto(gx, gy);       // água "afoga" o objeto
     // Um caminho novo pode fechar o último lado livre de um banco vizinho: ele não tem mais onde ficar
     if (chave === 'CAMINHO')
@@ -50,6 +51,9 @@ function aplicar(gx, gy) {
   } else if (camada === 'objeto') {
     if (!objetoLiberado(chave)) { avisar(`${OBJETOS[chave].nome} não está liberado neste cenário`); return; }
     if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
+  } else if (camada === 'contratar') {
+    if (!ehCaminho(gx, gy)) { avisar('O faxineiro começa sobre um caminho'); return; }
+    if (cobrar(LIXO.contratacao)) contratarFaxineiro(gx, gy);
   } else {
     removerObjeto(gx, gy);                              // demolir
   }
@@ -60,6 +64,7 @@ const pintarEm = (sx, sy) => { const g = telaParaGrade(sx, sy); aplicar(g.gx, g.
 // Ao arrastar rápido o mouse "pula" tiles. Amostramos pontos entre a posição
 // anterior e a atual para o traço ficar contínuo.
 function pintarLinha(a, b) {
+  if (ferramenta.camada === 'contratar') return;   // arrastar não contrata um faxineiro por tile
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
   const passos = Math.max(1, Math.ceil(dist / (TILE_H * camera.zoom / 2)));
   for (let i = 1; i <= passos; i++) {
@@ -104,8 +109,10 @@ function iniciarEntradaUsuario() {
     hover = telaParaGrade(atual.x, atual.y);
     if (dentroDoMapa(hover.gx, hover.gy)) {
       const o = objetoEm(hover.gx, hover.gy), obj = o && o.chave;
+      const nivel = o && lixeiras.has(chaveAtr(o.gx, o.gy)) ? ` (${lixeiras.get(chaveAtr(o.gx, o.gy))}/${capacidadeLixeira(o.gx, o.gy)})` : '';
+      const sujo = sujeiraEm(hover.gx, hover.gy).length;
       info.textContent = `(${hover.gx}, ${hover.gy}) · ${TIPOS[mapa[hover.gy][hover.gx]].nome}` +
-                         (obj ? ` · ${OBJETOS[obj].nome}` : '');
+                         (obj ? ` · ${OBJETOS[obj].nome}${nivel}` : '') + (sujo ? ` · 🗑️ ${sujo}` : '');
     } else info.textContent = '–';
   });
   // "pointercancel": o navegador pode cancelar o ponteiro (alt+tab, gesto do sistema, toque).

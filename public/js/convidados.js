@@ -26,6 +26,8 @@ function semear(n, ponto) {
       evitar: {},                                 // serviço -> instante até o qual ele não tenta de novo
       pensou: {},                                 // queixa -> instante até o qual ela não conta de novo
       pensamento: null,                           // { tipo, ate }: balão sobre a cabeça (ver pensar)
+      lixo: null,                                 // { tipo, ate }: lixo na mão (ver lixo.js)
+      capricho: Math.random(),                    // 0 = larga o lixo logo; 1 = procura lixeira por mais tempo
       n: { fome: aleatorio(10, 50), sede: aleatorio(10, 50), banheiro: aleatorio(0, 30),
            nausea: aleatorio(0, 10), energia: aleatorio(60, 100), felicidade: aleatorio(60, 100) },
       cor: `hsl(${Math.floor(Math.random() * 360)} 70% 55%)`,
@@ -62,7 +64,9 @@ function proximoPassoAteCaminho(sx, sy) {
 function escolherAlvo(g) {
   const cx = Math.floor(g.x), cy = Math.floor(g.y);
   if (ehCaminho(cx, cy)) {
+    chegarNoTile(g, cx, cy);                     // sujeira no chão, vômito e o lixo da mão (lixo.js)
     if (decidirNecessidade(g, cx, cy)) return;   // tem uma necessidade urgente: vai atendê-la
+    if (irAteLixeira(g, cx, cy)) return;         // sem urgência e com lixo na mão: lixeira por perto?
     // Passeio: sorteia um vizinho que seja caminho, evitando voltar (a menos que seja beco sem saída)
     const op = VIZINHOS.map(([dx, dy]) => ({ gx: cx + dx, gy: cy + dy })).filter(t => ehCaminho(t.gx, t.gy));
     const sem = op.filter(t => !(g.anterior && t.gx === g.anterior.gx && t.gy === g.anterior.gy));

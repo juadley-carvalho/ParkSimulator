@@ -82,6 +82,65 @@ function desenharBanco(cx, cy, atr, rot, ancora) {
   pecas.sort((a, b) => a.prof - b.prof).forEach(p => p.desenhar());   // algoritmo do pintor, dentro do tile
 }
 
+// Lixeira: um cesto verde na borda do caminho (o primeiro lado livre, como o banco), com tampa.
+// Do nível 75% para cima aparecem papéis saindo pela boca; cheia, eles caem para fora.
+function desenharLixeira(cx, cy, atr, rot, ancora) {
+  const [dx, dy] = (ancora && ladosSemCaminho(ancora.gx, ancora.gy)[0]) || [0, 1];
+  const p = gradeParaMundo(dx * 0.34, dy * 0.34), x = cx + p.x, y = cy + p.y;
+  caixaRet(x, y, 0.2, 0.2, 13, '#43a047', '#1b5e20', '#2e7d32');
+  caixaRet(x, y - 13, 0.24, 0.24, 2, '#66bb6a', '#2e7d32', '#388e3c');   // tampa
+  const nivel = ancora ? (lixeiras.get(chaveAtr(ancora.gx, ancora.gy)) || 0) / OBJETOS.LIXEIRA.lixeira.capacidade : 0;
+  if (nivel >= LIXO.esvaziarEm) {
+    ctx.fillStyle = '#fafafa'; ctx.fillRect(x - 4, y - 19, 4, 4); ctx.fillStyle = '#e53935'; ctx.fillRect(x + 1, y - 18, 3, 3);
+  }
+  if (nivel >= 1) { ctx.fillStyle = '#fff59d'; ctx.fillRect(x + 5, y - 3, 4, 3); ctx.fillStyle = '#fafafa'; ctx.fillRect(x - 9, y - 1, 4, 3); }
+}
+
+// Sujeira no chão: desenhada logo depois do terreno (é plana, fica embaixo de quem passa).
+// Cada item tem posição e giro próprios (sorteados ao cair), para o tile sujo parecer bagunçado.
+function desenharSujeira() {
+  for (const [k, lista] of sujeira) {
+    const [gx, gy] = k.split(',').map(Number);
+    for (const it of lista) {
+      const { x, y } = gradeParaMundo(gx + 0.5 + it.dx, gy + 0.5 + it.dy);
+      ctx.save();
+      ctx.translate(x, y);
+      if (it.tipo === 'vomito') {   // poça amarelo-esverdeada com respingos
+        ctx.fillStyle = '#c0ca33';
+        ctx.beginPath(); ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#9e9d24';
+        ctx.beginPath(); ctx.ellipse(-3, -1, 3, 1.5, 0, 0, Math.PI * 2); ctx.ellipse(5, 2, 2, 1, 0, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.scale(1, 0.5); ctx.rotate(it.giro);   // "deitado" no chão isométrico
+        if (it.tipo === 'copo') { ctx.fillStyle = '#e53935'; ctx.fillRect(-2, -4, 4, 8); ctx.fillStyle = '#fff'; ctx.fillRect(-2, -1, 4, 2); }
+        else if (it.tipo === 'palito') { ctx.fillStyle = '#a1887f'; ctx.fillRect(-1, -5, 2, 10); }
+        else { ctx.fillStyle = '#f5f5f5'; ctx.fillRect(-4, -3, 8, 6); ctx.fillStyle = '#bdbdbd'; ctx.fillRect(-4, -1, 8, 1); }
+      }
+      ctx.restore();
+    }
+  }
+}
+
+// Faxineiro: uniforme verde, boné e vassoura (que balança enquanto ele varre)
+function desenharFaxineiro(f) {
+  const { x, y } = gradeParaMundo(f.x, f.y);
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+  const balanco = f.trabalho > 0 ? Math.sin(tempo * 12) * 4 : 0;
+  ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x + 4, y - 9); ctx.lineTo(x + 7 + balanco, y + 1); ctx.stroke();    // cabo
+  ctx.fillStyle = '#fdd835'; ctx.fillRect(x + 4 + balanco, y, 6, 2);                             // cerdas
+  ctx.fillStyle = '#2e7d32'; ctx.fillRect(x - 3, y - 11, 6, 9);                                  // uniforme
+  ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1b5e20'; ctx.fillRect(x - 4, y - 18.5, 8, 2.5);                               // boné
+  if (f === selFunc) {
+    ctx.strokeStyle = '#ffe14d'; ctx.lineWidth = 2 / camera.zoom;
+    ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Barraca de comida (1x1): quiosque com telhado vermelho e um hambúrguer gigante no topo.
 function desenharBarraca(cx, cy) {
   const topo = caixa(cx, cy, 0.7, 22, '#f2e6d0', '#e0d2b8', '#c9b99c');
@@ -565,6 +624,10 @@ function desenharConvidado(g) {
   ctx.fillRect(x - 3, y - 11, 6, 9);
   ctx.fillStyle = '#f1c9a5';
   ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
+  if (g.lixo) {   // o lixo na mão, procurando lixeira
+    ctx.fillStyle = g.lixo.tipo === 'copo' ? '#e53935' : g.lixo.tipo === 'palito' ? '#a1887f' : '#f5f5f5';
+    ctx.fillRect(x + 3, y - 8, 3, 4);
+  }
   if (g === selecionado) {
     ctx.strokeStyle = '#ffe14d'; ctx.lineWidth = 2 / camera.zoom;
     ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.stroke();
@@ -594,6 +657,7 @@ function corDaFerramenta() {
   if (ferramenta.camada === 'terreno') return TIPOS[ferramenta.chave].cor[0];
   if (ferramenta.camada === 'objeto') return OBJETOS[ferramenta.chave].cor;
   if (ferramenta.camada === 'inspecionar') return '#ffe14d';
+  if (ferramenta.camada === 'contratar') return '#43a047';
   return '#e53935';
 }
 
@@ -609,6 +673,7 @@ function desenhar() {
   // Separar as passadas evita que o chão de um tile da frente cubra um objeto alto.
   for (let gy = 0; gy < MAPA; gy++)
     for (let gx = 0; gx < MAPA; gx++) desenharTile(gx, gy);
+  desenharSujeira();
 
   // Objetos e convidados entram na MESMA lista, ordenada por profundidade (x + y).
   // Assim um convidado passa atrás ou na frente de uma árvore corretamente.
@@ -630,6 +695,7 @@ function desenhar() {
         desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot, { gx, gy }); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
     }
   for (const g of convidados) if (g.estado !== 'brincando') itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
+  for (const f of funcionarios) itens.push({ prof: f.x + f.y, desenhar: () => desenharFaxineiro(f) });
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });
   itens.sort((a, b) => a.prof - b.prof);
   for (const it of itens) it.desenhar();

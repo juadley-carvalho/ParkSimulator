@@ -8,7 +8,7 @@
   "precosTravados": true,
   "objetivo": {
     "tipo": "lucro",
-    "valor": 8000,
+    "valor": 3000,
     "prazo": 24
   },
   "mapa": [

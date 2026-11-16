@@ -23,6 +23,7 @@ function usar(g, dt) {
   g.uso.resta -= dt;
   if (g.uso.resta > 0) return;
   for (const [campo, v] of Object.entries(efeitosFinais(g, g.uso.def))) g.n[campo] = limitar(g.n[campo] + v);
+  if (g.uso.def.lixo) receberLixo(g, g.uso.def.lixo);   // sobrou um papel, copo ou palito na mão
   g.estado = 'andando'; g.uso = null; g.objetivo = null; g.alvo = null; g.anterior = null;
 }
 

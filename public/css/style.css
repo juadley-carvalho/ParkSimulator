@@ -126,8 +126,9 @@ input:disabled { opacity:.5; cursor:not-allowed; }
 .botoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
 .dica { font-size:13px; color:var(--texto-suave); line-height:1.45; }
 .msg { min-height:1.4em; margin:8px 0; font-size:14px; }
-#empInfo, #balanco, #parqueInfo { line-height:1.6; }
-#empInfo b, #balanco b, #parqueInfo b { color:var(--ouro); }
+#empInfo, #balanco, #parqueInfo, #parqueLimpeza { line-height:1.6; }
+#empInfo b, #balanco b, #parqueInfo b, #parqueLimpeza b { color:var(--ouro); }
+#fStats { font-size:14px; line-height:1.55; }
 
 /* Avaliação do parque: nota grande, barra e as partes que somam a nota */
 .nota-topo { display:flex; align-items:baseline; gap:8px; }

@@ -33,6 +33,9 @@ function atualizarPainel() {
 }
 
 function selecionar(gx, gy) {
+  // Faxineiro bem no clique: tem prioridade (ele anda sobre os caminhos, onde também ficam bancos e lixeiras)
+  const f = funcionarios.find(f => Math.hypot(f.x - (gx + 0.5), f.y - (gy + 0.5)) < 0.7);
+  if (f) { selecionarFuncionario(f); return; }
   const o = objetoEm(gx, gy);   // objeto com preços tem prioridade sobre convidados próximos
   if (o && gestao.has(chaveAtr(o.gx, o.gy))) { selecionarObjeto(chaveAtr(o.gx, o.gy)); return; }
   let melhor = null, d = 1;
@@ -40,11 +43,23 @@ function selecionar(gx, gy) {
     const dist = Math.hypot(g.x - (gx + 0.5), g.y - (gy + 0.5));
     if (dist < d) { d = dist; melhor = g; }
   }
-  if (melhor) { selecionado = melhor; selObj = null; }
+  if (melhor) { selecionado = melhor; selObj = null; selFunc = null; }
+}
+
+// Painel do faxineiro: o nome vem do save (pode ter sido editado), então entra por textContent
+function selecionarFuncionario(f) {
+  selFunc = f; selObj = null; selecionado = null;
+  painelObj.innerHTML = `<div class='painel-topo'><span></span><button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
+    `<div id='fStats'></div><div class='botoes'><button class='btn btn-perigo' id='btnDemitir'>Demitir</button></div>`;
+  painelObj.querySelector('.painel-topo span').textContent = '🧹 ' + f.nome;
+  painelObj.querySelector('.fechar').addEventListener('click', () => { selFunc = null; });
+  $('btnDemitir').addEventListener('click', () => {
+    if (confirm(`Demitir ${f.nome}? O salário deixa de ser cobrado (a contratação não é devolvida).`)) demitirFuncionario(f);
+  });
 }
 
 function selecionarObjeto(k) {
-  selObj = k; selecionado = null;
+  selObj = k; selecionado = null; selFunc = null;
   const [gx, gy] = k.split(',').map(Number);
   const chave = objetos[gy][gx], d = gestao.get(k);
   painelObj.innerHTML = `<div class='painel-topo'><span>${OBJETOS[chave].icone} ${OBJETOS[chave].nome}</span>` +
@@ -64,7 +79,14 @@ function selecionarObjeto(k) {
 
 function atualizarPainelObj() {
   if (selObj && !gestao.has(selObj)) selObj = null;   // foi demolido
-  painelObj.style.display = selObj ? 'block' : 'none';
+  if (selFunc && !funcionarios.includes(selFunc)) selFunc = null;   // demitido ou jogo carregado
+  painelObj.style.display = selObj || selFunc ? 'block' : 'none';
+  if (selFunc) {
+    const f = selFunc;
+    $('fStats').innerHTML = (f.trabalho > 0 ? 'Limpando 🧹' : f.tarefa ? `Indo limpar (${f.tarefa.gx}, ${f.tarefa.gy})` : 'Patrulhando os caminhos') +
+      `<br>Recolheu este mês: ${f.recolheuMes}<br>Recolheu no total: ${f.recolheu}<br>Salário: ${moeda(LIXO.salario)}/mês`;
+    return;
+  }
   if (!selObj) return;
   const d = gestao.get(selObj), atr = atracoes.get(selObj);
   const [gx, gy] = selObj.split(',').map(Number);
@@ -86,7 +108,8 @@ function atualizarFinancasUI() {
     `Caixa: <b>${moeda(fin.caixa)}</b><br>Dívida: <b>${moeda(fin.divida)}</b> (limite ${moeda(LIMITE_EMPRESTIMO)})<br>` +
     `Disponível para pegar: ${moeda(LIMITE_EMPRESTIMO - fin.divida)}<br>` +
     `Juros no próximo fechamento: ${moeda(fin.divida * fin.juros)}<br>` +
-    `Manutenção mensal: ${moeda(custoManutencaoMensal())}`;
+    `Manutenção mensal: ${moeda(custoManutencaoMensal())}<br>` +
+    `Salários mensais: ${moeda(salariosMensais())} (${funcionarios.length} faxineiro${funcionarios.length === 1 ? '' : 's'})`;
   const b = fin.balanco;
   // Receita por visitante: quanto cada cliente rende, em média. Comparada com o custo fixo do mês
   // (manutenção + juros), mostra quantos visitantes são precisos para não ter prejuízo.
@@ -94,8 +117,8 @@ function atualizarFinancasUI() {
   $('balanco').innerHTML =
     `${nomeDoMes(fin.mes)} (em andamento, dia ${diaDoMes(fin.tMes)}/${DIAS_POR_MES}): receita ${moeda(fin.receitaMes)} · ` +
     `${fin.visitantesMes} visitantes · ${porVisitante(fin.receitaMes, fin.visitantesMes)} por visitante<br>` + (b
-    ? `${nomeDoMes(b.mes)}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)} = ` +
-      `<b>${moeda(b.receita - b.manut - b.juros)}</b><br>` +
+    ? `${nomeDoMes(b.mes)}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)}` +
+      (b.salarios ? ` − salários ${moeda(b.salarios)}` : '') + ` = <b>${moeda(b.receita - b.manut - b.juros - (b.salarios || 0))}</b><br>` +
       (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '') +
       (b.entradas ? ` · entradas ${moeda(b.entradas)}` : '') +
       (b.recusas ? ` · ${b.recusas} acharam a entrada cara` : '')
@@ -116,6 +139,12 @@ function atualizarParqueUI() {
     `custar até ${Math.round(fracaoMaxEntrada() * 100)}% do dinheiro que trouxe; o que pagar no portão não gasta lá dentro.`;
   atualizarNotaUI();
   atualizarQueixasUI();
+  const l = resumoLimpeza();
+  $('parqueLimpeza').innerHTML =
+    `No chão: <b>${l.lixo}</b> lixo${l.lixo === 1 ? '' : 's'} · <b>${l.vomito}</b> vômito${l.vomito === 1 ? '' : 's'}<br>` +
+    `Lixeiras: ${l.lixeiras}${l.cheias ? ` (<b>${l.cheias}</b> para esvaziar)` : ''}<br>` +
+    `Faxineiros: ${funcionarios.length} · recolheram ${l.recolheuMes} itens neste mês` +
+    (funcionarios.length ? '' : `<div class='dica'>Contrate na aba 👷 Funcionários da barra de construção.</div>`);
 }
 
 // Cor da nota: de vermelho (0) a verde (máxima), como as barras do convidado
@@ -180,7 +209,7 @@ function iniciarUI() {
     if (e.key !== 'Escape') return;
     const abertas = document.querySelectorAll('.modal.aberto:not(.fixa)');   // tela inicial e fim só fecham pelos botões
     if (abertas.length) abertas.forEach(m => m.classList.remove('aberto'));
-    else if (!document.querySelector('.modal.fixa.aberto')) { selecionado = null; selObj = null; }
+    else if (!document.querySelector('.modal.fixa.aberto')) { selecionado = null; selObj = null; selFunc = null; }
   });
   iniciarParqueUI();
   $('btnPegar').textContent = 'Pegar ' + moeda(PARCELA);
