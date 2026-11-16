@@ -3,7 +3,8 @@
    ============================================================ */
 
 // Usa o relógio REAL: pausado, o tempo do jogo não anda e o aviso nunca sumiria
-function avisar(msg) { fin.aviso = msg; fin.tAviso = tempoReal; }
+// ok = true: mensagem boa (verde), como "Salvo automaticamente"; senão é um problema (vermelho)
+function avisar(msg, ok = false) { fin.aviso = msg; fin.avisoOk = ok; fin.tAviso = tempoReal; }
 
 // Tenta debitar do caixa. Sem saldo, avisa e devolve false (a obra não acontece).
 function cobrar(v) {

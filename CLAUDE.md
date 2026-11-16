@@ -121,10 +121,11 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   passagem). Trocar grama/caminho sob um objeto é recusado; água afoga o objeto. Demolir solta quem o usava.
   O banco é desenhado em cada lado do tile NÃO ligado a outro caminho (`ladosSemCaminho`); sem lado livre
   (cruzamento) não se constrói, e um caminho novo que feche o último lado remove o banco (com reembolso).
-- **Brinquedo aquático** (`naAgua`, o passeio de barco): a pegada inteira é ÁGUA e os **canais** (`canaisDe`: a fileira
+- **Brinquedo aquático** (`naAgua`): a pegada inteira é ÁGUA. Com `canais: true` (o passeio de barco), os **canais** (`canaisDe`: a fileira
   logo à frente, saída dos barcos, e a logo atrás, por onde voltam) têm de ser água sem objeto. Canal pode ser dividido
   entre dois passeios, mas a pegada de um não pode cair no canal de outro (`donoDoCanal`). Trocar o chão sob ele ou
   nos canais é recusado. A fila liga pelas laterais (caminho encostado). A prévia mostra os canais tracejados.
+  A corredeira é `naAgua` sem canais: o bote dá a volta dentro da própria pegada 3×3 (`voltas: 1`, para na doca).
 - **Convidados** andam a `VELOCIDADE` ±15% (`g.velocidade`, sorteada em `semear`); a atratividade usa a velocidade dele.
 - **Parque** (janela 🎡, `parque` em estado.js): nome (até 30 caracteres, só via `textContent`/`document.title`) e
   preço de entrada (padrão $0). O ingresso é cobrado na chegada (`pagarEntrada`); quem acha caro (preço >
@@ -170,6 +171,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 | RODA_GIGANTE | 3×2 | $700 / $100 | $6 | 2 · 8 · 20 s |
 | MONTANHA_RUSSA | 4×3 | $1.200 / $200 | $8 | 8 · 12 · 25 s (2 voltas) |
 | BARCOS (passeio de barco) | 3×2 + canais | $750 / $90 | $4 | 3 · 8 (4 barcos) · 16 s (1 volta), só na água |
+| CASA_ASSOMBRADA | 2×2 | $1.000 / $110 | $6 | 4 · 8 · 15 s (quase sem náusea) |
+| CORREDEIRA (rafting) | 3×3 | $1.100 / $130 | $7 | 6 · 6 (1 bote) · 20 s (1 volta), só na água, sem canais |
 
 Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes não ficam sobre CAMINHO nem água (exceto as `naAgua`).
 
@@ -191,6 +194,11 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Estado novo que referencie convidados/objetos deve ser serializado com índices/chaves em `serializarJogo`/`aplicarJogo`.
 
 ## Save/Load
+- **Autosave** (salvar.js, seletor na janela 💾): `OPCOES_AUTOSAVE` desligado | minuto (60 s REAIS com a fase
+  `jogando`, mesmo pausado) | mes | ano (virada = `fin.mes` crescer de 1; o ano vira quando o novo mês é Janeiro).
+  Grava sempre no id `autosave` ("Autosave · nome do parque"), sem esperar (o jogo segue); trava `autosave.salvando`.
+  Jogo novo/carregado chama `reiniciarAutosave()` (o mês do save carregado não é virada). Preferência no `localStorage`.
+  `avisar(msg, true)` = aviso verde; o aviso é um balão abaixo da barra (fora do fluxo, não alarga a barra).
 - Música de fundo: `.mp3` em `public/musicas/` (o servidor lista em `GET /api/musicas`); `musica.js` toca em ordem
   embaralhada; botão 🎵 liga/desliga (preferência no `localStorage`). O navegador só toca após o 1º clique/tecla.
 - API: `GET /api/saves`, `GET|PUT|DELETE /api/saves/:id`. Só `armazenamento.js` sabe que os saves são arquivos JSON
@@ -218,6 +226,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   (atração precisa de CAMINHO encostado em alguma célula da pegada) dá "ninguém usa".
 - Emojis da interface dependem da fonte do sistema operacional.
 - Lógica nova vai em `simular(dt)` (main.js), não direto no `loop` (senão ignora a velocidade e a pausa).
+- Testes no Edge (CDP): matar o processo principal não fecha os filhos; um Edge velho na porta 9333 manda erros da
+  cena anterior para a nova. Encerre os `msedge.exe` do perfil de teste entre execuções.
 - Efeito "por tile" sem intervalo (pisar no lixo) derruba a felicidade; teste de faxineiro com chegadas ligadas muda o
   nível das lixeiras (use `tChegada = 1e9`).
 - Receita ≈ visitantes × dinheiro que trazem ($30–150): guardam até sair com < $2. Mudar só as preferências
@@ -225,6 +235,6 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 
 ## Ideias / backlog
 - Fila das atrações entrando só pelo portal (hoje a orientação é visual); volume da música na interface.
-- Mais cenários e objetivos (ex.: avaliação mínima + visitantes); autosave; mais atrações (trem, casa
-  mal-assombrada, tiro ao alvo); capacidade nos serviços simples; tolerância que evolui com a experiência;
+- Mais cenários e objetivos (ex.: avaliação mínima + visitantes); mais atrações (trem, tiro ao alvo, tobogã);
+  vários slots de autosave; capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).

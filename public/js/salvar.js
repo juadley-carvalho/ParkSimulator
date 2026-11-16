@@ -252,8 +252,7 @@ function slugDoNome(nome) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }
 
-async function salvarEm(nome) {
-  const id = slugDoNome(nome);
+async function salvarEm(nome, id = slugDoNome(nome)) {
   if (!id) throw new Error('Dê um nome ao save');
   const corpo = JSON.stringify({ ...serializarJogo(), nome: nome.trim() });   // o instantâneo é tirado agora
   await chamarApi(`${SAVES_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: corpo });
@@ -264,7 +263,57 @@ async function carregarDe(id) {
   aplicarJogo(await chamarApi(`${SAVES_URL}/${encodeURIComponent(id)}`));
   montarBarra();   // o cenário do save pode liberar outros objetos
   jogoEmAndamento = true; fase = 'jogando';
+  reiniciarAutosave();
   $('modalInicio').classList.remove('aberto');   // carregado a partir da tela inicial
+}
+
+// ---------- Salvamento automático ----------
+// modo: chave de OPCOES_AUTOSAVE; t = segundos reais desde o último; mes = o mês visto no último quadro
+// (para perceber a virada); salvando = trava contra dois salvamentos ao mesmo tempo (fetch é assíncrono).
+const autosave = { modo: 'desligado', t: 0, mes: 1, salvando: false, ultimo: null };
+
+function lerModoAutosave() {
+  try { const m = localStorage.getItem(CHAVE_AUTOSAVE); return OPCOES_AUTOSAVE[m] ? m : 'desligado'; }
+  catch { return 'desligado'; }   // localStorage bloqueado: começa desligado
+}
+
+function definirModoAutosave(m) {
+  autosave.modo = OPCOES_AUTOSAVE[m] ? m : 'desligado';
+  autosave.t = 0;
+  try { localStorage.setItem(CHAVE_AUTOSAVE, autosave.modo); } catch { /* sem localStorage: vale só nesta sessão */ }
+}
+
+// Jogo novo ou carregado: recomeça a contagem. O mês do save carregado não é uma "virada".
+function reiniciarAutosave() { autosave.t = 0; autosave.mes = fin.mes; }
+
+// Chamada a cada quadro (main.js) com o tempo REAL. Só conta com o jogo rodando (não na tela inicial).
+function atualizarAutosave(dtReal) {
+  if (fase !== 'jogando') return;
+  let devido = false;
+  if (autosave.modo === 'minuto') { autosave.t += dtReal; devido = autosave.t >= INTERVALO_AUTOSAVE; }
+  // fin.mes só cresce de 1 em 1 durante o jogo; mês 13, 25... = Janeiro = virou o ano
+  else if (fin.mes === autosave.mes + 1) devido = autosave.modo === 'mes' || (autosave.modo === 'ano' && (fin.mes - 1) % 12 === 0);
+  autosave.mes = fin.mes;
+  if (devido) { autosave.t = 0; fazerAutosave(); }
+}
+
+// Não usa "await" de quem chama: o jogo continua enquanto o arquivo vai para o servidor. O instantâneo
+// é tirado na hora (serializarJogo dentro de salvarEm, antes do primeiro await).
+async function fazerAutosave() {
+  if (autosave.salvando) return;
+  autosave.salvando = true;
+  try {
+    await salvarEm(`Autosave · ${nomeDoParque()}`, ID_AUTOSAVE);
+    autosave.ultimo = new Date();
+    avisar('💾 Salvo automaticamente', true);
+  } catch (e) { avisar('Autosave falhou: ' + e.message); }
+  finally { autosave.salvando = false; }   // finally roda com sucesso OU erro: a trava sempre se solta
+}
+
+function textoAutosave() {
+  if (autosave.modo === 'desligado') return 'Desligado.';
+  return `Grava no save "Autosave · ${nomeDoParque()}", substituindo o anterior.` +
+    (autosave.ultimo ? ` Último: ${autosave.ultimo.toLocaleTimeString('pt-BR')}.` : '');
 }
 
 // ---------- Tela de salvar e carregar ----------
@@ -322,8 +371,18 @@ function iniciarSalvar() {
     } catch (e) { mensagem('Não foi possível salvar: ' + e.message, true); }
   }
 
+  // Seletor do autosave: uma opção por entrada de OPCOES_AUTOSAVE
+  autosave.modo = lerModoAutosave();
+  const sel = $('selAutosave');
+  for (const [valor, texto] of Object.entries(OPCOES_AUTOSAVE)) {
+    const op = document.createElement('option'); op.value = valor; op.textContent = texto; sel.appendChild(op);
+  }
+  sel.value = autosave.modo;
+  sel.addEventListener('change', () => { definirModoAutosave(sel.value); $('infoAutosave').textContent = textoAutosave(); });
+
   $('btnJogo').addEventListener('click', () => {
     $('inNomeSave').value = nomeDoParque();   // sugere o nome do parque (pode ser trocado antes de salvar)
+    $('infoAutosave').textContent = textoAutosave();   // o nome vem do jogador: textContent
     mensagem(''); modal.classList.add('aberto'); atualizarLista();
   });
   $('btnFecharJogo').addEventListener('click', () => modal.classList.remove('aberto'));

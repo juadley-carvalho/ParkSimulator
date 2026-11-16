@@ -19,7 +19,8 @@ function dicaDoObjeto(chave) {
   const partes = [`${o.nome}: custa ${moeda(custoDe(chave))}`];
   if (eco.manutencao) partes.push(`manutenção ${moeda(eco.manutencao)}/mês`);
   if (tam.w * tam.h > 1) partes.push(`ocupa ${tam.w}×${tam.h} tiles`);
-  if (ficaNaAgua(chave)) partes.push('só na água, com uma fileira de água livre na frente e atrás (os barcos saem e voltam por ali)');
+  if (OBJETOS[chave].canais) partes.push('só na água, com uma fileira de água livre na frente e atrás (os barcos saem e voltam por ali)');
+  else if (ficaNaAgua(chave)) partes.push('só na água, encostada num caminho para a fila');
   if (rotacionavel(chave)) partes.push(`tecla ${TECLA_GIRAR.toUpperCase()} gira antes de construir`);
   const brinquedo = o.servicos && Object.values(o.servicos).find(s => s.intensidade);
   if (brinquedo) partes.push(`intensidade ${brinquedo.intensidade}/10`, `${brinquedo.capacidade} lugares`);

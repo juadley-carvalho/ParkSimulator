@@ -32,7 +32,7 @@ const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto
 // do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
 function finInicial() {
   return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-           visitantesMes: 0, entradasMes: 0, recusasMes: 0, queixasMes: {}, balanco: null, aviso: '', tAviso: -99 };
+           visitantesMes: 0, entradasMes: 0, recusasMes: 0, queixasMes: {}, balanco: null, aviso: '', avisoOk: false, tAviso: -99 };
 }
 const fin = finInicial();
 

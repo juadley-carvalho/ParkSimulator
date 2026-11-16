@@ -78,6 +78,8 @@ input[type=text], input[type=number] {
 }
 input[type=text]:focus, input[type=number]:focus { border-color:var(--ouro); }
 input:disabled { opacity:.5; cursor:not-allowed; }
+select { font:inherit; background:var(--campo); color:var(--texto); border:2px solid #3a4a70; border-radius:8px; padding:6px 8px; }
+select:focus { border-color:var(--ouro); outline:none; }
 
 /* HUD e painéis laterais ficam SEMPRE abaixo da barra superior (--abaixo-do-topo): com a fonte do jogo
    a barra é larga e, lado a lado, eles se sobrepunham em telas comuns (~1400 px). */
@@ -93,7 +95,12 @@ input:disabled { opacity:.5; cursor:not-allowed; }
 #fin { position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px); left:50%; transform:translateX(-50%);
        display:flex; align-items:center; gap:10px; padding:6px 8px 6px 14px; white-space:nowrap; }
 #finTxt { font-weight:600; color:var(--ouro); text-shadow:0 2px 0 rgba(0,0,0,.4); }
-#finAviso { color:var(--perigo); font-weight:700; text-shadow:0 1px 0 #000; }
+/* Aviso: balão logo abaixo da barra, à direita. Fora do fluxo (position:absolute) para não alargar a barra */
+#finAviso { position:absolute; top:calc(100% + 6px); right:0; padding:4px 12px; border-radius:999px;
+            background:rgba(13,19,35,.9); border:2px solid var(--perigo); color:var(--perigo);
+            font-weight:700; text-shadow:0 1px 0 #000; pointer-events:none; }
+#finAviso:empty { display:none; }
+#finAviso.ok { color:var(--ok); border-color:var(--ok); }
 
 /* ---------- Painéis laterais (convidado e objeto) ---------- */
 #painel, #painelObj { display:none; position:fixed; top:var(--abaixo-do-topo); right:10px;

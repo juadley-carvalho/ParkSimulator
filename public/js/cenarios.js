@@ -88,6 +88,7 @@ function comecarPartida() {
   centralizar();
   jogoEmAndamento = true;
   fase = 'jogando';
+  reiniciarAutosave();
 }
 
 function novoJogoLivre() {

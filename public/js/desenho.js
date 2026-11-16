@@ -546,6 +546,119 @@ function desenharPasseioBarco(cx, cy, atr, rot = 0) {
   ctx.restore();
 }
 
+// Telhado em pirâmide sobre um quadrado de meio-lado "s" tiles, centrado em (cx, cy), com a base na
+// altura "alt" e o pico "pico" px acima dela. As faces de trás primeiro (o pintor, dentro do telhado).
+function telhadoPiramide(cx, cy, s, alt, pico, corTras, corEsq, corDir) {
+  const P = (gx, gy, h) => { const p = gradeParaMundo(gx, gy); return { x: cx + p.x, y: cy + p.y - h }; };
+  const T = P(-s, -s, alt), R = P(s, -s, alt), B = P(s, s, alt), L = P(-s, s, alt), C = P(0, 0, alt + pico);
+  poligono([T, R, C], corTras); poligono([L, T, C], corTras);
+  poligono([L, B, C], corEsq); poligono([R, B, C], corDir);
+}
+
+// Casa mal-assombrada (2x2): casa roxa com torre no canto de trás, janelas que piscam durante o passeio
+// e um fantasma voando em volta (atr.angulo). A porta fica na face da frente quando ela está virada
+// para a câmera; virada para trás, só o portal aparece (desenhado antes da casa).
+function desenharCasaAssombrada(cx, cy, atr, rot = 0) {
+  const { eixo, frente } = direcoesDe(rot);
+  const a = atr ? atr.angulo : 0, rodando = !!atr && atr.fase === 'rodando';
+  const P = (gx, gy, h = 0) => { const p = gradeParaMundo(gx, gy); return { x: cx + p.x, y: cy + p.y - h }; };
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 0.98, 0.45, OBJETOS.CASA_ASSOMBRADA.cor);
+  // Fantasma: lençol branco com a barra ondulada. Os de trás (gx + gy < 0) antes da casa, os da frente depois.
+  const fantasma = atras => {
+    const gx = Math.cos(a) * 1.2, gy = Math.sin(a) * 1.2;
+    if ((gx + gy < 0) !== atras) return;
+    const c = P(gx, gy, 52 + Math.sin(tempo * 3) * 4);
+    ctx.save();
+    ctx.globalAlpha = 0.88; ctx.fillStyle = '#f5f5f5';
+    ctx.beginPath(); ctx.arc(c.x, c.y, 6, Math.PI, 0);
+    for (let i = 0; i <= 4; i++) ctx.lineTo(c.x + 6 - i * 3, c.y + (i % 2 ? 6 : 9));
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#212121'; ctx.fillRect(c.x - 3, c.y - 2, 2, 3); ctx.fillRect(c.x + 1, c.y - 2, 2, 3);
+    ctx.restore();
+  };
+  fantasma(true);
+  if (frenteAtras(rot)) portal();
+  // Torre no canto de trás (mais alta que a casa, aparece por cima do telhado)
+  const t = P(-0.45, -0.45);
+  caixaRet(t.x, t.y, 0.6, 0.6, 60, '#5b4a7a', '#3a2e52', '#4a3b63');
+  telhadoPiramide(t.x, t.y, 0.36, 60, 26, '#1f1630', '#2c1f45', '#24193a');
+  ctx.fillStyle = rodando && Math.sin(tempo * 9) > 0 ? '#ffeb3b' : '#6d4c41';
+  const jt = P(-0.15, -0.35, 46); ctx.fillRect(jt.x - 2, jt.y - 3, 4, 6);   // janela da torre
+  // Corpo e telhado
+  caixaRet(cx, cy, 1.8, 1.8, 34, '#5b4a7a', '#3a2e52', '#4a3b63');
+  telhadoPiramide(cx, cy, 0.95, 34, 26, '#1f1630', '#2c1f45', '#24193a');
+  // Janelas nas duas faces visíveis (+gy à esquerda, +gx à direita): acesas em amarelo durante o passeio
+  [[-0.45, 0.9], [0.45, 0.9], [0.9, -0.45], [0.9, 0.45]].forEach(([gx, gy], i) => {
+    const naPorta = gx * frente[0] + gy * frente[1] > 0.5 && Math.abs(gx * eixo[0] + gy * eixo[1] - 0.45) < 0.1;
+    if (naPorta) return;   // a porta ocupa esse lugar
+    const j = P(gx, gy, 20);
+    ctx.fillStyle = rodando ? (Math.sin(tempo * 11 + i * 2.1) > -0.2 ? '#ffeb3b' : '#3e2723') : '#ffb300';
+    ctx.fillRect(j.x - 3, j.y - 4, 6, 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(j.x - 0.5, j.y - 4, 1, 8);
+  });
+  if (!frenteAtras(rot)) {   // porta na face da frente, alinhada com o portal
+    const base = (u, h) => P(frente[0] * 0.9 + eixo[0] * (0.45 + u), frente[1] * 0.9 + eixo[1] * (0.45 + u), h);
+    poligono([base(-0.16, 0), base(0.16, 0), base(0.16, 17), base(0, 21), base(-0.16, 17)], '#1a1022', 'rgba(0,0,0,0.5)');
+  }
+  fantasma(false);
+  if (!frenteAtras(rot)) portal();
+}
+
+// Corredeira (3x3 na água): muro de pedra, canal com espuma em volta de uma ilha e um bote redondo
+// de 6 lugares que dá uma volta por corrida (atr.angulo de 0 a 2π) e para na doca, do lado da frente.
+function desenharCorredeira(cx, cy, atr, rot = 0) {
+  const { eixo, frente } = direcoesDe(rot);
+  const P = (gx, gy, h = 0) => { const p = gradeParaMundo(gx, gy); return { x: cx + p.x, y: cy + p.y - h }; };
+  const quad = (s, h) => [P(-s, -s, h), P(s, -s, h), P(s, s, h), P(-s, s, h)];
+  const rodando = !!atr && atr.fase === 'rodando';
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 1.45, 0, OBJETOS.CORREDEIRA.cor);
+  ctx.save();
+  if (frenteAtras(rot)) portal();
+  caixaRet(cx, cy, 2.9, 2.9, 5, '#9e9e9e', '#616161', '#757575');   // muro de pedra em volta
+  poligono(quad(1.25, 5), '#1976d2');                               // canal
+  // Espuma correndo pelo canal (mais rápida durante a corrida)
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  for (let k = 0; k < 14; k++) {
+    const ang = k * Math.PI / 7 + tempo * (rodando ? 1.6 : 0.5), r = 0.9 + (k % 3 - 1) * 0.15;
+    const e = P(Math.cos(ang) * r, Math.sin(ang) * r, 5);
+    ctx.beginPath(); ctx.ellipse(e.x, e.y, 4, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // Doca de madeira do lado da frente (onde o bote embarca)
+  const d = P(frente[0] * 1.12, frente[1] * 1.12);
+  caixaRet(d.x, d.y, eixo[0] ? 0.9 : 0.22, eixo[0] ? 0.22 : 0.9, 7, '#b07a45', '#7a5230', '#8d6239');
+  // Bote: posição no círculo do canal. Começa (ângulo 0) na doca, do lado da frente.
+  const ang = Math.atan2(frente[1], frente[0]) + (atr ? atr.angulo : 0);
+  const bx = Math.cos(ang) * 0.9, by = Math.sin(ang) * 0.9;
+  const bote = () => {
+    const balanco = rodando ? Math.sin(tempo * 7) * 1.5 : Math.sin(tempo * 2) * 0.5;
+    const c = P(bx, by, 8 + balanco);
+    ctx.fillStyle = '#e64a19'; ctx.beginPath(); ctx.ellipse(c.x, c.y + 2, 13, 6.5, 0, 0, Math.PI * 2); ctx.fill();   // lateral
+    ctx.fillStyle = '#ff7043'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 13, 6.5, 0, 0, Math.PI * 2); ctx.fill();       // boia
+    ctx.fillStyle = '#37474f'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 8, 4, 0, 0, Math.PI * 2); ctx.fill();          // miolo
+    const n = atr ? Math.min(6, atr.passageiros.length) : 0, giro = rodando ? tempo * 2.5 : 0;   // o bote gira
+    const pessoas = [];
+    for (let j = 0; j < n; j++) {
+      const t = giro + j * Math.PI / 3;
+      pessoas.push({ x: c.x + Math.cos(t) * 10, y: c.y + Math.sin(t) * 5, cor: CORES_BARCO[j % 4][0] });
+    }
+    pessoas.sort((p, q) => p.y - q.y).forEach(p => {   // de trás para a frente
+      ctx.fillStyle = p.cor; ctx.fillRect(p.x - 2, p.y - 6, 4, 6);
+      ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(p.x, p.y - 8, 2.3, 0, Math.PI * 2); ctx.fill();
+    });
+  };
+  const atrasDaIlha = bx + by < 0;
+  if (atrasDaIlha) bote();
+  // Ilha no meio, com pedras e um pinheiro
+  caixaRet(cx, cy, 1.0, 1.0, 9, '#689f38', '#33691e', '#558b2f');
+  for (const [gx, gy, s] of [[-0.25, 0.2, 0.22], [0.25, -0.1, 0.18]]) { const r = P(gx, gy, 9); caixaRet(r.x, r.y, s, s, 6, '#bdbdbd', '#757575', '#9e9e9e'); }
+  const pin = P(-0.1, -0.25, 9);
+  ctx.fillStyle = '#5d4037'; ctx.fillRect(pin.x - 1.5, pin.y - 6, 3, 6);
+  poligono([{ x: pin.x - 7, y: pin.y - 5 }, { x: pin.x + 7, y: pin.y - 5 }, { x: pin.x, y: pin.y - 24 }], '#2e7d32');
+  if (!atrasDaIlha) bote();
+  if (!frenteAtras(rot)) portal();
+  ctx.restore();
+}
+
 // Portão de circo: duas torres listradas (vermelho e branco) com telhado de tenda e bandeirola,
 // um arco colorido entre elas com franja de lona e uma placa com o nome do parque.
 // As torres ficam nas laterais do caminho, ao longo de gx (o caminho de entrada corre ao longo de gy).

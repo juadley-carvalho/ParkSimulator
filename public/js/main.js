@@ -47,6 +47,7 @@ function loop(t) {
     simular(dt);
     resta -= dt;
   }
+  atualizarAutosave(dtReal);
   desenhar();
   qtd.textContent = `${convidados.length} (saíram: ${stats.sairam})`;
   atualizarPainel();

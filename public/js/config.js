@@ -40,6 +40,8 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   BARRACA_SORVETE: { custo: 400, manutencao: 60 },
   BARCOS: { custo: 750, manutencao: 90 },
   LIXEIRA: { custo: 50, manutencao: 3 },
+  CASA_ASSOMBRADA: { custo: 1000, manutencao: 110 },
+  CORREDEIRA: { custo: 1100, manutencao: 130 },
 };
 
 const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_SORVETE: { comida: 3 },
@@ -47,7 +49,7 @@ const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_S
                       RODA_GIGANTE: { diversao: 6 },
                       MONTANHA_RUSSA: { diversao: 8 },
                       BARRACA_BEBIDAS: { bebida: 3 }, NAVIO_PIRATA: { diversao: 7 },
-                      BARCOS: { diversao: 4 } };
+                      BARCOS: { diversao: 4 }, CASA_ASSOMBRADA: { diversao: 6 }, CORREDEIRA: { diversao: 7 } };
 
 const CUSTO_TERRENO = { GRAMA: 0, CAMINHO: 10, AGUA: 25 };   // cobrado ao trocar o terreno do tile
 
@@ -126,6 +128,11 @@ const FRACAO_ENTRADA_MIN = 0.15, FRACAO_ENTRADA_MAX = 0.45;
 // 1, 2 e 3 = 1x, 2x e 4x. PASSO_MAX = maior passo de simulação: em 4x o quadro vira vários subpassos.
 const VELOCIDADES = [0, 1, 2, 4];
 const PASSO_MAX = 0.1;
+
+// Salvamento automático (escolhido na janela de saves; a preferência fica no localStorage). Grava sempre
+// no mesmo save (ID_AUTOSAVE), substituindo o anterior. "minuto" conta tempo REAL com o jogo aberto.
+const OPCOES_AUTOSAVE = { desligado: 'Desligado', minuto: 'A cada 1 minuto', mes: 'A cada virada de mês', ano: 'A cada virada de ano' };
+const ID_AUTOSAVE = 'autosave', CHAVE_AUTOSAVE = 'parque.autosave', INTERVALO_AUTOSAVE = 60;
 
 // Tecla que gira 90° a atração que está sendo posicionada (4 posições).
 const TECLA_GIRAR = 'z';

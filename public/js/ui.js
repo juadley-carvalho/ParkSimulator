@@ -103,6 +103,7 @@ function atualizarFinancasUI() {
                             `⭐ ${Math.round(avaliacao.nota)} · 💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
   $('finTxt').style.color = fin.caixa < 0 ? '#e53935' : '';
   $('finAviso').textContent = tempoReal - fin.tAviso < 2.5 ? fin.aviso : '';
+  $('finAviso').classList.toggle('ok', fin.avisoOk);
   for (const b of document.querySelectorAll('#velocidades button')) b.classList.toggle('ativo', +b.dataset.v === velocidade);
   $('pausado').hidden = !(velocidade === 0 && fase === 'jogando');
   if (!$('modalFin').classList.contains('aberto')) return;

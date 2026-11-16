@@ -50,9 +50,21 @@ const OBJETOS = {
   // Intensidade 3: entre a roda-gigante (2) e o carrossel (5); com 2 dividiria o mesmo público da roda.
   // 4 barcos de 2 lugares; "voltas: 1" faz o passeio terminar exatamente com os barcos nas vagas.
   BARCOS: { categoria: 'atracoes', icone: '🚣', nome: 'Passeio de barco', cor: '#00acc1', tam: { w: 3, h: 2 }, altura: 62,
-            naAgua: true, desenhar: desenharPasseioBarco,
+            naAgua: true, canais: true, desenhar: desenharPasseioBarco,
             servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 16, voltas: 1, intensidade: 3,
                                     efeitos: { felicidade: +28, nausea: +8, energia: -6 } } } },
+  // Casa mal-assombrada: susto sem enjoo (intensidade 4, quase sem náusea). "giro" = velocidade do fantasma
+  // que voa em volta da casa (mais rápido durante o passeio).
+  CASA_ASSOMBRADA: { categoria: 'atracoes', icone: '👻', nome: 'Casa mal-assombrada', cor: '#7e57c2', tam: { w: 2, h: 2 }, altura: 118,
+            desenhar: desenharCasaAssombrada,
+            servicos: { diversao: { atividade: 'brinquedo', capacidade: 8, duracao: 15, intensidade: 4, giro: { parado: 0.5, rodando: 1.4 },
+                                    efeitos: { felicidade: +34, nausea: +3, energia: -6 } } } },
+  // Corredeira (rafting): aquática, mas sem "canais": o bote dá a volta num canal DENTRO da pegada 3x3,
+  // em torno de uma ilha. "voltas: 1" faz o bote terminar sempre na doca. Intensidade 6, entre o carrossel e o navio.
+  CORREDEIRA: { categoria: 'atracoes', icone: '🛶', nome: 'Corredeira', cor: '#ff7043', tam: { w: 3, h: 3 }, altura: 64,
+            naAgua: true, desenhar: desenharCorredeira,
+            servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 20, voltas: 1, intensidade: 6,
+                                    efeitos: { felicidade: +38, nausea: +16, energia: -10 } } } },
   // Lixeira: fica sobre o caminho, na borda (como o banco), mas sozinha no tile. "lixeira" = capacidade.
   LIXEIRA: { categoria: 'cenario', icone: '🗑️', nome: 'Lixeira', cor: '#2e7d32', desenhar: desenharLixeira, sobreCaminho: true,
              lixeira: { capacidade: LIXO.capacidadeLixeira } },
@@ -99,7 +111,7 @@ function ficaNaAgua(chave) { return !!OBJETOS[chave].naAgua; }
 // pegada (saída dos barcos) e a logo atrás (entrada deles). Cada célula da pegada cuja vizinha na
 // direção da frente fica FORA da pegada está na borda da frente; o mesmo para trás, com -frente.
 function canaisDe(chave, gx, gy, rot = 0) {
-  if (!ficaNaAgua(chave)) return [];
+  if (!OBJETOS[chave].canais) return [];   // só quem tem barcos saindo e voltando (a corredeira não)
   const { w, h } = tamanhoDe(chave, rot), [fx, fy] = direcoesDe(rot).frente, canais = [];
   const dentro = (x, y) => x >= gx && x < gx + w && y >= gy && y < gy + h;
   for (let j = 0; j < h; j++)
