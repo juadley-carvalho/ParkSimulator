@@ -35,7 +35,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
   `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas,
-  avaliacao, lixo, ui, barra, salvar, cenarios, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  avaliacao, lixo, ui, barra, salvar, cenarios, ParkAudio, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -199,8 +199,11 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   Grava sempre no id `autosave` ("Autosave · nome do parque"), sem esperar (o jogo segue); trava `autosave.salvando`.
   Jogo novo/carregado chama `reiniciarAutosave()` (o mês do save carregado não é virada). Preferência no `localStorage`.
   `avisar(msg, true)` = aviso verde; o aviso é um balão abaixo da barra (fora do fluxo, não alarga a barra).
-- Música de fundo: `.mp3` em `public/musicas/` (o servidor lista em `GET /api/musicas`); `musica.js` toca em ordem
-  embaralhada; botão 🎵 liga/desliga (preferência no `localStorage`). O navegador só toca após o 1º clique/tecla.
+- Música de fundo: o botão alterna `musica.modo` = mp3 (🎵, os `.mp3` de `public/musicas/`, listados em
+  `GET /api/musicas`, em ordem embaralhada) → sintetizada (🎹, `ParkAudio.js`: Web Audio, ruído rosa filtrado como
+  multidão + órgão de carrossel) → desligada (🔇). Sem mp3, pula esse modo. Preferência `musicaModo` no `localStorage`
+  (a chave antiga `musicaLigada` = 'nao' vira desligada). O navegador só toca após o 1º clique/tecla (o AudioContext
+  nasce "suspended"; `tocar()` chama `resume()`). `ParkAudio.js` foi escrito como módulo: sem o `export` (scripts clássicos).
 - API: `GET /api/saves`, `GET|PUT|DELETE /api/saves/:id`. Só `armazenamento.js` sabe que os saves são arquivos JSON
   (trocar por SQLite = reescrever só ele). Id `[a-z0-9-]{1,40}`; gravação atômica (temporário + rename).
 - `aplicarJogo` valida tudo **antes** de alterar o jogo (save inválido não estraga o parque); chaves desconhecidas

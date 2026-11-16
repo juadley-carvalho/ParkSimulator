@@ -1,11 +1,13 @@
 /* ============================================================
-   musica.js — música de fundo (os .mp3 da pasta public/musicas)
-   Depende de: dom.js, config.js
+   musica.js — música de fundo: os .mp3 da pasta public/musicas OU o som sintetizado (ParkAudio.js)
+   Depende de: dom.js, config.js, ParkAudio.js
    ============================================================ */
 
 // O servidor lista os arquivos (GET /api/musicas); aqui eles tocam em ordem embaralhada, um depois do
 // outro, sem fim. Um único elemento <audio> (new Audio()) é reaproveitado: trocar o "src" troca a faixa.
-const musica = { lista: [], ordem: [], pos: 0, ligada: true, falhas: 0, audio: new Audio() };
+// modo: 'mp3' | 'sintetizada' | 'desligada' (o botão 🎵 alterna entre eles, nessa ordem)
+const musica = { lista: [], ordem: [], pos: 0, modo: 'mp3', falhas: 0, audio: new Audio(), sintese: new ParkAudio() };
+const MODOS_MUSICA = ['mp3', 'sintetizada', 'desligada'];
 
 // Embaralhamento de Fisher-Yates: troca cada posição com uma sorteada entre ela e o início.
 // Toda ordem tem a mesma chance (ordenar com sort(() => Math.random() - 0.5) NÃO tem essa garantia).
@@ -27,49 +29,71 @@ function tocarProxima() {
 
 // play() devolve uma Promise que falha se o navegador bloquear o som: ele só deixa tocar áudio
 // depois que a pessoa interage com a página (clique ou tecla). Por isso tentamos de novo no 1º clique.
+// Liga o som do modo atual e desliga o outro. Com o som sintetizado vale a mesma regra do navegador:
+// o AudioContext nasce "suspended" até a 1ª interação; resume() o libera (ver "liberar" em iniciarMusica).
 function tocar() {
-  if (!musica.ligada || !musica.lista.length) return;
-  if (!musica.audio.src) { tocarProxima(); return; }
-  musica.audio.play().catch(() => {});
+  if (musica.modo !== 'mp3') musica.audio.pause();
+  if (musica.modo !== 'sintetizada' && musica.sintese.isPlaying) musica.sintese.stop();
+  if (musica.modo === 'sintetizada') {
+    musica.sintese.init();
+    if (musica.sintese.ctx.state === 'suspended') musica.sintese.ctx.resume().catch(() => {});
+    musica.sintese.start();
+  } else if (musica.modo === 'mp3' && musica.lista.length) {
+    if (!musica.audio.src) { tocarProxima(); return; }
+    musica.audio.play().catch(() => {});
+  }
   atualizarBotaoMusica();
+}
+
+// Próximo modo do botão; sem nenhum .mp3, pula o modo 'mp3'
+function proximoModo(modo) {
+  const validos = MODOS_MUSICA.filter(m => m !== 'mp3' || musica.lista.length);
+  return validos[(validos.indexOf(modo) + 1) % validos.length];
 }
 
 function atualizarBotaoMusica() {
   const b = $('btnMusica');
-  if (!musica.lista.length) {
-    b.textContent = '🎵'; b.disabled = true;
-    b.title = 'Sem músicas: coloque arquivos .mp3 na pasta public/musicas e recarregue a página';
-    return;
+  const prox = { mp3: 'música mp3', sintetizada: 'som sintetizado', desligada: 'desligar' }[proximoModo(musica.modo)];
+  if (musica.modo === 'mp3') {
+    const faixa = decodeURIComponent((musica.audio.src.split('/').pop() || '')).replace(/\.mp3$/i, '');
+    b.textContent = '🎵';
+    b.title = `Tocando: ${faixa || '...'} (clique: ${prox})`;
+  } else if (musica.modo === 'sintetizada') {
+    b.textContent = '🎹';
+    b.title = `Som sintetizado: multidão e órgão de carrossel (clique: ${prox})`;
+  } else {
+    b.textContent = '🔇';
+    b.title = `Som desligado (clique: ${prox})`;
   }
-  b.disabled = false;
-  b.textContent = musica.ligada ? '🎵' : '🔇';
-  const faixa = decodeURIComponent((musica.audio.src.split('/').pop() || '')).replace(/\.mp3$/i, '');
-  b.title = musica.ligada ? `Tocando: ${faixa || '...'} (clique para desligar)` : 'Música desligada (clique para ligar)';
 }
 
+// Preferência no localStorage. "musicaLigada" é a chave antiga (só liga/desliga): 'nao' vira 'desligada'.
 function lerPreferenciaMusica() {
-  try { return localStorage.getItem('musicaLigada') !== 'nao'; } catch { return true; }
+  try {
+    const m = localStorage.getItem('musicaModo');
+    if (MODOS_MUSICA.includes(m)) return m;
+    return localStorage.getItem('musicaLigada') === 'nao' ? 'desligada' : 'mp3';
+  } catch { return 'mp3'; }
 }
 function gravarPreferenciaMusica() {
-  try { localStorage.setItem('musicaLigada', musica.ligada ? 'sim' : 'nao'); } catch { /* sem armazenamento: tudo bem */ }
+  try { localStorage.setItem('musicaModo', musica.modo); } catch { /* sem armazenamento: tudo bem */ }
 }
 
 async function iniciarMusica() {
   musica.audio.volume = VOLUME_MUSICA;
-  musica.ligada = lerPreferenciaMusica();
+  musica.modo = lerPreferenciaMusica();
   musica.audio.addEventListener('ended', () => { musica.falhas = 0; tocarProxima(); });
   musica.audio.addEventListener('playing', () => { musica.falhas = 0; atualizarBotaoMusica(); });
   // Arquivo corrompido ou que não abre: pula para o próximo, mas para se TODOS falharem (senão seria um laço sem fim)
   musica.audio.addEventListener('error', () => { if (++musica.falhas < musica.lista.length) tocarProxima(); });
 
   $('btnMusica').addEventListener('click', () => {
-    musica.ligada = !musica.ligada;
+    musica.modo = proximoModo(musica.modo);
     gravarPreferenciaMusica();
-    if (musica.ligada) tocar(); else musica.audio.pause();
-    atualizarBotaoMusica();
+    tocar();
   });
   // Primeira interação com a página: libera o som (ver tocar). "once" remove o ouvinte depois da 1ª vez.
-  const liberar = () => { if (musica.audio.paused) tocar(); };
+  const liberar = () => tocar();
   addEventListener('pointerdown', liberar, { once: true, capture: true });
   addEventListener('keydown', liberar, { once: true, capture: true });
 
@@ -77,6 +101,7 @@ async function iniciarMusica() {
     const r = await fetch('/api/musicas');
     if (r.ok) musica.lista = await r.json();
   } catch { /* servidor fora do ar: o jogo segue sem música */ }
+  if (musica.modo === 'mp3' && !musica.lista.length) musica.modo = 'sintetizada';   // sem arquivos: usa o sintetizado
   atualizarBotaoMusica();
   tocar();   // talvez o navegador bloqueie agora; nesse caso começa no primeiro clique
 }

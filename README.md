@@ -61,7 +61,8 @@ public/
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves
     cenarios.js      tela inicial, cenários, objetivos, vitória e derrota
-    musica.js        música de fundo (playlist embaralhada, botão 🎵)
+    ParkAudio.js     som de fundo sintetizado (Web Audio: multidão + órgão de carrossel)
+    musica.js        música de fundo: mp3 embaralhados, som sintetizado ou desligada (botão 🎵)
     input.js         mouse/toque, câmera, regras das ferramentas
     main.js          mapa inicial, loop do jogo e partida
 ```
