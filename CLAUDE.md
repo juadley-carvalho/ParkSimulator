@@ -35,7 +35,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
   `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas,
-  avaliacao, ui, barra, salvar, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  avaliacao, ui, barra, salvar, cenarios, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -47,7 +47,10 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - Responsabilidades: `estado` dados · `iso` grade↔tela · `desenho` canvas · `objetos` catálogo e regras de construção ·
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
   movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota do parque e pensamentos · `ui` painéis de detalhes e janelas de
-  finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `input` mouse/teclado/câmera.
+  finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `cenarios` tela inicial,
+  cenários, objetivos, vitória/derrota · `input` mouse/teclado/câmera.
+- **Fase** (`fase`, estado.js): `menu | jogando | vitoria | derrota`. O `loop` só chama os `atualizar*` em `jogando`
+  (o desenho continua). Não vai no save. A partida em si (`partida`: modo, objetivo, liberados...) vai.
 
 ## Interface (style.css)
 - Tema único de jogo: cores em variáveis no `:root` (sem modo claro/escuro). Fonte Fredoka servida de
@@ -80,6 +83,17 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   fome, sede, banheiro, nausea (100 = pior) e energia, felicidade (100 = melhor).
 
 ## Regras do jogo (valores em config.js)
+- **Tela inicial** (`#modalInicio`, classe `fixa`: Esc não fecha): Continuar, Modo livre (o parque de `montarMapaInicial`),
+  Carregar save e os cenários. O botão 🏠 volta a ela (pausando). Ao abrir a página há um parque livre parado ao fundo.
+- **Cenários** (`public/cenarios/<id>.json`, ordem em `CENARIOS`): mapa como 24 textos de 24 letras (`.` grama, `#`
+  caminho, `~` água), `objetos` `[{chave, gx, gy, rot}]`, caixa, dívida, juros, `liberados` (sem = tudo), `precosTravados`
+  (brinquedos a $0, ver `precoUso`) e `objetivo {tipo, valor, prazo, meses}`. `validarCenario` confere tudo antes.
+  Nos cenários não há a aba 🧪 Teste. Vencer grava o id no `localStorage` (`CHAVE_PROGRESSO`) e libera o próximo.
+- **Objetivos** (`TIPOS_OBJETIVO`): `visitantes` (entraram desde o início, `partida.visitantes`), `convidados` (ao mesmo
+  tempo), `divida` (zerar) e `lucro` (variação do `patrimonio()` = caixa − dívida + 50% do custo dos objetos, para demolir
+  não contar como lucro) vencem na hora; `nota` conta nos fechamentos e exige `meses` SEGUIDOS (`partida.sequencia`).
+  Fechar o mês `prazo` sem cumprir = derrota. "N convidados ao mesmo tempo" é fácil demais no 1º mês (o limite vem da
+  nota, que começa alta) e "nota num fechamento" também: por isso visitantes acumulados e meses seguidos.
 - **Calendário**: começa em Janeiro, Ano 1. Mês = 300 s (`SEG_POR_MES`, um ano ≈ 1 h) com 30 dias (1 dia = 10 s).
   `fin.mes` é um contador crescente; nome/ano saem de `nomeDoMes`, o dia de `diaDoMes(fin.tMes)` (utils.js).
 - **Finanças ($)**: caixa e dívida iniciais $15.000; empréstimo máx $20.000 em parcelas de $1.000; juros 3%/mês
@@ -130,14 +144,14 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 |---|---|---|---|---|
 | ARVORE | 1×1 | $30 / $2 | | |
 | BANCO | 1×1 | $60 / $5 | grátis | só sobre CAMINHO |
-| BARRACA (de comida) | 1×1 | $500 / $80 | comida $4 | |
+| BARRACA (de comida) | 1×1 | $350 / $80 | comida $4 | |
 | BARRACA_BEBIDAS | 1×1 | $350 / $40 | bebida $3 | |
-| BARRACA_SORVETE | 1×1 | $400 / $45 | sorvete $3 | |
+| BARRACA_SORVETE | 1×1 | $400 / $60 | sorvete $3 | |
 | BANHEIRO | 1×1 | $350 / $50 | grátis | |
-| CARROSSEL | 2×2 | $3.000 / $200 | $5 | 5 · 6 · 8 s |
-| NAVIO_PIRATA | 3×2 | $7.500 / $350 | $7 | 7 · 10 · 18 s |
-| RODA_GIGANTE | 3×2 | $5.000 / $300 | $6 | 2 · 8 · 20 s |
-| MONTANHA_RUSSA | 4×3 | $12.000 / $600 | $8 | 8 · 12 · 25 s (2 voltas) |
+| CARROSSEL | 2×2 | $800 / $100 | $5 | 5 · 6 · 8 s |
+| NAVIO_PIRATA | 3×2 | $900 / $120 | $7 | 7 · 10 · 18 s |
+| RODA_GIGANTE | 3×2 | $700 / $100 | $6 | 2 · 8 · 20 s |
+| MONTANHA_RUSSA | 4×3 | $1.200 / $200 | $8 | 8 · 12 · 25 s (2 voltas) |
 | BARCOS (passeio de barco) | 3×2 + canais | $750 / $90 | $4 | 3 · 8 (4 barcos) · 16 s (1 volta), só na água |
 
 Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes não ficam sobre CAMINHO nem água (exceto as `naAgua`).
@@ -151,7 +165,10 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - **Novo serviço/necessidade**: `URGENCIA`, `ICONES`, `FELIC_POR_ATIVIDADE` (config.js) e `atualizarNecessidades`.
 - **Nova queixa**: entrada em `PENSAMENTOS` e uma chamada `pensar(g, tipo)` no gatilho. **Novo fator da nota**: mais
   uma parte em `partesDaAvaliacao` (a janela do parque lista as partes sozinha).
-- **Mudou o formato do save**: aumente `VERSAO_SAVE` e converta em `migrar()` (salvar.js). Campo opcional novo com
+- **Novo cenário**: arquivo em `public/cenarios/` e o id em `CENARIOS` (a posição define o desbloqueio). Teste se o
+  objetivo é viável simulando um jogador (ver Verificação). **Novo tipo de objetivo**: entrada em `TIPOS_OBJETIVO`
+  (`imediato`, `atual`, `cumpriu(v, o)`, `texto(o)`, `progresso(v, o)`); contador novo vai em `partidaInicial` e no save.
+- **Mudou o formato do save**: aumente `VERSAO_SAVE` e converta em `migrar()` (salvar.js; versão 2 = `partida`, a 1 vira modo livre). Campo opcional novo com
   padrão sensato não exige migração, mas convidados novos precisam de um padrão em `base` (em `aplicarJogo`).
 - Estado novo que referencie convidados/objetos deve ser serializado com índices/chaves em `serializarJogo`/`aplicarJogo`.
 
@@ -170,7 +187,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Headless sem navegador: jsdom com **stub de canvas** (um `Proxy` que aceita qualquer chamada, e `measureText`),
   `requestAnimationFrame = () => 0` (o loop real roda durante `await` e invalida comparações), `fetch` injetado.
   Simule com `window.eval` chamando `atualizar`, `atualizarAtracoes`, `atualizarFinancas`, `atualizarEntrada`, `atualizarAvaliacao` com
-  `dt = 0.1`. Invariantes úteis: convidado `esperando`/`brincando` pertence a uma fila/atração; `usando` tem `uso.def`.
+  `dt = 0.1` (e `atualizarPartida`; o `loop` só atualiza com `fase === 'jogando'`). Cenários: `fetch` lendo de
+  `public/`, `localStorage` falso; para calibrar um objetivo, monte o parque como um jogador faria e rode os meses. Invariantes úteis: convidado `esperando`/`brincando` pertence a uma fila/atração; `usando` tem `uso.def`.
 - Para ver o desenho de verdade: `canvas` (node-canvas) ligado ao jsdom, ou puppeteer. Rode o servidor e o teste no
   mesmo comando se o shell não mantiver processos em segundo plano.
 
@@ -186,6 +204,6 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 
 ## Ideias / backlog
 - Fila das atrações entrando só pelo portal (hoje a orientação é visual); volume da música na interface.
-- Chegadas e tolerância ao preço de entrada dependentes da avaliação do parque; autosave; mais atrações (trem, casa
+- Mais cenários e objetivos (ex.: avaliação mínima + visitantes); autosave; mais atrações (trem, casa
   mal-assombrada, tiro ao alvo); capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).

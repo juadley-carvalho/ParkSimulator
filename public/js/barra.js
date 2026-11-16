@@ -41,9 +41,9 @@ function listaDeItens() {
                  dica: `${t.nome}: ${custo ? moeda(custo) + ' por tile' : 'grátis'}` });
   }
   for (const [k, o] of Object.entries(OBJETOS))
-    itens.push({ categoria: o.categoria || 'cenario', nome: o.nome, icone: o.icone || '📦', camada: 'objeto', chave: k,
+    if (objetoLiberado(k)) itens.push({ categoria: o.categoria || 'cenario', nome: o.nome, icone: o.icone || '📦', camada: 'objeto', chave: k,
                  custo: custoDe(k), dica: dicaDoObjeto(k) });
-  itens.push(
+  if (partida.modo === 'livre') itens.push(   // nos cenários, "+5 convidados" seria trapaça
     { categoria: 'teste', nome: '+5 convidados', icone: '👥', dica: 'Faz 5 convidados chegarem pela entrada',
       acao: () => semear(5, [ENTRADA.gx, ENTRADA.gy]) },
     { categoria: 'teste', nome: 'Limpar', icone: '🧹', dica: 'Remove todos os convidados', acao: limparConvidados });
@@ -82,7 +82,7 @@ function abrirCategoria(id) {
   atualizarBarra();
 }
 
-// Monta a barra (chamada uma vez, em main.js)
+// Monta a barra (a cada partida nova: o cenário decide quais objetos aparecem)
 function montarBarra() {
   barra.replaceChildren();
   ITENS_BARRA.length = 0; ABAS_BARRA.length = 0;

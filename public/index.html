@@ -12,8 +12,35 @@
 <div id='barra'></div>
 <div id='painel'></div>
 <div id='painelObj'></div>
-<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><button class='btn' id='btnMusica' title='Música'>🎵</button><span id='finAviso'></span></div>
-<!-- Janelas: faixa de título (com ✕) + corpo dividido em seções. Esc fecha qualquer uma (ui.js). -->
+<div id='fin'><span id='finTxt'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><button class='btn' id='btnMusica' title='Música'>🎵</button><button class='btn' id='btnInicio' title='Tela inicial (cenários)'>🏠</button><span id='finAviso'></span></div>
+<!-- Janelas: faixa de título (com ✕) + corpo dividido em seções. Esc fecha qualquer uma (ui.js), menos as
+     "fixa" (tela inicial e fim de cenário: só os botões delas). As que vêm depois no HTML ficam por cima. -->
+<div id='modalInicio' class='modal fixa'><div class='janela janela-larga'>
+  <div class='janela-topo'><h3>🎡 Parque de Diversões</h3></div>
+  <div class='janela-corpo'>
+    <div class='botoes'>
+      <button class='btn btn-ok' id='btnContinuar'>▶ Continuar</button>
+      <button class='btn' id='btnModoLivre'>🌳 Modo livre</button>
+      <button class='btn' id='btnInicioCarregar'>💾 Carregar save</button>
+    </div>
+    <div class='secao' style='margin-top:14px'>
+      <h4>🎯 Cenários</h4>
+      <div class='dica'>Cumpra o objetivo antes do prazo. Vencer um cenário libera o próximo.</div>
+      <div id='listaCenarios'></div>
+    </div>
+  </div>
+</div></div>
+<div id='modalFim' class='modal fixa'><div class='janela'>
+  <div class='janela-topo'><h3 id='fimTitulo'></h3></div>
+  <div class='janela-corpo'>
+    <p id='fimTexto'></p>
+    <div class='botoes'>
+      <button class='btn btn-ok' id='btnFimContinuar'>Continuar jogando</button>
+      <button class='btn btn-ok' id='btnFimRepetir'>Tentar de novo</button>
+      <button class='btn' id='btnFimInicio'>🏠 Tela inicial</button>
+    </div>
+  </div>
+</div></div>
 <div id='modalJogo' class='modal'><div class='janela'>
   <div class='janela-topo'><h3>💾 Salvar e carregar</h3><button class='fechar' id='btnFecharJogo' title='Fechar (Esc)'>✕</button></div>
   <div class='janela-corpo'>
@@ -68,7 +95,7 @@
     </div>
   </div>
 </div></div>
-<div id="hud"><b id="info">–</b><br>Convidados: <b id="qtd">0</b><br><small>Botão esquerdo: pintar/arrastar · Botão do meio: mover · Roda: zoom · Z: girar atração</small></div>
+<div id="hud"><b id="info">–</b><br>Convidados: <b id="qtd">0</b><br><div id="objetivoHud" hidden></div><small>Botão esquerdo: pintar/arrastar · Botão do meio: mover · Roda: zoom · Z: girar atração</small></div>
 
 
 <!-- A ORDEM importa: cada arquivo usa o que foi definido nos anteriores. main.js é o último. -->
@@ -88,6 +115,7 @@
 <script src="js/ui.js"></script>
 <script src="js/barra.js"></script>
 <script src="js/salvar.js"></script>
+<script src="js/cenarios.js"></script>
 <script src="js/musica.js"></script>
 <script src="js/input.js"></script>
 <script src="js/main.js"></script>

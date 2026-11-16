@@ -48,6 +48,7 @@ function aplicar(gx, gy) {
         }
       }
   } else if (camada === 'objeto') {
+    if (!objetoLiberado(chave)) { avisar(`${OBJETOS[chave].nome} não está liberado neste cenário`); return; }
     if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
   } else {
     removerObjeto(gx, gy);                              // demolir

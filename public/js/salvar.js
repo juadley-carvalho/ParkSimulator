@@ -5,7 +5,7 @@
 
 // Versão do formato do arquivo de save. Ao mudar a estrutura do estado, aumente este número
 // e acrescente uma conversão em migrar() para os saves antigos continuarem abrindo.
-const VERSAO_SAVE = 1;
+const VERSAO_SAVE = 2;   // 2: partida (modo livre ou cenário com objetivo)
 const SAVES_URL = '/api/saves';
 
 // ---------- Serialização: estado do jogo -> objeto simples (JSON) ----------
@@ -16,9 +16,9 @@ function serializarJogo() {
   const comoIndices = lista => lista.map(g => indice.get(g));
   return {
     versao: VERSAO_SAVE,
-    resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length },
+    resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length, cenario: partida.nome },
     estado: {
-      mapa, objetos, fin, parque, avaliacao, tempo, tChegada, stats,
+      mapa, objetos, fin, parque, avaliacao, partida, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
       rotacoes: Object.fromEntries(rotacoes),
       atracoes: Object.fromEntries([...atracoes].map(([k, a]) =>
@@ -35,7 +35,9 @@ function migrar(doc) {
   if (!doc || typeof doc.versao !== 'number' || !doc.estado || typeof doc.estado !== 'object')
     throw new Error('Arquivo de save inválido');
   if (doc.versao > VERSAO_SAVE) throw new Error('Este save é de uma versão mais nova do jogo');
-  // Exemplo para o futuro:  if (doc.versao < 2) { ...ajusta doc.estado para o formato 2... }
+  // Cada versão converte para a seguinte; um save da versão 1 passa por todos os "if" em ordem.
+  // 1 -> 2: antes dos cenários todo jogo era livre
+  if (doc.versao < 2) doc.estado.partida = { modo: 'livre' };
   return doc.estado;
 }
 
@@ -177,6 +179,18 @@ function aplicarJogo(doc) {
     for (const k of ['saidas', 'infelizes', 'chegadas', 'recusas']) avaliacao[k] = Math.max(0, num(av[k], 0));
   } else iniciarAvaliacao();
 
+  // Partida: cenário com objetivo coerente, ou modo livre (save editado à mão com dados estranhos)
+  Object.assign(partida, partidaInicial());
+  const pt = e.partida || {}, ob = pt.objetivo || {};
+  if (pt.modo === 'cenario' && typeof pt.cenario === 'string' && TIPOS_OBJETIVO[ob.tipo] && Number.isFinite(ob.valor) && Number.isInteger(ob.prazo))
+    Object.assign(partida, {
+      modo: 'cenario', cenario: pt.cenario.slice(0, 40), nome: String(pt.nome || pt.cenario).slice(0, 40),
+      objetivo: { tipo: ob.tipo, valor: ob.valor, prazo: ob.prazo, meses: Number.isInteger(ob.meses) && ob.meses > 0 ? ob.meses : 1 },
+      liberados: Array.isArray(pt.liberados) ? pt.liberados.filter(k => OBJETOS[k]) : null,
+      precosTravados: !!pt.precosTravados, inicio: num(pt.inicio, 0), concluido: !!pt.concluido,
+      sequencia: Math.max(0, Math.floor(num(pt.sequencia, 0))), visitantes: Math.max(0, Math.floor(num(pt.visitantes, 0))),
+    });
+
   // Refaz o "def" do serviço em uso (ver serializarJogo) e solta quem ficou em estado incoerente
   for (const g of convidados) {
     if (g.uso) {
@@ -215,6 +229,9 @@ async function salvarEm(nome) {
 
 async function carregarDe(id) {
   aplicarJogo(await chamarApi(`${SAVES_URL}/${encodeURIComponent(id)}`));
+  montarBarra();   // o cenário do save pode liberar outros objetos
+  jogoEmAndamento = true; fase = 'jogando';
+  $('modalInicio').classList.remove('aberto');   // carregado a partir da tela inicial
 }
 
 // ---------- Tela de salvar e carregar ----------
@@ -239,7 +256,7 @@ function iniciarSalvar() {
     const titulo = document.createElement('b'); titulo.textContent = s.nome || s.id;
     const detalhe = document.createElement('small');
     const r = s.resumo || {};
-    detalhe.textContent = `${new Date(s.salvoEm).toLocaleString('pt-BR')} · ${r.mes ? nomeDoMes(r.mes) : '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados`;
+    detalhe.textContent = `${r.cenario ? '🎯 ' + r.cenario + ' · ' : ''}${new Date(s.salvoEm).toLocaleString('pt-BR')} · ${r.mes ? nomeDoMes(r.mes) : '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados`;
     info.append(titulo, detalhe);
 
     const carregar = document.createElement('button'); carregar.className = 'btn'; carregar.textContent = 'Carregar';

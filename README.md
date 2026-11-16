@@ -25,6 +25,7 @@ npm start       # http://localhost:3000
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
 | Salvar e carregar o parque | botão **Salvar / Carregar** |
+| Escolher cenário, modo livre ou carregar | tela inicial (botão **🏠** volta a ela e pausa o jogo) |
 
 ## Estrutura
 
@@ -37,6 +38,7 @@ public/
   index.html         estrutura da página e ordem dos scripts
   css/style.css      estilos (tema de jogo)
   musicas/           coloque aqui .mp3 para a música de fundo (ver LEIA-ME.md)
+  cenarios/          um .json por cenário (mapa em letras, objetos, dinheiro, objetivo); ordem em config.js
   js/
     config.js        constantes e balanceamento (custos, preços, juros, taxas)
     utils.js         funções genéricas (moeda, aleatório, ...)
@@ -54,6 +56,7 @@ public/
     ui.js            painéis de detalhes e tela de finanças
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves
+    cenarios.js      tela inicial, cenários, objetivos, vitória e derrota
     musica.js        música de fundo (playlist embaralhada, botão 🎵)
     input.js         mouse/toque, câmera, regras das ferramentas
     main.js          mapa inicial, loop do jogo e partida

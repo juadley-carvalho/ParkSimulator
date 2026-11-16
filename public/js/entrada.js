@@ -63,6 +63,7 @@ function atualizarEntrada(dt) {
     }
     pagarEntrada(g);
     fin.visitantesMes++;   // base para avaliar receita por visitante
+    partida.visitantes++;  // objetivo "visitantes" dos cenários
   }
   else tChegada = 2;                                   // parque lotado: tenta de novo logo
 }

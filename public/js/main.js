@@ -21,12 +21,15 @@ function montarMapaInicial() {
 function loop(t) {
   const dt = Math.min((t - tAnterior) / 1000, 0.1);   // limita dt: ao voltar de outra aba, ninguém "teleporta"
   tAnterior = t;
-  tempo += dt;
-  atualizar(dt);
-  atualizarAtracoes(dt);
-  atualizarFinancas(dt);
-  atualizarEntrada(dt);
-  atualizarAvaliacao(dt);
+  if (fase === 'jogando') {   // na tela inicial e no fim de um cenário, o tempo do parque para
+    tempo += dt;
+    atualizar(dt);
+    atualizarAtracoes(dt);
+    atualizarFinancas(dt);
+    atualizarEntrada(dt);
+    atualizarAvaliacao(dt);
+    atualizarPartida();
+  }
   desenhar();
   qtd.textContent = `${convidados.length} (saíram: ${stats.sairam})`;
   atualizarPainel();
@@ -34,18 +37,19 @@ function loop(t) {
   atualizarFinancasUI();
   atualizarParqueUI();
   atualizarBarra();
+  atualizarObjetivoUI();
   requestAnimationFrame(loop);
 }
 
 // ---------- Partida ----------
-montarMapaInicial();
-iniciarAvaliacao();
 iniciarUI();
 iniciarSalvar();
 iniciarMusica();
-montarBarra();
+iniciarCenarios();
 iniciarEntradaUsuario();
 ajustarTamanho();
-centralizar();
+novoJogoLivre();   // parque de fundo da tela inicial (parado até o jogador escolher)
+jogoEmAndamento = false;
+abrirInicio();
 // (sem convidados iniciais: eles chegam pela entrada, ver atualizarEntrada)
 requestAnimationFrame(loop);

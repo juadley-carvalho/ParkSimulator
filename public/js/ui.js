@@ -49,8 +49,11 @@ function selecionarObjeto(k) {
   const chave = objetos[gy][gx], d = gestao.get(k);
   painelObj.innerHTML = `<div class='painel-topo'><span>${OBJETOS[chave].icone} ${OBJETOS[chave].nome}</span>` +
     `<button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
-    Object.entries(OBJETOS[chave].servicos).map(([s, def]) =>
-      `<div class='linha'><span>${def.nome || NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.1' data-s='${s}' value='${d.precos[s] || 0}'></div>`).join('') +
+    Object.entries(OBJETOS[chave].servicos).map(([s, def]) => {
+      const travado = s === 'diversao' && partida.precosTravados;   // cenário "Só ingresso"
+      return `<div class='linha'><span>${def.nome || NOMES_SERVICO[s] || s}</span>$ <input type='number' min='0' step='0.1' data-s='${s}' ` +
+        (travado ? `value='0' disabled title='Neste cenário os brinquedos são grátis'>` : `value='${d.precos[s] || 0}'>`) + `</div>`;
+    }).join('') +
     `<div id='oStats'></div>`;
   painelObj.querySelector('.fechar').addEventListener('click', () => { selObj = null; });
   // Os campos só são criados aqui; o loop atualiza apenas o texto das estatísticas
@@ -175,9 +178,9 @@ function iniciarUI() {
   // Esc: fecha a janela aberta; sem janela, fecha os painéis de seleção
   window.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    const abertas = document.querySelectorAll('.modal.aberto');
+    const abertas = document.querySelectorAll('.modal.aberto:not(.fixa)');   // tela inicial e fim só fecham pelos botões
     if (abertas.length) abertas.forEach(m => m.classList.remove('aberto'));
-    else { selecionado = null; selObj = null; }
+    else if (!document.querySelector('.modal.fixa.aberto')) { selecionado = null; selObj = null; }
   });
   iniciarParqueUI();
   $('btnPegar').textContent = 'Pegar ' + moeda(PARCELA);

@@ -12,6 +12,7 @@ function cobrar(v) {
 }
 
 function precoUso(ancora, servico) {
+  if (servico === 'diversao' && partida.precosTravados) return 0;   // cenário "Só ingresso": brinquedos grátis
   const d = gestao.get(chaveAtr(ancora.gx, ancora.gy));
   return d ? (d.precos[servico] || 0) : 0;
 }
@@ -46,6 +47,14 @@ function custoManutencaoMensal() {
   return total;
 }
 
+// Quanto o parque vale: caixa − dívida + o que os objetos devolveriam se demolidos. É a base do
+// objetivo "lucro": demolir não conta como ganho (o caixa sobe, o valor dos objetos desce igual).
+function patrimonio() {
+  let objetosValem = 0;
+  for (const linha of objetos) for (const c of linha) if (typeof c === 'string') objetosValem += custoDe(c) * REEMBOLSO;
+  return arred(fin.caixa - fin.divida + objetosValem);
+}
+
 // Fechamento do mês: cobra juros sobre a dívida e a manutenção (o caixa pode ficar negativo)
 function fecharMes() {
   const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal();
@@ -53,6 +62,7 @@ function fecharMes() {
   fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, visitantes: fin.visitantesMes,
                   entradas: fin.entradasMes, recusas: fin.recusasMes, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
   fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.queixasMes = {}; fin.mes++;
+  objetivoNoFechamento(fin.balanco.mes);   // cenário: vitória ou fim do prazo (cenarios.js)
 }
 
 function atualizarFinancas(dt) {

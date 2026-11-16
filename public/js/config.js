@@ -167,3 +167,8 @@ const PENSAMENTOS = {
 };
 const DURACAO_PENSAMENTO = 3;     // s que o balão fica na tela
 const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA queixa (senão contaria a cada tile)
+
+// ---------- Cenários (ver cenarios.js; cada um é um arquivo public/cenarios/<id>.json) ----------
+// A ORDEM desta lista é a ordem de desbloqueio: concluir um cenário libera o seguinte.
+const CENARIOS = ['primeiro-parque', 'lagoa-azul', 'heranca-falida', 'so-ingresso'];
+const CHAVE_PROGRESSO = 'parque.cenariosConcluidos';   // localStorage: ids dos cenários já vencidos

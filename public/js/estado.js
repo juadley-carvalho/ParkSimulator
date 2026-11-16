@@ -50,6 +50,24 @@ function avaliacaoInicial() {
 }
 const avaliacao = avaliacaoInicial();
 
+// Partida: modo livre ou um cenário com objetivo (ver cenarios.js). Vai no save.
+// objetivo = { tipo, valor, prazo (mês final), meses (fechamentos seguidos exigidos) }; liberados =
+// chaves de OBJETOS que podem ser construídas (null = todas); inicio = patrimônio no começo (base do
+// objetivo "lucro"); sequencia = quantos fechamentos seguidos já cumpriram o objetivo;
+// visitantes = quantos entraram desde o começo (objetivo "visitantes").
+function partidaInicial() {
+  return { modo: 'livre', cenario: null, nome: '', objetivo: null, liberados: null, precosTravados: false,
+           inicio: 0, sequencia: 0, visitantes: 0, concluido: false };
+}
+const partida = partidaInicial();
+
+// Máquina de estados da tela: 'menu' (tela inicial) -> 'jogando' -> 'vitoria' | 'derrota'.
+// Fora de 'jogando' o tempo do parque para. Não vai no save (carregar sempre volta a 'jogando').
+let fase = 'menu';
+
+// Pode construir este objeto na partida atual?
+function objetoLiberado(chave) { return !partida.liberados || partida.liberados.includes(chave); }
+
 const convidados = [];
 
 let tempo = 0;
