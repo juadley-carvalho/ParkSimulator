@@ -201,7 +201,9 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   `avisar(msg, true)` = aviso verde; o aviso é um balão abaixo da barra (fora do fluxo, não alarga a barra).
 - Música de fundo: o botão alterna `musica.modo` = mp3 (🎵, os `.mp3` de `public/musicas/`, listados em
   `GET /api/musicas`, em ordem embaralhada) → sintetizada (🎹, `ParkAudio.js`: Web Audio, ruído rosa filtrado como
-  multidão + órgão de carrossel) → desligada (🔇). Sem mp3, pula esse modo. Preferência `musicaModo` no `localStorage`
+  multidão + valsa de realejo composta na hora: seções de 8 compassos com `PROGRESSOES` de acordes sorteadas, tom e
+  andamento variando, melodia por notas do acorde perto da anterior, "um-pá-pá" e sininho; agendada no relógio do
+  áudio com 1,5 s de antecedência, não nota a nota com setTimeout) → desligada (🔇). Sem mp3, pula esse modo. Preferência `musicaModo` no `localStorage`
   (a chave antiga `musicaLigada` = 'nao' vira desligada). O navegador só toca após o 1º clique/tecla (o AudioContext
   nasce "suspended"; `tocar()` chama `resume()`). `ParkAudio.js` foi escrito como módulo: sem o `export` (scripts clássicos).
 - API: `GET /api/saves`, `GET|PUT|DELETE /api/saves/:id`. Só `armazenamento.js` sabe que os saves são arquivos JSON
