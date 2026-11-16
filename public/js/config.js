@@ -122,6 +122,11 @@ const NOME_PARQUE_PADRAO = 'Meu parque', NOME_PARQUE_MAX = 30;
 const PRECO_ENTRADA_PADRAO = 0;
 const FRACAO_ENTRADA_MIN = 0.15, FRACAO_ENTRADA_MAX = 0.45;
 
+// Velocidades do jogo (0 = pausa), escolhidas na barra superior ou pelas teclas: Espaço pausa/retoma,
+// 1, 2 e 3 = 1x, 2x e 4x. PASSO_MAX = maior passo de simulação: em 4x o quadro vira vários subpassos.
+const VELOCIDADES = [0, 1, 2, 4];
+const PASSO_MAX = 0.1;
+
 // Tecla que gira 90° a atração que está sendo posicionada (4 posições).
 const TECLA_GIRAR = 'z';
 

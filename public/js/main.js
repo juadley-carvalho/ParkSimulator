@@ -21,18 +21,31 @@ function montarMapaInicial() {
   contratarFaxineiro(12, 20);
 }
 
+// Um passo da simulação (dt em segundos de JOGO, no máximo PASSO_MAX)
+function simular(dt) {
+  tempo += dt;
+  atualizar(dt);
+  atualizarFuncionarios(dt);
+  atualizarAtracoes(dt);
+  atualizarFinancas(dt);
+  atualizarEntrada(dt);
+  atualizarAvaliacao(dt);
+  atualizarPartida();
+}
+
 function loop(t) {
-  const dt = Math.min((t - tAnterior) / 1000, 0.1);   // limita dt: ao voltar de outra aba, ninguém "teleporta"
+  const dtReal = Math.min((t - tAnterior) / 1000, 0.1);   // limita: ao voltar de outra aba, ninguém "teleporta"
   tAnterior = t;
-  if (fase === 'jogando') {   // na tela inicial e no fim de um cenário, o tempo do parque para
-    tempo += dt;
-    atualizar(dt);
-    atualizarFuncionarios(dt);
-    atualizarAtracoes(dt);
-    atualizarFinancas(dt);
-    atualizarEntrada(dt);
-    atualizarAvaliacao(dt);
-    atualizarPartida();
+  tempoReal += dtReal;
+  // Em 4x, um quadro vale 4 vezes mais tempo de jogo. Um passo único de 0,4 s faria o convidado pular
+  // tiles inteiros (e as decisões que ele toma ao chegar em cada um), então o tempo é dividido em
+  // subpassos de até PASSO_MAX. Só simula com a fase "jogando" (na tela inicial e no fim, o parque para)
+  // e para no meio se a fase mudar (um cenário vencido no 2º subpasso não roda o 3º).
+  let resta = fase === 'jogando' ? dtReal * velocidade : 0;
+  while (resta > 1e-9 && fase === 'jogando') {
+    const dt = Math.min(resta, PASSO_MAX);
+    simular(dt);
+    resta -= dt;
   }
   desenhar();
   qtd.textContent = `${convidados.length} (saíram: ${stats.sairam})`;
@@ -50,6 +63,7 @@ iniciarUI();
 iniciarSalvar();
 iniciarMusica();
 iniciarCenarios();
+iniciarVelocidades();
 iniciarEntradaUsuario();
 ajustarTamanho();
 novoJogoLivre();   // parque de fundo da tela inicial (parado até o jogador escolher)

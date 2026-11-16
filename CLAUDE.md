@@ -52,6 +52,10 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   cenários, objetivos, vitória/derrota · `input` mouse/teclado/câmera.
 - **Fase** (`fase`, estado.js): `menu | jogando | vitoria | derrota`. O `loop` só chama os `atualizar*` em `jogando`
   (o desenho continua). Não vai no save. A partida em si (`partida`: modo, objetivo, liberados...) vai.
+- **Velocidade** (`velocidade`: 0 = pausa, 1, 2, 4; `VELOCIDADES`): o `loop` multiplica o dt real e chama `simular(dt)` em
+  subpassos de no máximo `PASSO_MAX` (0,1 s), parando se a fase mudar no meio. Teclas: Espaço (pausa/retoma, volta a
+  `velocidadeAntes`), 1/2/3. Pausado dá para construir e inspecionar. O que deve andar pausado (avisos) usa `tempoReal`,
+  não `tempo`. Não vai no save.
 
 ## Interface (style.css)
 - Tema único de jogo: cores em variáveis no `:root` (sem modo claro/escuro). Fonte Fredoka servida de
@@ -213,6 +217,7 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Teste com loop real ligado compara estados em momentos diferentes; teste com objeto sem tile livre até o caminho
   (atração precisa de CAMINHO encostado em alguma célula da pegada) dá "ninguém usa".
 - Emojis da interface dependem da fonte do sistema operacional.
+- Lógica nova vai em `simular(dt)` (main.js), não direto no `loop` (senão ignora a velocidade e a pausa).
 - Efeito "por tile" sem intervalo (pisar no lixo) derruba a felicidade; teste de faxineiro com chegadas ligadas muda o
   nível das lixeiras (use `tChegada = 1e9`).
 - Receita ≈ visitantes × dinheiro que trazem ($30–150): guardam até sair com < $2. Mudar só as preferências

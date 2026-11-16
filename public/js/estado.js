@@ -89,6 +89,9 @@ let tChegada = 1;                           // segundos até a próxima chegada
 
 // Agora lógica (atualizar) e desenho (desenhar) são separados.
 let tAnterior = 0;
+let tempoReal = 0;         // segundos reais desde o início (anda até pausado: avisos e animações da interface)
+let velocidade = 1;        // multiplicador do tempo do jogo (um de VELOCIDADES; 0 = pausado)
+let velocidadeAntes = 1;   // a última velocidade não pausada (Espaço volta para ela)
 
 let ferramenta = { camada: 'terreno', chave: 'CAMINHO' };
 let rotacaoAtual = 0;   // rotação (0 a 3) da atração que o jogador está posicionando

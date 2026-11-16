@@ -203,3 +203,14 @@ input:disabled { opacity:.5; cursor:not-allowed; }
 #objetivoHud { margin-top:4px; padding-top:4px; border-top:2px dashed rgba(255,255,255,.12); color:var(--ouro); font-weight:600; }
 #objetivoHud[hidden] { display:none; }
 #fimTexto { margin:0 0 6px; line-height:1.5; }
+
+/* ---------- Velocidade do jogo (barra superior) ---------- */
+#velocidades { display:flex; gap:3px; }
+.btn-vel { padding:5px 8px; min-width:38px; font-size:14px; }
+.btn-vel.ativo { border-color:#8a6d12; background:linear-gradient(180deg, #ffe082 0%, #f9a825 100%); color:#3e2a00;
+                 text-shadow:none; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #8a6d12; }
+#pausado { position:fixed; top:calc(var(--abaixo-do-topo) + 4px); left:50%; transform:translateX(-50%); padding:6px 16px;
+           border-radius:999px; background:rgba(13,19,35,.85); border:2px solid var(--ouro); color:var(--ouro);
+           font-weight:700; pointer-events:none; }
+#pausado[hidden] { display:none; }
+#pausado small { color:var(--texto-suave); font-weight:400; }

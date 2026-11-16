@@ -25,6 +25,7 @@ npm start       # http://localhost:3000
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
 | Salvar e carregar o parque | botão **Salvar / Carregar** |
+| Pausar / velocidade 1×, 2×, 4× | botões na barra superior, ou **Espaço** (pausa) e teclas **1**, **2**, **3** |
 | Contratar faxineiro | aba **👷 Funcionários** e clique num caminho; para demitir, **Inspecionar** o faxineiro |
 | Escolher cenário, modo livre ou carregar | tela inicial (botão **🏠** volta a ela e pausa o jogo) |
 

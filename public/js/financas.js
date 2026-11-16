@@ -2,7 +2,8 @@
    financas.js — caixa, empréstimo, cobranças e fechamento do mês (só lógica)
    ============================================================ */
 
-function avisar(msg) { fin.aviso = msg; fin.tAviso = tempo; }
+// Usa o relógio REAL: pausado, o tempo do jogo não anda e o aviso nunca sumiria
+function avisar(msg) { fin.aviso = msg; fin.tAviso = tempoReal; }
 
 // Tenta debitar do caixa. Sem saldo, avisa e devolve false (a obra não acontece).
 function cobrar(v) {

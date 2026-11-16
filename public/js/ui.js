@@ -102,7 +102,9 @@ function atualizarFinancasUI() {
   $('finTxt').textContent = `🎡 ${nomeDoParque()} · 📅 Dia ${diaDoMes(fin.tMes)} de ${nomeDoMes(fin.mes)} · ` +
                             `⭐ ${Math.round(avaliacao.nota)} · 💰 ${moeda(fin.caixa)} · 🏦 Dívida ${moeda(fin.divida)}`;
   $('finTxt').style.color = fin.caixa < 0 ? '#e53935' : '';
-  $('finAviso').textContent = tempo - fin.tAviso < 2.5 ? fin.aviso : '';
+  $('finAviso').textContent = tempoReal - fin.tAviso < 2.5 ? fin.aviso : '';
+  for (const b of document.querySelectorAll('#velocidades button')) b.classList.toggle('ativo', +b.dataset.v === velocidade);
+  $('pausado').hidden = !(velocidade === 0 && fase === 'jogando');
   if (!$('modalFin').classList.contains('aberto')) return;
   $('empInfo').innerHTML =
     `Caixa: <b>${moeda(fin.caixa)}</b><br>Dívida: <b>${moeda(fin.divida)}</b> (limite ${moeda(LIMITE_EMPRESTIMO)})<br>` +
@@ -194,6 +196,32 @@ function iniciarParqueUI() {
   preco.addEventListener('input', () => {
     const v = parseFloat(preco.value);
     if (!isNaN(v)) parque.precoEntrada = Math.max(0, arred(v));
+  });
+}
+
+// ---------- Velocidade do jogo ----------
+function definirVelocidade(v) {
+  if (v > 0) velocidadeAntes = v;
+  velocidade = v;
+}
+function alternarPausa() { definirVelocidade(velocidade ? 0 : velocidadeAntes); }
+
+// Botões da barra superior (um por velocidade de VELOCIDADES) e teclas (chamada uma vez, em main.js)
+function iniciarVelocidades() {
+  const grupo = $('velocidades');
+  VELOCIDADES.forEach((v, i) => {
+    const b = el('button', 'btn btn-vel', v ? `${v}×` : '⏸');
+    b.dataset.v = v;
+    b.title = v ? `Velocidade ${v}× (tecla ${i})` : 'Pausa (Espaço)';
+    b.addEventListener('click', () => (v ? definirVelocidade(v) : alternarPausa()));
+    grupo.appendChild(b);
+  });
+  window.addEventListener('keydown', e => {
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;   // digitando
+    if (e.key === ' ') { e.preventDefault(); alternarPausa(); }   // sem preventDefault, Espaço "clicaria" o botão focado
+    const n = Number(e.key);
+    if (Number.isInteger(n) && n >= 1 && n < VELOCIDADES.length) definirVelocidade(VELOCIDADES[n]);
   });
 }
 
