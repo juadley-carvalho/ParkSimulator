@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Parque de Diversões — Manual do Jogador</title>
+<!--
+  Manual do jogador. Feito para impressão A4: gerar-pdf.js (pasta ferramentas) abre esta página no Edge sem
+  janela, preenche os números de página do índice e grava Manual-Parque-de-Diversoes.pdf.
+  Cada <section class="pagina-inicio"> começa numa página nova (é isso que permite calcular o índice).
+  As imagens vêm de img/ (geradas por capturar.js). Os números foram conferidos em public/js/config.js,
+  public/js/objetos.js e public/cenarios/*.json (versão v1.10.0).
+-->
+<style>
+@font-face { font-family: 'Fredoka'; src: url('../../public/fonts/fredoka-latin.woff2') format('woff2'); font-weight: 300 700; }
+
+:root {
+  --azul-noite: #1b2440; --azul: #2a3a66; --laranja: #ff8a3d; --laranja-escuro: #e5641c; --ouro: #ffc83d;
+  --verde: #43a047; --vermelho: #e53935; --papel: #fffdf7; --texto: #263043; --suave: #5f6b80; --linha: #e4dccb;
+  --dica: #e8f5e9; --dica-borda: #43a047; --atencao: #fff3e0; --atencao-borda: #fb8c00; --info: #e3f2fd; --info-borda: #1e88e5;
+}
+/* As margens da página saem brancas na impressão: o "papel" também é branco, para não virar uma caixa creme */
+:root { --papel: #ffffff; }
+
+@page {
+  size: A4; margin: 15mm 15mm 17mm 15mm;
+  @bottom-left { content: "Parque de Diversões · Manual do jogador"; font: 8.5pt 'Fredoka', sans-serif; color: #8a93a6; }
+  @bottom-right { content: counter(page); font: 600 9pt 'Fredoka', sans-serif; color: #e5641c; }
+}
+@page capa { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; background: var(--papel); color: var(--texto); font: 10.5pt/1.48 'Segoe UI', 'Fredoka', sans-serif; }
+h1, h2, h3, h4, .fredoka { font-family: 'Fredoka', 'Segoe UI', sans-serif; }
+p { margin: 0 0 7pt; }
+ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+li { margin-bottom: 2pt; }
+b, strong { color: #1b2440; }
+img { max-width: 100%; display: block; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; font-size: 9.5pt; }
+th, td { border-bottom: 1px solid var(--linha); padding: 3.5pt 5pt; text-align: left; vertical-align: top; }
+th { background: var(--azul-noite); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 500; }
+tr:nth-child(even) td { background: #faf5ea; }
+.num { text-align: right; white-space: nowrap; }
+.tecla { display: inline-block; min-width: 16pt; padding: 0 5pt; border: 1px solid #b9b0a0; border-bottom-width: 2.5px;
+         border-radius: 4pt; background: #fff; font: 600 9pt 'Fredoka', sans-serif; text-align: center; color: #1b2440; }
+
+/* ---------- Capa ---------- */
+.capa { page: capa; position: relative; width: 210mm; height: 297mm; overflow: hidden; background: #111827; color: #fff; }
+.capa img { position: absolute; z-index: 0; left: -35mm; top: 52mm; width: 280mm; max-width: none; }
+.capa .faixa-topo { position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 100mm;
+  background: linear-gradient(180deg, #111827 0%, #111827 52%, rgba(17,24,39,.85) 70%, rgba(17,24,39,0) 100%); }
+.capa .titulo { position: absolute; z-index: 2; top: 20mm; left: 0; right: 0; text-align: center; }
+.capa .titulo .pre { font: 500 13pt 'Fredoka', sans-serif; letter-spacing: 5pt; color: var(--ouro); text-transform: uppercase; }
+.capa .titulo h1 { margin: 2mm 0 0; font-size: 46pt; line-height: 1; font-weight: 700; color: #fff;
+  text-shadow: 0 3pt 0 var(--laranja-escuro), 0 6pt 14pt rgba(0,0,0,.5); }
+.capa .titulo .sub { margin-top: 5mm; font: 500 16pt 'Fredoka', sans-serif; color: #ffe0b2; }
+.capa .rodape { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; height: 52mm; padding: 22mm 18mm 0;
+  background: linear-gradient(0deg, #111827 55%, rgba(17,24,39,0)); display: flex; justify-content: space-between; align-items: flex-end; }
+.capa .selo { background: var(--laranja); color: #fff; border-radius: 30pt; padding: 5pt 14pt; font: 600 11pt 'Fredoka', sans-serif;
+  box-shadow: 0 3pt 0 var(--laranja-escuro); }
+.capa .rodape .txt { font: 400 10pt 'Fredoka', sans-serif; color: #cfd8ea; text-align: right; }
+
+/* ---------- Seções e capítulos ---------- */
+.pagina-inicio { break-before: page; }
+.cabeca { display: flex; align-items: center; gap: 10pt; margin: 0 0 10pt; padding: 0 0 6pt; border-bottom: 3px solid var(--laranja); }
+.cabeca .n { flex: none; width: 34pt; height: 34pt; border-radius: 50%; background: var(--laranja); color: #fff;
+  font: 700 17pt/34pt 'Fredoka', sans-serif; text-align: center; box-shadow: 0 2.5pt 0 var(--laranja-escuro); }
+.cabeca h2 { margin: 0; font-size: 21pt; font-weight: 600; color: var(--azul-noite); line-height: 1.1; }
+.cabeca .ic { font-size: 22pt; margin-left: auto; }
+.abre { font-size: 11pt; color: var(--suave); margin-bottom: 10pt; }
+h3 { font-size: 13.5pt; font-weight: 600; color: var(--azul); margin: 12pt 0 5pt; break-after: avoid; }
+h4 { font-size: 11pt; font-weight: 600; color: var(--laranja-escuro); margin: 8pt 0 3pt; break-after: avoid; }
+figure { margin: 4pt 0 10pt; break-inside: avoid; }
+figure img { border-radius: 6pt; border: 1px solid #d8cfbd; box-shadow: 0 2pt 5pt rgba(0,0,0,.12); }
+figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style: italic; }
+.centro img { margin: 0 auto; }
+.lado { display: flex; gap: 12pt; align-items: flex-start; margin-bottom: 8pt; break-inside: avoid; }
+.lado > * { flex: 1; min-width: 0; }
+.lado > figure { margin-top: 0; }
+.estreita { flex: 0 0 38% !important; }
+
+.quadro { border-radius: 6pt; padding: 7pt 10pt 4pt 34pt; margin: 6pt 0 10pt; position: relative; break-inside: avoid; font-size: 10pt; }
+.quadro::before { position: absolute; left: 9pt; top: 6pt; font-size: 14pt; }
+.quadro .t { font: 600 10.5pt 'Fredoka', sans-serif; display: block; margin-bottom: 2pt; }
+.dica { background: var(--dica); border-left: 4px solid var(--dica-borda); } .dica::before { content: '💡'; } .dica .t { color: #2e7d32; }
+.atencao { background: var(--atencao); border-left: 4px solid var(--atencao-borda); } .atencao::before { content: '⚠️'; } .atencao .t { color: #e65100; }
+.info { background: var(--info); border-left: 4px solid var(--info-borda); } .info::before { content: '📘'; } .info .t { color: #1565c0; }
+
+/* ---------- Índice ---------- */
+.indice ol { list-style: none; padding: 0; margin: 6pt 0 0; }
+.indice li { display: flex; align-items: baseline; gap: 6pt; padding: 5.5pt 0; border-bottom: 1px dashed #d6ccb8; font: 500 12pt 'Fredoka', sans-serif; }
+.indice li a { color: var(--azul-noite); text-decoration: none; display: flex; gap: 8pt; flex: 1; }
+.indice li .n { color: var(--laranja-escuro); width: 22pt; }
+.indice li small { display: block; font: 400 9pt 'Segoe UI', sans-serif; color: var(--suave); }
+.indice li .pg { font-weight: 700; color: var(--laranja-escuro); min-width: 20pt; text-align: right; }
+
+/* ---------- Fichas ---------- */
+.ficha { display: flex; gap: 11pt; border: 1.5px solid #e2d6bf; border-radius: 9pt; background: #fff; padding: 8pt; margin-bottom: 9pt;
+  break-inside: avoid; box-shadow: 0 2pt 0 #eadfca; }
+.ficha .img { flex: 0 0 47%; }
+.ficha .img img { border-radius: 6pt; }
+.ficha .dados { flex: 1; min-width: 0; }
+.ficha h3 { margin: 0 0 1pt; font-size: 15pt; color: var(--azul-noite); }
+.ficha .tipo { font: 500 9pt 'Fredoka', sans-serif; color: var(--laranja-escuro); text-transform: uppercase; letter-spacing: 1pt; }
+.ficha table { margin: 4pt 0 5pt; font-size: 9pt; }
+.ficha td { padding: 2pt 4pt; }
+.ficha td:first-child { color: var(--suave); width: 42%; }
+.ficha tr:nth-child(even) td { background: none; }
+.ficha p { font-size: 9.4pt; margin-bottom: 3pt; }
+.medidor { display: inline-flex; gap: 1.5pt; vertical-align: middle; margin-left: 3pt; }
+.medidor i { width: 6pt; height: 8pt; border-radius: 1.5pt; background: #e0d8c8; }
+.medidor i.on { background: linear-gradient(#ff8a3d, #e53935); }
+.ficha.pequena .img { flex-basis: 34%; }
+.publico { display: inline-block; background: #fff3e0; color: #e65100; border-radius: 10pt; padding: 0 6pt; font: 600 8.5pt 'Fredoka', sans-serif; }
+
+.cenario { border: 2px solid #e2d6bf; border-radius: 10pt; overflow: hidden; margin-bottom: 10pt; break-inside: avoid; background: #fff; }
+.cenario .topo { background: var(--azul-noite); color: #fff; padding: 6pt 11pt; display: flex; align-items: center; gap: 8pt; }
+.cenario .topo h3 { margin: 0; color: #fff; font-size: 15pt; }
+.cenario .topo .obj { margin-left: auto; font: 500 9.5pt 'Fredoka', sans-serif; color: var(--ouro); text-align: right; }
+.cenario .corpo { padding: 8pt 11pt 4pt; }
+.grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+.mini th, .mini td { font-size: 8.8pt; padding: 2.5pt 4pt; }
+</style>
+</head>
+<body>
+
+<!-- ======================= CAPA ======================= -->
+<section class="capa" id="capa">
+  <img src="img/capa.png" alt="">
+  <div class="faixa-topo"></div>
+  <div class="titulo">
+    <div class="pre">Manual do jogador</div>
+    <h1>Parque de<br>Diversões</h1>
+    <div class="sub">Construa, cuide e encha de alegria o seu parque!</div>
+  </div>
+  <div class="rodape">
+    <span class="selo">🎢 Versão 1.10</span>
+    <span class="txt">9 atrações · 4 cenários · mapas de 24 a 64 tiles<br>Simulador isométrico inspirado em RollerCoaster Tycoon</span>
+  </div>
+</section>
+
+<!-- ======================= ÍNDICE ======================= -->
+<section class="pagina-inicio indice" id="indice">
+  <div class="cabeca"><span class="n">★</span><h2>Índice</h2><span class="ic">🗺️</span></div>
+  <p class="abre">Bem-vindo, diretor! Este manual explica tudo o que você precisa para transformar um terreno vazio
+  no parque mais animado da região. Leia na ordem ou pule direto para o que interessa.</p>
+  <ol>
+    <li data-alvo="cap1"><a href="#cap1"><span class="n">1</span><span>Bem-vindo ao parque<small>O objetivo do jogo e a tela inicial</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap2"><a href="#cap2"><span class="n">2</span><span>Controles e interface<small>Mouse, teclas, barra superior, HUD, barra de construção e painéis</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap3"><a href="#cap3"><span class="n">3</span><span>Terreno e construção<small>Caminhos, água, pegada, girar, prévia e demolição</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap4"><a href="#cap4"><span class="n">4</span><span>As atrações<small>Uma ficha para cada brinquedo</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap5"><a href="#cap5"><span class="n">5</span><span>Serviços e decoração<small>Barracas, banheiro, banco, lixeira e árvore</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap6"><a href="#cap6"><span class="n">6</span><span>Os convidados<small>Necessidades, intensidade, dinheiro e pensamentos</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap7"><a href="#cap7"><span class="n">7</span><span>Filas e preços<small>Como os convidados escolhem e quanto cobrar</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap8"><a href="#cap8"><span class="n">8</span><span>A avaliação do parque<small>De onde vêm e para onde vão os pontos</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap9"><a href="#cap9"><span class="n">9</span><span>Finanças<small>Caixa, empréstimo, juros, manutenção, salários e ingresso</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap10"><a href="#cap10"><span class="n">10</span><span>Limpeza<small>Lixo, lixeiras, vômito e faxineiros</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap11"><a href="#cap11"><span class="n">11</span><span>Multidões e caminhos largos<small>Superlotação</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap12"><a href="#cap12"><span class="n">12</span><span>Tempo, saves e música<small>Velocidade, pausa, salvar, carregar e autosave</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap13"><a href="#cap13"><span class="n">13</span><span>Os cenários<small>Objetivos, prazos e estratégia recomendada</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap14"><a href="#cap14"><span class="n">14</span><span>Dominando o jogo<small>Estratégias avançadas, erros comuns, tabelas e atalhos</small></span></a><span class="pg"></span></li>
+  </ol>
+</section>
+
+<!-- ======================= 1 ======================= -->
+<section class="pagina-inicio" id="cap1">
+  <div class="cabeca"><span class="n">1</span><h2>Bem-vindo ao parque</h2><span class="ic">🎡</span></div>
+  <p class="abre">Você é o diretor de um parque de diversões. Construa caminhos, atrações e barracas, cuide da
+  limpeza e das contas, e faça os visitantes saírem felizes (e de bolso vazio!).</p>
+
+  <h3>O objetivo do jogo</h3>
+  <p>Convidados chegam pelo <b>portão</b> com algum dinheiro no bolso e passeiam pelos caminhos. Eles sentem fome,
+  sede, vontade de ir ao banheiro, cansaço e, claro, vontade de se divertir. Cada vez que usam algo do seu parque,
+  pagam por isso, e é desse dinheiro que você vive. Quanto melhor o parque, maior a <b>avaliação</b> (de 0 a 999)
+  e mais rápido chegam novos visitantes.</p>
+  <p>No <b>modo livre</b> não há fim: o desafio é crescer. Nos <b>cenários</b> você tem um objetivo e um prazo
+  (por exemplo, receber 700 visitantes até dezembro). Vencer um cenário libera o próximo.</p>
+
+  <h3>A tela inicial</h3>
+  <div class="lado">
+    <figure class="estreita" style="flex-basis:33% !important"><img src="img/tela-inicial.png" alt=""><figcaption>A tela inicial: modo livre, carregar e a lista de cenários.</figcaption></figure>
+    <div>
+      <p>Ao abrir o jogo você vê a tela inicial, com um parque parado ao fundo:</p>
+      <ul>
+        <li><b>▶ Continuar</b> volta ao parque em andamento (só aparece depois do primeiro jogo).</li>
+        <li><b>🌳 Modo livre</b> começa um parque novo, já com alguns brinquedos, barracas, duas lixeiras e um
+          faxineiro. Ao lado, o seletor 🗺️ escolhe o tamanho do terreno: <b>24×24, 32×32, 48×48 ou 64×64</b> tiles.
+          O parque inicial fica sempre junto do portão; o resto do terreno é seu para crescer.</li>
+        <li><b>💾 Carregar save</b> abre a lista de jogos salvos.</li>
+        <li><b>🎯 Cenários</b>: cada cartão mostra a descrição, o objetivo e o prazo. Só o primeiro começa liberado;
+          os outros mostram 🔒 até você vencer o anterior. Os vencidos ganham ✅.</li>
+      </ul>
+      <p>O botão <b>🏠</b> da barra superior volta para esta tela a qualquer momento, e o parque fica parado
+      enquanto ela está aberta.</p>
+      <div class="quadro atencao"><span class="t">Cuidado ao trocar de jogo</span>Começar outro parque ou cenário
+      descarta o atual. O jogo pergunta antes, mas salve primeiro se quiser voltar a ele.</div>
+    </div>
+  </div>
+
+  <h3>Seu primeiro minuto</h3>
+  <ol>
+    <li>Escolha <b>Modo livre</b> (24×24 é ótimo para começar).</li>
+    <li>Observe os convidados entrando pelo portão de circo, na borda de baixo.</li>
+    <li>Na barra de baixo, abra a aba <b>🎢 Atrações</b>, escolha um brinquedo e clique num gramado <b>encostado
+      num caminho</b>.</li>
+    <li>Use a ferramenta <b>🔍 Inspecionar</b> para clicar em convidados e brinquedos e ver o que está acontecendo.</li>
+    <li>Abra a janela <b>🎡 Parque</b> para acompanhar a avaliação.</li>
+    <li>Aperte <span class="tecla">Espaço</span> para pausar: pausado, dá para construir e mudar preços com calma.</li>
+  </ol>
+</section>
+
+<!-- ======================= 2 ======================= -->
+<section class="pagina-inicio" id="cap2">
+  <div class="cabeca"><span class="n">2</span><h2>Controles e interface</h2><span class="ic">🕹️</span></div>
+
+  <h3>Controles</h3>
+  <table>
+    <tr><th style="width:38%">Comando</th><th>O que faz</th></tr>
+    <tr><td>Botão <b>esquerdo</b></td><td>Usa a ferramenta escolhida: pinta terreno, constrói, contrata, demole ou inspeciona. <b>Arraste</b> para pintar vários tiles de uma vez.</td></tr>
+    <tr><td>Botão do <b>meio</b> (roda) pressionado</td><td>Arrasta o mapa.</td></tr>
+    <tr><td><b>Roda</b> do mouse</td><td>Zoom, centrado no cursor.</td></tr>
+    <tr><td><span class="tecla">Z</span></td><td>Gira 90° a atração que você está posicionando.</td></tr>
+    <tr><td><span class="tecla">Espaço</span></td><td>Pausa / continua (volta à última velocidade).</td></tr>
+    <tr><td><span class="tecla">1</span> <span class="tecla">2</span> <span class="tecla">3</span></td><td>Velocidade 1×, 2× e 4×.</td></tr>
+    <tr><td><span class="tecla">Esc</span></td><td>Fecha a janela aberta; sem janela, fecha os painéis laterais.</td></tr>
+  </table>
+
+  <figure><img src="img/interface.png" alt=""><figcaption>A tela de jogo: barra superior, HUD à esquerda, painel do convidado selecionado à direita e a barra de construção embaixo.</figcaption></figure>
+
+  <h3>A barra superior</h3>
+  <figure><img src="img/barra-superior.png" alt=""><figcaption>Nome do parque, data, avaliação, caixa e dívida; velocidades; janelas; música e tela inicial.</figcaption></figure>
+  <p>Da esquerda para a direita: o <b>nome do parque</b>, o <b>dia, mês e ano</b>, a <b>⭐ avaliação</b>, o
+  <b>💰 caixa</b> (fica vermelho se negativo) e a <b>🏦 dívida</b>. Depois vêm os botões de velocidade
+  (<b>⏸ 1× 2× 4×</b>), as janelas <b>📊 Finanças</b>, <b>🎡 Parque</b> e <b>💾 Salvar / Carregar</b>, o botão de
+  <b>música</b> e o <b>🏠</b> (tela inicial). Avisos como “Saldo insuficiente” aparecem num balão logo abaixo.</p>
+
+  <div class="lado">
+    <figure class="estreita"><img src="img/hud.png" alt=""><figcaption>O HUD.</figcaption></figure>
+    <div>
+      <h3 style="margin-top:0">O HUD</h3>
+      <p>No canto superior esquerdo: o tile sob o mouse (coordenadas, terreno, objeto, quanto lixo há numa
+      lixeira e quantos itens de sujeira há no chão), o número de <b>convidados</b> no parque e quantos já
+      saíram. Nos cenários, aparece também a linha do <b>🎯 objetivo</b> com o progresso e o prazo.</p>
+    </div>
+  </div>
+
+  <h3>A barra de construção</h3>
+  <p>Embaixo da tela ficam as <b>abas</b> e, acima delas, os <b>cartões</b> da aba aberta, com ícone, nome e preço.
+  Passe o mouse sobre um cartão para ver custo, manutenção, tamanho e, nos brinquedos, a intensidade e os lugares.
+  Cartões que o caixa não cobre ficam apagados, com o preço em vermelho. A aba que contém a ferramenta em uso
+  ganha um pontinho laranja.</p>
+  <figure><img src="img/barra-atracoes.png" alt=""><figcaption>Aba Atrações (aqui alargada para mostrar todos os cartões; no jogo, a barra rola para o lado).</figcaption></figure>
+  <table>
+    <tr><th style="width:22%">Aba</th><th>Conteúdo</th></tr>
+    <tr><td>🧰 Ferramentas</td><td><b>🔍 Inspecionar</b> (detalhes de convidados, objetos e faxineiros; preços) e <b>🔨 Demolir</b> (devolve 50% do custo).</td></tr>
+    <tr><td>⛰️ Terreno</td><td>Grama (grátis), Caminho ($10 por tile) e Água ($25 por tile).</td></tr>
+    <tr><td>🌳 Cenário</td><td>Árvore, Banco e Lixeira.</td></tr>
+    <tr><td>🍔 Serviços</td><td>Barraca de comida, Barraca de bebidas, Sorveteria e Banheiro.</td></tr>
+    <tr><td>🎢 Atrações</td><td>Os nove brinquedos (capítulo 4).</td></tr>
+    <tr><td>👷 Funcionários</td><td>Faxineiro: clique num caminho para contratar.</td></tr>
+    <tr><td>🧪 Teste</td><td>Só no modo livre: <b>+5 convidados</b> e <b>Limpar</b> (remove todos os convidados).</td></tr>
+  </table>
+  <p>Nos cenários, só aparecem os objetos liberados naquele cenário.</p>
+
+  <h3>Os painéis laterais</h3>
+  <p>Com <b>🔍 Inspecionar</b>, clique num convidado, numa barraca ou brinquedo, ou num faxineiro: um painel abre à
+  direita. O do convidado mostra as necessidades em barras (verde = bem, vermelho = mal), o dinheiro, a
+  tolerância e o que ele está fazendo; o do objeto, os preços (editáveis) e as estatísticas; o do faxineiro, o
+  trabalho do mês e o botão <b>Demitir</b>. Feche com ✕ ou <span class="tecla">Esc</span>.</p>
+</section>
+
+<!-- ======================= 3 ======================= -->
+<section class="pagina-inicio" id="cap3">
+  <div class="cabeca"><span class="n">3</span><h2>Terreno e construção</h2><span class="ic">🏗️</span></div>
+
+  <h3>Grama, caminho e água</h3>
+  <div class="lado">
+    <figure><img src="img/terreno.png" alt=""><figcaption>Grama, caminhos e um lago.</figcaption></figure>
+    <div>
+      <p>O terreno é uma grade de tiles em losango. Escolha um tipo na aba <b>⛰️ Terreno</b> e clique (ou
+      arraste) para pintar.</p>
+      <ul>
+        <li><b>👣 Caminho</b> ($10): os convidados <b>só andam sobre caminhos</b>. Todo o parque precisa estar
+          ligado ao portão por eles.</li>
+        <li><b>💧 Água</b> ($25): decoração e lugar dos brinquedos aquáticos. Ninguém atravessa a água.</li>
+        <li><b>🌱 Grama</b> (grátis): onde ficam a maioria das construções.</li>
+      </ul>
+      <p>O tile do <b>portão</b> não pode ser alterado.</p>
+    </div>
+  </div>
+  <div class="quadro atencao"><span class="t">O chão embaixo dos objetos</span>Não dá para trocar a grama ou o
+  caminho embaixo de um objeto: demola-o antes. Já a <b>água afoga</b> o que estiver no tile (o objeto é
+  demolido, com o reembolso normal). A água sob um brinquedo aquático e a dos seus canais também é protegida.</div>
+
+  <h3>Construindo</h3>
+  <p>Escolha um objeto na barra e passe o mouse pelo mapa. A <b>prévia</b> mostra a pegada inteira (todos os tiles
+  que ele ocupa) e um “fantasma” do objeto: <b>colorida com contorno amarelo</b> se dá para construir ali,
+  <b>vermelha</b> se não dá. Clique para construir; o custo sai do caixa na hora.</p>
+  <div class="grade2">
+    <figure><img src="img/previa-ok.png" alt=""><figcaption>Prévia válida: o carrossel cabe no gramado, encostado no caminho.</figcaption></figure>
+    <figure><img src="img/previa-erro.png" alt=""><figcaption>Prévia vermelha: parte da pegada cai na água.</figcaption></figure>
+  </div>
+  <h4>Onde cada coisa pode ficar</h4>
+  <ul>
+    <li><b>Atrações, barracas, banheiro e árvores</b>: sobre a <b>grama</b>. Nunca sobre o caminho (bloqueariam a passagem).</li>
+    <li><b>Banco e lixeira</b>: <b>sobre o caminho</b>, na borda. O banco aparece em cada lado do tile que não tem
+      outro caminho; num cruzamento (os quatro lados ligados) não cabe. Se um caminho novo fechar o último lado
+      livre de um banco, ele é removido (com reembolso). A lixeira fica sozinha no tile.</li>
+    <li><b>Passeio de barco e corredeira</b>: com a pegada inteira <b>na água</b>.</li>
+    <li>Para receber convidados, um brinquedo ou barraca precisa de um <b>caminho encostado</b> em pelo menos um
+      dos seus tiles. Qualquer lado serve.</li>
+  </ul>
+  <h4>Demolindo</h4>
+  <p>A ferramenta <b>🔨 Demolir</b> remove o objeto inteiro (clique em qualquer tile dele) e devolve <b>50% do
+  custo</b>. Quem estava usando o objeto ou na fila volta a passear.</p>
+
+  <h3>Girando as atrações</h3>
+  <p>Antes de clicar, aperte <span class="tecla">Z</span> para girar a atração 90° (quatro posições). Atrações
+  retangulares trocam largura e profundidade; todas mudam o lado do <b>portal de entrada</b> (os dois postes com a
+  faixa colorida). Só as atrações giram.</p>
+  <figure><img src="img/girar.png" alt=""><figcaption>O mesmo navio pirata nas quatro orientações.</figcaption></figure>
+  <div class="quadro info"><span class="t">Os canais do passeio de barco</span>Os barcos saem pela frente e voltam
+  pelos fundos. Por isso a fileira de tiles logo à frente e a logo atrás do passeio precisam ser <b>água livre</b>.
+  A prévia mostra esses canais com um contorno tracejado (claro = ok, vermelho = bloqueado). Dois passeios podem
+  dividir um canal, mas um não pode ser construído em cima do canal do outro.</div>
+  <figure class="centro"><img src="img/canais.png" alt="" style="width:48%"><figcaption style="text-align:center">Prévia do passeio de barco com os canais tracejados.</figcaption></figure>
+</section>
+
+<!-- ======================= 4 ======================= -->
+<section class="pagina-inicio" id="cap4">
+  <div class="cabeca"><span class="n">4</span><h2>As atrações</h2><span class="ic">🎢</span></div>
+  <p class="abre">Nove brinquedos, do passeio tranquilo ao frio na barriga. Cada ficha mostra os números do jogo
+  e o público: a <b>intensidade</b> (1 a 10) é comparada com a <b>tolerância</b> de cada convidado
+  (capítulo 6). “Público” é a fatia aproximada dos convidados que aceitam o brinquedo normalmente.</p>
+  <div class="quadro info"><span class="t">Como ler as fichas</span>Custo de construção · manutenção cobrada todo
+  fim de mês · preço inicial do ingresso (você muda no painel) · lugares por viagem · duração da viagem. Os
+  efeitos são aplicados quando a viagem termina: felicidade (+ é bom), náusea (+ é ruim) e energia.</div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-CARROSSEL.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 2×2</span><h3>🎠 Carrossel</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$800</b> / $100 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$5</td></tr>
+        <tr><td>Intensidade</td><td>5 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>6 · 8 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +35 · náusea +25 · energia −10</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 79%</span> O clássico: barato, rápido e agrada a quase todos. Viagens curtas
+      fazem a fila andar depressa. Deixa um pouco enjoado: um banco por perto ajuda.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-RODA_GIGANTE.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 3×2</span><h3>🎡 Roda-gigante</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$700</b> / $100 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$6</td></tr>
+        <tr><td>Intensidade</td><td>2 <span class="medidor"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>8 · 20 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +30 · náusea +5 · energia −5</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 30%</span> Para quem gosta de calma. Quase não enjoa. Sozinha atende
+      pouca gente, mas completa a variedade e acolhe os convidados mais sensíveis.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-MONTANHA_RUSSA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 4×3</span><h3>🎢 Montanha-russa</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$1.200</b> / $200 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$8</td></tr>
+        <tr><td>Intensidade</td><td>8 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>12 · 25 s (2 voltas)</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +45 · náusea +30 · energia −15</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 50%</span> A estrela do parque: a maior alegria e o ingresso mais caro.
+      Também a mais cara de manter, e a que mais enjoa: espere vômito no caminho da saída.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-NAVIO_PIRATA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 3×2</span><h3>🏴‍☠️ Navio pirata</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$900</b> / $120 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$7</td></tr>
+        <tr><td>Intensidade</td><td>7 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>10 · 18 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +40 · náusea +20 · energia −12</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 69%</span> Um balanço gigante. Quase tão emocionante quanto a montanha-russa,
+      mais barato e com muitos lugares. Excelente custo-benefício.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-BARCOS.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração aquática · 3×2 + canais</span><h3>🚣 Passeio de barco</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$750</b> / $90 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$4</td></tr>
+        <tr><td>Intensidade</td><td>3 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>8 (4 barcos de 2) · 16 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +28 · náusea +8 · energia −6</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 50%</span> Construído <b>na água</b>, com uma fileira de água livre à frente e
+      atrás (os canais). Os convidados embarcam pelas laterais: encoste um caminho num dos lados.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-CASA_ASSOMBRADA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 2×2</span><h3>👻 Casa mal-assombrada</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$1.000</b> / $110 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$6</td></tr>
+        <tr><td>Intensidade</td><td>4 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>8 · 15 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +34 · náusea +3 · energia −6</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 69%</span> Susto sem enjoo: muita alegria e quase nenhuma náusea.
+      Ocupa só 2×2 e agrada a muita gente.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-CORREDEIRA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração aquática · 3×3</span><h3>🛶 Corredeira</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$1.100</b> / $130 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$7</td></tr>
+        <tr><td>Intensidade</td><td>6 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>6 (1 bote) · 20 s (1 volta)</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +38 · náusea +16 · energia −10</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 79%</span> Rafting em volta de uma ilha. Fica <b>na água</b> (3×3), mas
+      não precisa de canais: o bote dá a volta dentro da própria atração. Poucos lugares: a fila cresce rápido.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-TREM.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 4×3</span><h3>🚂 Trem</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$950</b> / $70 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$4</td></tr>
+        <tr><td>Intensidade</td><td>3 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>12 · 30 s (2 voltas)</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +30 · náusea +4 · <b>energia +5</b></td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 50%</span> Locomotiva e três vagões em volta de um jardim. O único brinquedo
+      que <b>descansa</b> (devolve energia). Muitos lugares e manutenção baixa.</p>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="img"><img src="img/obj-TOBOGA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Atração · 3×2</span><h3>🛝 Tobogã</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$600</b> / $60 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$3</td></tr>
+        <tr><td>Intensidade</td><td>5 <span class="medidor"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Lugares · duração</td><td>6 · 14 s</td></tr>
+        <tr><td>Efeitos</td><td>felicidade +32 · náusea +10 · energia −12</td></tr>
+      </table>
+      <p><span class="publico">Público ≈ 79%</span> Rampa gigante de quatro pistas, descida sentado num saco. A atração
+      mais barata de construir e manter. Subir a escada cansa.</p>
+    </div>
+  </div>
+
+  <div class="quadro dica"><span class="t">Variedade vale pontos</span>Cada <b>tipo</b> diferente de atração soma
+  40 pontos na avaliação, até cinco tipos (200 pontos). Um segundo carrossel não soma, mas aumenta a capacidade.</div>
+</section>
+
+<!-- ======================= 5 ======================= -->
+<section class="pagina-inicio" id="cap5">
+  <div class="cabeca"><span class="n">5</span><h2>Serviços e decoração</h2><span class="ic">🍔</span></div>
+  <p class="abre">Comida, bebida, banheiro e descanso mantêm os convidados no parque (e gastando). Ter cada um
+  desses quatro serviços também vale pontos na avaliação.</p>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-BARRACA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Serviço · comida</span><h3>🍔 Barraca de comida</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$350</b> / $80 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$4 (comida)</td></tr>
+        <tr><td>Uso</td><td>3 s · fome −60 · banheiro +12 · deixa um <b>papel</b></td></tr>
+      </table>
+      <p>Mata bem a fome. Quem come fica com o papel na mão até achar uma lixeira.</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-BARRACA_BEBIDAS.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Serviço · bebida</span><h3>🥤 Barraca de bebidas</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$350</b> / $40 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$3 (bebida)</td></tr>
+        <tr><td>Uso</td><td>2 s · sede −80 · banheiro +10 · náusea −10 · deixa um <b>copo</b></td></tr>
+      </table>
+      <p>A sede sobe mais rápido que a fome: espalhe bebidas. Ainda alivia um pouco o enjoo.</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-BARRACA_SORVETE.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Serviço · comida leve</span><h3>🍦 Sorveteria</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$400</b> / $60 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>$3 (sorvete)</td></tr>
+        <tr><td>Uso</td><td>2 s · fome −30 · sede −25 · <b>felicidade +8</b> · banheiro +6 · deixa um <b>palito</b></td></tr>
+      </table>
+      <p>Um lanche leve que também refresca e alegra. Conta como comida: quem tem fome vai à mais perto entre ela e a barraca.</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-BANHEIRO.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Serviço · banheiro</span><h3>🚻 Banheiro</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$350</b> / $50 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>grátis (pode cobrar)</td></tr>
+        <tr><td>Uso</td><td>4 s · banheiro −100</td></tr>
+      </table>
+      <p>Indispensável: comer e beber enchem a bexiga. Sem banheiro, a queixa “Preciso de um banheiro!” se espalha.</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-BANCO.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Cenário · descanso · sobre o caminho</span><h3>🪑 Banco</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$60</b> / $5 por mês</td></tr>
+        <tr><td>Preço inicial</td><td>grátis</td></tr>
+        <tr><td>Uso</td><td>6 s sentado · energia +40 · náusea −35</td></tr>
+      </table>
+      <p>Barato e poderoso: recupera o cansaço e cura o enjoo. Coloque perto da saída dos brinquedos intensos.</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-LIXEIRA.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Cenário · sobre o caminho</span><h3>🗑️ Lixeira</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$50</b> / $3 por mês</td></tr>
+        <tr><td>Capacidade</td><td>30 itens (depois transborda)</td></tr>
+      </table>
+      <p>Fica na borda do caminho, sozinha no tile. Precisa de um faxineiro para ser esvaziada (capítulo 10).</p>
+    </div>
+  </div>
+
+  <div class="ficha pequena">
+    <div class="img"><img src="img/obj-ARVORE.png" alt=""></div>
+    <div class="dados">
+      <span class="tipo">Cenário · decoração</span><h3>🌳 Árvore</h3>
+      <table>
+        <tr><td>Custo / manutenção</td><td><b>$30</b> / $2 por mês</td></tr>
+      </table>
+      <p>Pura decoração: deixa o parque bonito, mas não muda a avaliação. Lembre que toda árvore também cobra manutenção.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 6 ======================= -->
+<section class="pagina-inicio" id="cap6">
+  <div class="cabeca"><span class="n">6</span><h2>Os convidados</h2><span class="ic">🧑‍🤝‍🧑</span></div>
+  <p class="abre">Cada convidado é único: tem seu dinheiro, seu passo, sua paciência e seu gosto por emoção.
+  Entender o que eles sentem é o segredo de um parque cheio.</p>
+
+  <div class="lado">
+    <figure class="estreita"><img src="img/painel-convidado.png" alt=""><figcaption>Painel de um convidado (ferramenta Inspecionar).</figcaption></figure>
+    <div>
+      <h3 style="margin-top:0">Necessidades</h3>
+      <table class="mini">
+        <tr><th>Barra</th><th>Com o tempo</th><th>Resolve com</th></tr>
+        <tr><td>Fome</td><td>sobe depressa</td><td>barraca de comida, sorveteria</td></tr>
+        <tr><td>Sede</td><td>sobe mais depressa ainda</td><td>barraca de bebidas (sorvete ajuda)</td></tr>
+        <tr><td>Banheiro</td><td>sobe devagar, e mais a cada lanche</td><td>banheiro</td></tr>
+        <tr><td>Náusea</td><td>desce sozinha</td><td>banco, bebida; brinquedos aumentam</td></tr>
+        <tr><td>Energia</td><td>cai enquanto ele anda</td><td>banco, trem</td></tr>
+        <tr><td>Felicidade</td><td>cai com o tempo (não cai dentro do brinquedo)</td><td>brinquedos, sorvete</td></tr>
+      </table>
+      <p>Quando uma necessidade fica <b>urgente</b>, o convidado sai procurando o serviço pelos caminhos. Ele
+      escolhe o mais próximo que <b>alcança</b> e que <b>pode pagar</b>. A felicidade cai mais rápido esperando em
+      fila e andando, e cai ainda mais com qualquer necessidade crítica (fome, sede, banheiro ou náusea
+      muito altas, ou energia muito baixa).</p>
+    </div>
+  </div>
+
+  <h3>O que o ícone sobre a cabeça diz</h3>
+  <p>Um ícone acima do convidado mostra o que ele está indo buscar ou usando: 🍔 comida, 🥤 bebida, 🍦 sorvete,
+  🚻 banheiro, 💤 descanso, 🎠 diversão, 🗑️ indo jogar o lixo fora, 👋 indo embora. Um papelzinho, copo ou palito
+  na mão é o lixo que ele ainda não jogou fora.</p>
+
+  <h3>Intensidade × tolerância</h3>
+  <p>Todo convidado tem uma <b>tolerância</b> de 1 a 10 (veja no painel). A maioria fica no meio: tolerância 5 ou 6
+  é o mais comum, e 1 ou 10 são raríssimos. Ele aceita brinquedos com intensidade até <b>2 pontos acima ou abaixo</b>
+  da tolerância. Fora disso só vai se estiver <b>muito infeliz</b> (desesperado por diversão) e então paga caro:
+  menos felicidade por ponto de diferença e, se o brinquedo for forte demais, mais náusea, e sai pensando
+  🤢 “Esse brinquedo foi intenso demais!”.</p>
+  <div class="quadro dica"><span class="t">Cubra todos os gostos</span>Um parque com intensidades variadas (por
+  exemplo roda-gigante 2, trem 3, casa 4, carrossel 5, navio 7 e montanha-russa 8) tem opção boa para todo mundo.</div>
+
+  <h3>Dinheiro</h3>
+  <p>Cada convidado chega com <b>$30 a $150</b>. Ele paga ao usar serviços e no embarque dos brinquedos. Quando o
+  dinheiro fica abaixo de <b>$2</b>, vai embora satisfeito. Se ficar <b>muito infeliz</b>, vai embora reclamando
+  (e isso derruba a avaliação). Quem vai embora caminha até o portão.</p>
+
+  <h3>Pensamentos e queixas</h3>
+  <figure class="centro"><img src="img/pensamentos.png" alt="" style="width:60%"><figcaption style="text-align:center">Balões de pensamento sobre os convidados.</figcaption></figure>
+  <table class="mini">
+    <tr><th style="width:8%"></th><th style="width:40%">Pensamento</th><th>O que quer dizer / o que fazer</th></tr>
+    <tr><td>😤</td><td>Que fila demorada!</td><td>Desistiu da fila por falta de paciência (25 a 45 s). Construa outra atração ou uma de viagens mais curtas.</td></tr>
+    <tr><td>🍔</td><td>Estou com fome e não acho comida</td><td>Não há comida que ele alcance pelos caminhos. Construa barracas, espalhadas.</td></tr>
+    <tr><td>🥤</td><td>Estou com sede e não acho bebida</td><td>Idem, para bebidas.</td></tr>
+    <tr><td>🚻</td><td>Preciso de um banheiro!</td><td>Faltam banheiros (ou estão longe demais da rede de caminhos dele).</td></tr>
+    <tr><td>💸</td><td>Está tudo caro demais!</td><td>O serviço existe, mas ele não pode pagar. Baixe o preço.</td></tr>
+    <tr><td>🤢</td><td>Esse brinquedo foi intenso demais!</td><td>Foi num brinquedo forte demais para ele. Ofereça opções mais calmas.</td></tr>
+    <tr><td>🎟️</td><td>Ingresso caro demais!</td><td>Desistiu no portão (não chega a entrar; só aparece nas queixas). Baixe a entrada.</td></tr>
+    <tr><td>😞</td><td>Este parque é chato, vou embora</td><td>Felicidade no fundo do poço. Mais diversão, menos fila e menos caminhada.</td></tr>
+    <tr><td>🗑️</td><td>Que sujeira!</td><td>Pisou em lixo. Lixeiras e faxineiros.</td></tr>
+    <tr><td>😖</td><td>Que nojo, pisei em vômito!</td><td>Pisou em vômito. Faxineiros (eles limpam vômito primeiro).</td></tr>
+    <tr><td>🤮</td><td>Passei mal...</td><td>Vomitou. Bancos e bebidas perto dos brinquedos intensos.</td></tr>
+    <tr><td>😣</td><td>Que aperto! Lotado demais aqui</td><td>Caminho lotado. Alargue o caminho ou crie rotas alternativas.</td></tr>
+  </table>
+  <p>As queixas do mês ficam na janela <b>🎡 Parque</b>, das mais comuns para as menos comuns: é o melhor
+  termômetro do que está faltando.</p>
+</section>
+
+<!-- ======================= 7 ======================= -->
+<section class="pagina-inicio" id="cap7">
+  <div class="cabeca"><span class="n">7</span><h2>Filas e preços</h2><span class="ic">🎟️</span></div>
+
+  <h3>Como o convidado escolhe um brinquedo</h3>
+  <p>Quando quer se divertir, o convidado não vai simplesmente ao brinquedo mais perto: ele compara <b>todos</b> os
+  que consegue alcançar pelos caminhos e escolhe o que promete mais <b>felicidade líquida</b>:</p>
+  <ul>
+    <li><b>+</b> a felicidade que o brinquedo dá (com o desconto se a intensidade não combinar com ele);</li>
+    <li><b>−</b> um pouco por ponto de diferença entre a intensidade e a tolerância dele;</li>
+    <li><b>−</b> a felicidade que vai perder <b>andando</b> até lá e <b>esperando</b> na fila;</li>
+    <li><b>−</b> o preço (cada dólar pesa como um ponto de felicidade).</li>
+  </ul>
+  <p>Se nenhum brinquedo compensa (fila longa demais, caro demais, longe demais), ele não vai a nenhum.</p>
+
+  <h3>Filas e viagens</h3>
+  <div class="lado">
+    <figure class="estreita"><img src="img/painel-objeto.png" alt=""><figcaption>Painel da montanha-russa: preço, receita, usos, fila e espera.</figcaption></figure>
+    <div>
+      <ul>
+        <li>Cada atração aceita até <b>12 pessoas na fila</b> (o rótulo “Fila n/12” aparece sobre ela). Com a fila
+          cheia, quem chega desiste e tenta outra coisa.</li>
+        <li>O ingresso é cobrado no <b>embarque</b>. Quem não tem mais dinheiro sai da fila.</li>
+        <li>A viagem parte quando lota ou <b>5 segundos</b> depois que o primeiro passageiro sentou.</li>
+        <li>Cada convidado aguenta de <b>25 a 45 segundos</b> na fila. Depois desiste, fica mais triste e evita
+          aquela atração por um tempo.</li>
+        <li>O painel mostra a <b>espera estimada</b> para quem entrar agora na fila.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Mudando preços</h3>
+  <p>Com <b>🔍 Inspecionar</b>, clique numa barraca, banheiro, banco ou atração e digite o novo preço. A mudança
+  vale na hora. O painel mostra a receita total e o número de usos, ótimos para comparar.</p>
+  <div class="quadro dica"><span class="t">O dinheiro do convidado é limitado</span>Cada visitante traz entre $30 e
+  $150 e gasta até quase zerar o bolso. Preço alto não faz ele trazer mais dinheiro: só faz ele escolher outra coisa
+  ou reclamar 💸. Quase sempre, <b>mais visitantes</b> rendem mais do que preços mais altos.</div>
+  <div class="quadro atencao"><span class="t">Preço e atratividade</span>Cada dólar a mais tira um ponto da
+  atratividade do brinquedo. A montanha-russa (+45 de felicidade) aguenta um ingresso maior que o tobogã (+32).</div>
+</section>
+
+<!-- ======================= 8 ======================= -->
+<section class="pagina-inicio" id="cap8">
+  <div class="cabeca"><span class="n">8</span><h2>A avaliação do parque</h2><span class="ic">⭐</span></div>
+  <div class="lado">
+    <figure class="estreita"><img src="img/janela-parque.png" alt=""><figcaption>Janela 🎡 Parque: nome, avaliação e suas partes, entrada, portão, limpeza, lotação e queixas.</figcaption></figure>
+    <div>
+      <p>A <b>avaliação</b> (⭐ na barra superior) vai de <b>0 a 999</b>. Ela é recalculada a cada 5 segundos e o
+      número mostrado anda suavemente até o novo valor. A janela <b>🎡 Parque</b> mostra exatamente de onde vêm os
+      pontos:</p>
+      <table class="mini">
+        <tr><th>Parte</th><th class="num">Máximo</th><th>Como ganhar</th></tr>
+        <tr><td>😊 Felicidade</td><td class="num">400</td><td>felicidade média dos convidados × 4</td></tr>
+        <tr><td>🎢 Variedade de atrações</td><td class="num">200</td><td>40 por tipo diferente de atração</td></tr>
+        <tr><td>🍔 Serviços</td><td class="num">150</td><td>ter comida, bebida, banheiro e descanso (37,5 cada)</td></tr>
+        <tr><td>💧 Necessidades em dia</td><td class="num">250</td><td>fome, sede, banheiro e náusea baixas</td></tr>
+        <tr><td>😞 Saíram infelizes</td><td class="num">−150</td><td>fração dos que saíram reclamando</td></tr>
+        <tr><td>🎟️ Desistiram no portão</td><td class="num">−100</td><td>fração dos que acharam a entrada cara</td></tr>
+        <tr><td>🗑️ Sujeira no chão</td><td class="num">−150</td><td>lixo por tile de caminho (vômito conta 2)</td></tr>
+      </table>
+      <p>As penalidades olham para o <b>passado recente</b> e vão sendo esquecidas aos poucos (caem pela metade em
+      cerca de 0,7 mês). Um mês ruim pesa, mas não para sempre.</p>
+      <h3>O que a avaliação muda</h3>
+      <ul>
+        <li><b>Ritmo de chegada</b>: com 500, chega gente no ritmo normal (um a cada 3–8 s); com 999, quase duas
+          vezes mais rápido; com 0, duas vezes mais devagar. A janela mostra o efeito (ex.: “1,1×”).</li>
+        <li><b>Quanto aceitam pagar de entrada</b>: de 15% do dinheiro que trouxeram (nota 0) a 45% (nota 999);
+          com nota 500, cerca de 30%.</li>
+      </ul>
+      <p>Não há limite de convidados ao mesmo tempo: o parque enche conforme a gente chega e fica.</p>
+    </div>
+  </div>
+  <div class="quadro dica"><span class="t">Caminho rápido para uma boa nota</span>Cinco tipos de atração (200) +
+  os quatro serviços (150) já garantem 350 pontos sem depender de ninguém. O resto vem de convidados felizes e bem
+  cuidados, de um parque limpo e de uma entrada justa.</div>
+</section>
+
+<!-- ======================= 9 ======================= -->
+<section class="pagina-inicio" id="cap9">
+  <div class="cabeca"><span class="n">9</span><h2>Finanças</h2><span class="ic">💰</span></div>
+  <div class="lado">
+    <figure class="estreita"><img src="img/janela-financas.png" alt=""><figcaption>Janela 📊 Finanças: empréstimo, juros e balanço.</figcaption></figure>
+    <div>
+      <h3 style="margin-top:0">O calendário</h3>
+      <p>O jogo começa em <b>Janeiro do Ano 1</b>. Cada mês tem 30 dias e dura <b>5 minutos</b> em velocidade 1×
+      (um dia = 10 s; um ano ≈ 1 hora).</p>
+      <h3>Caixa e empréstimo</h3>
+      <p>No modo livre você começa com <b>$15.000 no caixa e $15.000 de dívida</b>: o dinheiro de abertura veio do
+      banco. Na janela Finanças:</p>
+      <ul>
+        <li><b>Pegar $1.000</b>: mais dinheiro no caixa e na dívida, até a dívida de <b>$20.000</b>.</li>
+        <li><b>Pagar $1.000</b>: abate a dívida (precisa ter o dinheiro no caixa).</li>
+        <li><b>Juros mensal</b>: 3% por padrão (o campo permite mudar).</li>
+      </ul>
+    </div>
+  </div>
+  <h3>O fechamento do mês</h3>
+  <p>No último dia de cada mês o parque paga as contas, de uma vez:</p>
+  <ul>
+    <li><b>juros</b> = dívida × taxa (com $15.000 a 3%, são $450 por mês);</li>
+    <li><b>manutenção</b> de todos os objetos (veja as fichas: de $2 por árvore a $200 pela montanha-russa);</li>
+    <li><b>salários</b>: $150 por faxineiro.</li>
+  </ul>
+  <p>O <b>balanço</b> do mês (receita − manutenção − juros − salários, número de visitantes e receita por
+  visitante) fica na janela Finanças. O caixa pode ficar <b>negativo</b> no fechamento: não há falência, mas sem
+  dinheiro você não constrói, não contrata e não paga parcelas.</p>
+  <h3>Construir e demolir</h3>
+  <p>Construir cobra o preço na hora; sem saldo, nada é construído (“Saldo insuficiente”). Demolir devolve
+  <b>50%</b> do custo. Pintar caminho custa $10 por tile e água $25. Antes de construir, pense: a atração vai
+  render mais do que custa de manutenção por mês? Brinquedos vazios afundam o caixa.</p>
+  <h3>O ingresso do parque</h3>
+  <p>Na janela <b>🎡 Parque</b> você define o <b>preço da entrada</b> (começa em $0). Ele é cobrado na chegada.
+  Cada convidado só entra se a entrada custar até uma fração do dinheiro que trouxe (de 15% a 45%, conforme a
+  avaliação). Quem acha caro dá meia-volta: é uma chegada perdida e uma penalidade na avaliação. E lembre: o
+  que ele paga no portão não gasta lá dentro.</p>
+  <div class="quadro dica"><span class="t">Juros são um ralo silencioso</span>Cada $1.000 de dívida custa $30 por
+  mês (a 3%). Quando o parque estiver dando lucro, pague parcelas: o dinheiro economizado vira lucro todo mês.</div>
+</section>
+
+<!-- ======================= 10 ======================= -->
+<section class="pagina-inicio" id="cap10">
+  <div class="cabeca"><span class="n">10</span><h2>Limpeza</h2><span class="ic">🧹</span></div>
+  <figure class="centro"><img src="img/lixo.png" alt="" style="width:62%"><figcaption style="text-align:center">Lixeira transbordando, papéis e copos no chão, uma poça de vômito, um convidado com um copo na mão e um faxineiro trabalhando.</figcaption></figure>
+
+  <h3>De onde vem o lixo</h3>
+  <ul>
+    <li>Quem come ou bebe fica com o lixo na mão: <b>papel</b> (barraca de comida), <b>copo</b> (bebidas) ou
+      <b>palito</b> (sorvete). Ele segura de 8 a 30 segundos, conforme o capricho de cada um.</li>
+    <li>Passando por uma <b>lixeira</b> (no tile ou ao lado), joga o lixo nela. Se não tem pressa, chega a desviar
+      até uma lixeira a até 6 tiles de distância.</li>
+    <li>Lixeira <b>cheia</b> (30 itens): ele deixa o lixo no chão ao lado dela (transborda).</li>
+    <li>Cansou de segurar: joga no chão (até 4 itens por tile).</li>
+    <li>Convidado <b>enjoado</b> pode <b>vomitar</b> no caminho (alivia a náusea dele, mas suja o chão).</li>
+  </ul>
+  <p>Pisar num tile sujo deixa o convidado mais triste (vômito, o dobro). A sujeira no chão também tira até
+  <b>150 pontos</b> da avaliação.</p>
+
+  <div class="lado">
+    <div>
+      <h3 style="margin-top:0">Faxineiros</h3>
+      <p>Na aba <b>👷 Funcionários</b>, escolha o Faxineiro e clique num caminho para contratar: <b>$500</b> na hora
+      e <b>$150 por mês</b> de salário. Ele anda sozinho pelos caminhos e escolhe o trabalho mais importante por
+      perto: primeiro <b>vômito</b>, depois <b>lixeiras quase cheias</b> (75% ou mais) e então o lixo do chão. Dois
+      faxineiros nunca correm para o mesmo lugar. Sem nada para limpar, ele patrulha.</p>
+      <p>Para ver o trabalho dele ou <b>demitir</b>, use 🔍 Inspecionar e clique nele (a contratação não é devolvida).</p>
+    </div>
+    <figure class="estreita"><img src="img/painel-faxineiro.png" alt=""><figcaption>Painel do faxineiro.</figcaption></figure>
+  </div>
+  <div class="quadro dica"><span class="t">Lixeiras + faxineiro, sempre juntos</span>Só lixeiras enchem e
+  transbordam; só faxineiro corre atrás de lixo espalhado. Juntos dão o parque mais limpo. Ponha lixeiras perto das
+  barracas, onde o lixo nasce, e um faxineiro para cada região movimentada. A seção <b>🧹 Limpeza</b> da janela
+  Parque mostra o lixo no chão, as lixeiras a esvaziar e quanto os faxineiros recolheram no mês.</div>
+</section>
+
+<!-- ======================= 11 ======================= -->
+<section class="pagina-inicio" id="cap11">
+  <div class="cabeca"><span class="n">11</span><h2>Multidões e caminhos largos</h2><span class="ic">👥</span></div>
+  <p class="abre">Parque cheio é bom, até o caminho virar um engarrafamento.</p>
+  <figure><img src="img/lotacao.png" alt=""><figcaption>A mesma quantidade de gente: à esquerda, num caminho de 1 tile (lotado, em vermelho, com queixas 😣); à direita, num caminho de 3 tiles de largura (sem aperto).</figcaption></figure>
+  <ul>
+    <li>Um trecho fica <b>lotado</b> quando há mais de <b>2,5 convidados andando por tile de caminho</b>, contando
+      o tile e os quatro vizinhos.</li>
+    <li>No aperto, os convidados <b>andam mais devagar</b> (até a metade da velocidade), <b>perdem felicidade</b>
+      a cada segundo e reclamam 😣 “Que aperto!”.</li>
+    <li>Os tiles lotados aparecem <b>em vermelho</b> no mapa, e a seção <b>👥 Lotação</b> da janela Parque conta
+      quantos convidados estão no aperto agora.</li>
+  </ul>
+  <h3>Como resolver</h3>
+  <ul>
+    <li><b>Alargue</b> os trechos movimentados (perto do portão, das barracas e das filas): um caminho de 2 ou 3
+      tiles de largura tem mais espaço para a mesma multidão.</li>
+    <li>Crie <b>rotas alternativas</b>: um anel em vez de um corredor único divide o fluxo.</li>
+    <li><b>Espalhe</b> as atrações e os serviços, em vez de concentrar tudo num só cruzamento.</li>
+  </ul>
+  <div class="quadro dica"><span class="t">Comece pela entrada</span>Todo convidado passa pelo portão duas vezes
+  (chegando e saindo). Um caminho largo nos primeiros tiles depois do portão evita o primeiro gargalo.</div>
+</section>
+
+<!-- ======================= 12 ======================= -->
+<section class="pagina-inicio" id="cap12">
+  <div class="cabeca"><span class="n">12</span><h2>Tempo, saves e música</h2><span class="ic">⏱️</span></div>
+
+  <h3>Velocidade e pausa</h3>
+  <div class="lado">
+    <div>
+      <p>Os botões <b>⏸ 1× 2× 4×</b> da barra superior controlam o tempo. Teclas: <span class="tecla">Espaço</span>
+      pausa e continua (volta à velocidade anterior), <span class="tecla">1</span> <span class="tecla">2</span>
+      <span class="tecla">3</span> escolhem 1×, 2× e 4×.</p>
+      <p>Pausado, aparece o aviso ao lado, e você pode construir, demolir, inspecionar e mudar preços. Em 4× um mês
+      passa em pouco mais de um minuto: ótimo para esperar o dinheiro entrar, perigoso para deixar problemas crescerem.</p>
+    </div>
+    <figure class="estreita"><img src="img/pausado.png" alt=""><figcaption>O aviso de pausa.</figcaption></figure>
+  </div>
+
+  <h3>Salvar e carregar</h3>
+  <div class="lado">
+    <figure class="estreita"><img src="img/janela-saves.png" alt=""><figcaption>Janela 💾 Salvar e carregar.</figcaption></figure>
+    <div>
+      <p>Clique em <b>💾 Salvar / Carregar</b>. Digite um nome (o do parque já vem sugerido) e clique em
+      <b>Salvar</b>; se já existir um save com esse nome, o jogo pergunta antes de substituir.</p>
+      <p>A lista mostra cada save com o cenário (se houver), a data em que foi salvo, o mês do jogo, o caixa, os
+      convidados e o tamanho do mapa. <b>Carregar</b> substitui o parque atual; <b>Apagar</b> remove o save para
+      sempre. O save guarda tudo: terreno, objetos, preços, filas, finanças, convidados, sujeira, faxineiros e o
+      andamento do cenário.</p>
+      <h4>Salvamento automático</h4>
+      <p>Escolha <b>Desligado</b>, <b>A cada 1 minuto</b> (de tempo real), <b>A cada virada de mês</b> ou <b>A cada
+      virada de ano</b>. O autosave grava sempre no mesmo save, “Autosave · nome do parque”, substituindo o
+      anterior, e avisa “💾 Salvo automaticamente”. A escolha fica guardada no navegador.</p>
+    </div>
+  </div>
+
+  <h3>Música</h3>
+  <p>O botão de música da barra superior alterna entre três modos: <b>🎵 músicas</b> (arquivos .mp3 colocados na
+  pasta <i>public/musicas</i> do jogo, tocados em ordem aleatória), <b>🎹 som sintetizado</b> (o burburinho de uma
+  multidão e uma valsa de realejo composta na hora, sempre diferente) e <b>🔇 desligado</b>. Sem arquivos .mp3, o
+  jogo usa o som sintetizado. O navegador só deixa o som começar depois do primeiro clique ou tecla.</p>
+</section>
+
+<!-- ======================= 13 ======================= -->
+<section class="pagina-inicio" id="cap13">
+  <div class="cabeca"><span class="n">13</span><h2>Os cenários</h2><span class="ic">🎯</span></div>
+  <p class="abre">Cada cenário é um desafio com terreno, dinheiro e objetivo próprios. Cumpra o objetivo antes do
+  fim do prazo. Os objetivos de visitantes, dívida e lucro vencem <b>na hora</b> em que são cumpridos; o de
+  avaliação conta nos <b>fechamentos de mês</b>. Nos cenários não existe a aba 🧪 Teste.</p>
+
+  <div class="cenario">
+    <div class="topo"><h3>🌱 Primeiro parque</h3><span class="obj">Receber 700 visitantes<br>até o fim de Dezembro, Ano 1</span></div>
+    <div class="corpo">
+      <div class="lado">
+        <figure class="estreita"><img src="img/cenario-primeiro-parque.png" alt=""></figure>
+        <div>
+          <p>Terreno 24×24 vazio com uma cruz de caminhos, um banco, uma barraca de comida e um banheiro perto do
+          portão. Caixa e dívida de <b>$6.000</b>. Liberados: árvore, banco, lixeira, as três barracas, banheiro,
+          carrossel, roda-gigante, navio pirata e montanha-russa.</p>
+          <p><b>Visitante</b> = quem passou pelo portão. No ritmo normal (avaliação 500) chegam cerca de 650 por ano:
+          você precisa de uma avaliação <b>acima de 500</b> durante o ano e de ninguém desistindo no portão.</p>
+        </div>
+      </div>
+      <h4>Estratégia recomendada</h4>
+      <ol>
+        <li><b>Entrada a $0</b> o cenário inteiro: cada desistência no portão é um visitante a menos.</li>
+        <li>Mês 1: <b>barraca de bebidas</b> (completa os quatro serviços), <b>carrossel</b> e <b>navio pirata</b>
+          encostados na cruz de caminhos, duas <b>lixeiras</b> perto das barracas.</li>
+        <li>Assim que o caixa deixar: <b>roda-gigante</b> e depois a <b>montanha-russa</b>, completando os quatro
+          tipos liberados (160 pontos de variedade).</li>
+        <li>Um <b>faxineiro</b> quando o lixo aparecer, e bancos perto do navio e da montanha-russa.</li>
+        <li>Acompanhe o contador no HUD; se a avaliação cair, veja as queixas na janela Parque.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="cenario">
+    <div class="topo"><h3>🚣 Lagoa Azul</h3><span class="obj">Avaliação de pelo menos 550 por 3 meses seguidos<br>até o fim de Junho, Ano 2</span></div>
+    <div class="corpo">
+      <div class="lado">
+        <figure class="estreita"><img src="img/cenario-lagoa-azul.png" alt=""></figure>
+        <div>
+          <p>Uma lagoa enorme ocupa o terreno, contornada por caminhos. Caixa e dívida de <b>$12.000</b>. Já existem
+          um banco e uma sorveteria. Liberados: árvore, banco, lixeira, as três barracas, banheiro, carrossel,
+          roda-gigante e <b>passeio de barco</b>.</p>
+          <p>A nota é conferida no fechamento de cada mês; um mês abaixo de 550 zera a sequência.</p>
+        </div>
+      </div>
+      <h4>Estratégia recomendada</h4>
+      <ol>
+        <li>Complete os <b>quatro serviços</b> logo: barraca de bebidas e banheiro (150 pontos garantidos).</li>
+        <li>Construa os <b>três tipos</b> de atração liberados (120 pontos). O passeio de barco precisa de água com
+          canais livres: gire com <span class="tecla">Z</span> até a prévia ficar válida e uma lateral encostar no
+          caminho. Na margem direita, junto ao caminho vertical, ele cabe sem girar; na margem de baixo, girado uma vez.</li>
+        <li>Como a variedade aqui é limitada, os pontos que faltam vêm da <b>felicidade</b> e das <b>necessidades em
+          dia</b>: barracas e bancos espalhados, filas curtas (um segundo carrossel ajuda) e preços moderados.</li>
+        <li>Evite penalidades: entrada barata, <b>lixeiras e um faxineiro</b> desde cedo, e nada de convidados saindo
+          infelizes. Só comece a contar os três meses quando a nota estiver estável acima de 550.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="cenario">
+    <div class="topo"><h3>💸 Herança falida</h3><span class="obj">Pagar toda a dívida<br>até o fim de Dezembro, Ano 1</span></div>
+    <div class="corpo">
+      <div class="lado">
+        <figure class="estreita"><img src="img/cenario-heranca-falida.png" alt=""></figure>
+        <div>
+          <p>Você herdou um parque com carrossel, roda-gigante, montanha-russa, navio pirata e uma barraca de comida,
+          mas também a dívida máxima: <b>$20.000 a 5% ao mês</b>, com só <b>$1.500</b> no caixa. Faltam bebidas,
+          banheiro e bancos. Tudo está liberado.</p>
+          <p>As contas fixas começam altas: $1.000 de juros mais cerca de $616 de manutenção por mês.</p>
+        </div>
+      </div>
+      <h4>Estratégia recomendada</h4>
+      <ol>
+        <li>Primeiro, os serviços que faltam: <b>barraca de bebidas</b> e <b>banheiro</b> ($350 cada) e um ou dois
+          <b>bancos</b> ($60). Eles fazem os convidados ficarem mais tempo gastando e sobem a avaliação.</li>
+        <li><b>Não construa atrações caras</b>: cada uma acrescenta manutenção. Os brinquedos que você já tem bastam.</li>
+        <li><b>Pague parcelas de $1.000 sempre que puder</b>, guardando só o necessário para o próximo fechamento.
+          Cada parcela paga corta <b>$50 por mês</b> de juros, e o efeito se acumula.</li>
+        <li>Teste um pequeno <b>preço de entrada</b> e ajuste os ingressos com cuidado, de olho em “Desistiram no
+          portão” e nas queixas 💸 da janela Parque.</li>
+        <li>O objetivo vence no instante em que a dívida chega a zero.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="cenario">
+    <div class="topo"><h3>🎟️ Só ingresso</h3><span class="obj">Aumentar o patrimônio em $3.000<br>até o fim de Dezembro, Ano 2</span></div>
+    <div class="corpo">
+      <div class="lado">
+        <figure class="estreita"><img src="img/cenario-so-ingresso.png" alt=""></figure>
+        <div>
+          <p>Aqui os <b>brinquedos não cobram nada</b> (o preço fica travado em $0): o dinheiro vem da <b>entrada</b> e
+          das <b>barracas</b>. Caixa e dívida de <b>$8.000</b>; já existem carrossel, roda-gigante, barraca de comida,
+          banheiro e banco, num anel de caminhos em volta de um lago.</p>
+          <p><b>Patrimônio</b> = caixa − dívida + metade do que os objetos custaram. Por isso construir algo de $800
+          “custa” $400 de patrimônio na hora (o valor de demolição fica contando).</p>
+        </div>
+      </div>
+      <h4>Estratégia recomendada</h4>
+      <ol>
+        <li>Defina um <b>preço de entrada</b> já no primeiro dia (janela 🎡 Parque). Comece por volta de $15 e ajuste:
+          se a seção Portão mostrar muitas desistências, baixe; se quase ninguém desiste, suba um pouco.</li>
+        <li>Construa <b>barraca de bebidas</b> e <b>sorveteria</b>: são a outra fonte de receita. Mantenha os preços
+          delas razoáveis para não ouvir 💸.</li>
+        <li>Uma avaliação alta faz chegar mais gente e faz cada um aceitar uma entrada mais cara: lixeiras,
+          faxineiro, bancos e uma ou duas atrações baratas (o tobogã custa $600 e $60/mês) ajudam.</li>
+        <li><b>Pague a dívida</b> quando sobrar caixa: pagar não muda o patrimônio, mas acaba com os juros ($240 por
+          mês no começo), que são puro prejuízo.</li>
+        <li>O objetivo vence no instante em que o lucro chega a $3.000.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>Fim de cenário</h3>
+  <div class="grade2">
+    <figure><img src="img/fim-vitoria.png" alt=""><figcaption>Vitória: continue cuidando do parque ou volte à tela inicial. O próximo cenário é liberado.</figcaption></figure>
+    <figure><img src="img/fim-derrota.png" alt=""><figcaption>O prazo acabou: tente de novo ou escolha outro cenário.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ======================= 14 ======================= -->
+<section class="pagina-inicio" id="cap14">
+  <div class="cabeca"><span class="n">14</span><h2>Dominando o jogo</h2><span class="ic">🏆</span></div>
+
+  <h3>Estratégias avançadas</h3>
+  <ul>
+    <li><b>Pense em “felicidade líquida”.</b> Andar e esperar na fila custam felicidade. Atrações perto do portão
+      e das barracas, filas curtas e caminhos diretos valem mais do que um brinquedo novo escondido no fundo.</li>
+    <li><b>Capacidade antes de novidade.</b> Uma atração sempre com 12 na fila está perdendo clientes: uma segunda
+      cópia, ou uma de viagens curtas (carrossel, tobogã), atende mais gente.</li>
+    <li><b>Cubra a curva de tolerância.</b> Quase 80% dos convidados aceitam intensidade 5 ou 6; só 30% aceitam a
+      roda-gigante (2). Comece pelo meio da escala e depois cubra as pontas.</li>
+    <li><b>Monte “ilhas de conforto”</b>: banco + barraca de bebidas + lixeira perto da saída dos brinquedos
+      intensos. Cura a náusea, mata a sede e segura o lixo e o vômito longe do caminho principal.</li>
+    <li><b>Cansaço é constante.</b> A energia cai sempre que o convidado anda: bancos espalhados (e o trem) mantêm
+      todo mundo de pé por mais tempo, e convidado no parque é convidado gastando.</li>
+    <li><b>Use a pausa.</b> Planeje grandes obras pausado e só então volte a acelerar.</li>
+    <li><b>Mapas grandes</b>: cresça a partir do portão. Convidados não cruzam dezenas de tiles vazios de bom humor.</li>
+    <li><b>Leia as queixas.</b> A lista da janela Parque diz exatamente o que construir a seguir.</li>
+  </ul>
+
+  <h3>Erros comuns</h3>
+  <table class="mini">
+    <tr><th style="width:38%">Erro</th><th>Solução</th></tr>
+    <tr><td>Atração sem caminho encostado: ninguém usa</td><td>Ligue qualquer lado da pegada a um caminho.</td></tr>
+    <tr><td>Esquecer o banheiro</td><td>Comer e beber enchem a bexiga; queixas 🚻 derrubam a nota.</td></tr>
+    <tr><td>Entrada cara demais</td><td>Desistências no portão custam visitantes e até 100 pontos.</td></tr>
+    <tr><td>Preços altos nos brinquedos</td><td>O convidado prefere outro ou não vai a nenhum. Mais visitantes rende mais.</td></tr>
+    <tr><td>Lixeiras sem faxineiro</td><td>Elas enchem e transbordam: contrate pelo menos um.</td></tr>
+    <tr><td>Corredor único de 1 tile</td><td>Alargue perto do portão e das filas; crie anéis.</td></tr>
+    <tr><td>Dívida esquecida</td><td>Juros todo mês: pague parcelas quando sobrar caixa.</td></tr>
+    <tr><td>Construir tudo de uma vez</td><td>Manutenção acumulada; cresça conforme a receita.</td></tr>
+    <tr><td>Canal do barco bloqueado</td><td>A fileira da frente e a de trás precisam ser água livre.</td></tr>
+  </table>
+
+  <h3>Tabela-resumo das atrações</h3>
+  <table class="mini">
+    <tr><th>Atração</th><th>Pegada</th><th class="num">Custo</th><th class="num">Manut.</th><th class="num">Preço</th><th class="num">Intens.</th><th class="num">Lugares</th><th class="num">Duração</th><th class="num">Felic.</th><th class="num">Náusea</th><th class="num">Público</th><th class="num">Máx./mês*</th></tr>
+    <tr><td>🎡 Roda-gigante</td><td>3×2</td><td class="num">$700</td><td class="num">$100</td><td class="num">$6</td><td class="num">2</td><td class="num">8</td><td class="num">20 s</td><td class="num">+30</td><td class="num">+5</td><td class="num">30%</td><td class="num">120</td></tr>
+    <tr><td>🚣 Passeio de barco</td><td>3×2 (água)</td><td class="num">$750</td><td class="num">$90</td><td class="num">$4</td><td class="num">3</td><td class="num">8</td><td class="num">16 s</td><td class="num">+28</td><td class="num">+8</td><td class="num">50%</td><td class="num">150</td></tr>
+    <tr><td>🚂 Trem</td><td>4×3</td><td class="num">$950</td><td class="num">$70</td><td class="num">$4</td><td class="num">3</td><td class="num">12</td><td class="num">30 s</td><td class="num">+30</td><td class="num">+4</td><td class="num">50%</td><td class="num">120</td></tr>
+    <tr><td>👻 Casa mal-assombrada</td><td>2×2</td><td class="num">$1.000</td><td class="num">$110</td><td class="num">$6</td><td class="num">4</td><td class="num">8</td><td class="num">15 s</td><td class="num">+34</td><td class="num">+3</td><td class="num">69%</td><td class="num">160</td></tr>
+    <tr><td>🎠 Carrossel</td><td>2×2</td><td class="num">$800</td><td class="num">$100</td><td class="num">$5</td><td class="num">5</td><td class="num">6</td><td class="num">8 s</td><td class="num">+35</td><td class="num">+25</td><td class="num">79%</td><td class="num">225</td></tr>
+    <tr><td>🛝 Tobogã</td><td>3×2</td><td class="num">$600</td><td class="num">$60</td><td class="num">$3</td><td class="num">5</td><td class="num">6</td><td class="num">14 s</td><td class="num">+32</td><td class="num">+10</td><td class="num">79%</td><td class="num">128</td></tr>
+    <tr><td>🛶 Corredeira</td><td>3×3 (água)</td><td class="num">$1.100</td><td class="num">$130</td><td class="num">$7</td><td class="num">6</td><td class="num">6</td><td class="num">20 s</td><td class="num">+38</td><td class="num">+16</td><td class="num">79%</td><td class="num">90</td></tr>
+    <tr><td>🏴‍☠️ Navio pirata</td><td>3×2</td><td class="num">$900</td><td class="num">$120</td><td class="num">$7</td><td class="num">7</td><td class="num">10</td><td class="num">18 s</td><td class="num">+40</td><td class="num">+20</td><td class="num">69%</td><td class="num">166</td></tr>
+    <tr><td>🎢 Montanha-russa</td><td>4×3</td><td class="num">$1.200</td><td class="num">$200</td><td class="num">$8</td><td class="num">8</td><td class="num">12</td><td class="num">25 s</td><td class="num">+45</td><td class="num">+30</td><td class="num">50%</td><td class="num">144</td></tr>
+  </table>
+  <p style="font-size:8.8pt;color:var(--suave)">* Passageiros por mês com a fila sempre cheia (máximo teórico: 300 s ÷ duração × lugares).
+  “Público” = fatia aproximada dos convidados cuja tolerância aceita o brinquedo normalmente.</p>
+
+  <h3>Serviços em resumo</h3>
+  <table class="mini">
+    <tr><th>Objeto</th><th class="num">Custo</th><th class="num">Manut.</th><th class="num">Preço</th><th>Efeito</th></tr>
+    <tr><td>🍔 Barraca de comida</td><td class="num">$350</td><td class="num">$80</td><td class="num">$4</td><td>fome −60, banheiro +12 (papel)</td></tr>
+    <tr><td>🥤 Barraca de bebidas</td><td class="num">$350</td><td class="num">$40</td><td class="num">$3</td><td>sede −80, banheiro +10, náusea −10 (copo)</td></tr>
+    <tr><td>🍦 Sorveteria</td><td class="num">$400</td><td class="num">$60</td><td class="num">$3</td><td>fome −30, sede −25, felicidade +8, banheiro +6 (palito)</td></tr>
+    <tr><td>🚻 Banheiro</td><td class="num">$350</td><td class="num">$50</td><td class="num">$0</td><td>banheiro −100</td></tr>
+    <tr><td>🪑 Banco</td><td class="num">$60</td><td class="num">$5</td><td class="num">$0</td><td>energia +40, náusea −35</td></tr>
+    <tr><td>🗑️ Lixeira</td><td class="num">$50</td><td class="num">$3</td><td class="num">—</td><td>guarda 30 itens</td></tr>
+    <tr><td>🌳 Árvore</td><td class="num">$30</td><td class="num">$2</td><td class="num">—</td><td>decoração</td></tr>
+    <tr><td>🧹 Faxineiro</td><td class="num">$500</td><td class="num">$150</td><td class="num">—</td><td>limpa vômito, lixeiras e lixo</td></tr>
+  </table>
+
+  <h3>Atalhos</h3>
+  <table class="mini">
+    <tr><th>Tecla / mouse</th><th>Ação</th><th>Tecla / mouse</th><th>Ação</th></tr>
+    <tr><td>Botão esquerdo</td><td>usar a ferramenta (arraste para pintar)</td><td><span class="tecla">Espaço</span></td><td>pausa / continua</td></tr>
+    <tr><td>Botão do meio</td><td>arrastar o mapa</td><td><span class="tecla">1</span> <span class="tecla">2</span> <span class="tecla">3</span></td><td>velocidade 1×, 2×, 4×</td></tr>
+    <tr><td>Roda</td><td>zoom</td><td><span class="tecla">Z</span></td><td>girar a atração</td></tr>
+    <tr><td>🏠</td><td>tela inicial (pausa)</td><td><span class="tecla">Esc</span></td><td>fechar janela ou painel</td></tr>
+  </table>
+  <div class="quadro dica"><span class="t">Divirta-se!</span>Não existe um único parque certo. Experimente,
+  observe os convidados e deixe as queixas guiarem a próxima obra. Bom trabalho, diretor!</div>
+</section>
+
+</body>
+</html>
