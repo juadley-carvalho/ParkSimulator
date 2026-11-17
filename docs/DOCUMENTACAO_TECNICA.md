@@ -1054,10 +1054,7 @@ acompanhamento "um-pá-pá" e sininho, agendada no relógio do áudio com 1,5 s 
   (o manual usa o Edge via CDP: `docs/manual/ferramentas/`). Com o loop real ligado, comparações entre
   instantes diferentes ficam inválidas; passageiros falsos quebram a simulação.
 - Receita ≈ visitantes × dinheiro que trazem ($30–150): mudar só preferências redistribui o gasto.
-- **Observação** (encontrada ao documentar, não corrigida): em `montarMapaInicial` o banco é posto com
-  `construir('BANCO', 13, 11)` sem passar por `podeConstruir`; o tile (13, 11) é grama (os caminhos do bloco
-  são a linha 12 e a coluna 12), então o banco do parque livre fica sobre a grama, encostado no cruzamento.
-  Ele funciona como serviço (os convidados o alcançam pelos tiles vizinhos), mas contraria a regra
-  `sobreCaminho`.
-- **Observação**: a tabela de atrações do `CLAUDE.md` ainda não lista o Trem e o Tobogã (v1.10.0), e o
-  `README.md` não cita a aba Funcionários na lista de abas.
+- Construção feita por código (parque inicial, cenários) deve passar por `podeConstruir`: até a v1.10.1 o
+  banco do parque livre era posto direto em (13, 11), na grama, contrariando a regra `sobreCaminho`. Desde a
+  v1.10.2 `montarMapaInicial` valida cada objeto (avisa no console se não couber) e o banco fica em (12, 11),
+  sobre a coluna de caminho logo acima do cruzamento.

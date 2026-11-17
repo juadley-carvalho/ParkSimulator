@@ -106,7 +106,7 @@ O id só aceita letras minúsculas, números e hífen. Para trocar o armazenamen
 
 ## Barra de construção
 
-A barra inferior tem **abas por categoria** (Ferramentas, Terreno, Cenário, Serviços, Atrações e Teste). Cada aba mostra cartões com ícone, nome e preço; passe o mouse sobre um cartão para ver custo, manutenção, tamanho e, nos brinquedos, intensidade e lugares. A aba que contém a ferramenta ativa mostra um ponto laranja, e cartões acima do saldo do caixa ficam esmaecidos com o preço em vermelho.
+A barra inferior tem **abas por categoria** (Ferramentas, Terreno, Cenário, Serviços, Atrações, Funcionários e Teste; a de Teste só no modo livre). Cada aba mostra cartões com ícone, nome e preço; passe o mouse sobre um cartão para ver custo, manutenção, tamanho e, nos brinquedos, intensidade e lugares. A aba que contém a ferramenta ativa mostra um ponto laranja, e cartões acima do saldo do caixa ficam esmaecidos com o preço em vermelho.
 
 - As categorias e a ordem das abas ficam em `CATEGORIAS` (`config.js`). Uma categoria sem itens não aparece.
 - Itens com `camada` selecionam uma ferramenta; itens com `acao` executam algo na hora (veja `listaDeItens()` em `barra.js`).

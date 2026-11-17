@@ -12,8 +12,12 @@ function montarMapaInicial() {
   for (let i = 0; i < B; i++) { mapa[12 + dy][i + dx] = 'CAMINHO'; mapa[i + dy][12 + dx] = 'CAMINHO'; }
   for (let gy = 3; gy <= 6; gy++) for (let gx = 3; gx <= 7; gx++) mapa[gy + dy][gx + dx] = 'AGUA';
   [[9,9],[15,15],[16,9],[9,16],[2,10]].forEach(([gx, gy]) => objetos[gy + dy][gx + dx] = 'ARVORE');
-  const por = (chave, gx, gy) => construir(chave, gx + dx, gy + dy);
-  por('BANCO', 13, 11);
+  // Passa pelas mesmas regras do jogador (podeConstruir): sem isso, o banco ficou anos na grama em (13, 11)
+  const por = (chave, gx, gy) => {
+    if (podeConstruir(chave, gx + dx, gy + dy)) construir(chave, gx + dx, gy + dy);
+    else console.warn(`Parque inicial: ${chave} não cabe em (${gx + dx}, ${gy + dy})`);
+  };
+  por('BANCO', 12, 11);   // sobre o caminho, logo acima do cruzamento (o tile de caminho mais perto de onde estava)
   por('BARRACA', 14, 13);
   por('BANHEIRO', 10, 11);
   por('CARROSSEL', 8, 13);
