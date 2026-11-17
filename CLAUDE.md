@@ -191,6 +191,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 | BARCOS (passeio de barco) | 3×2 + canais | $750 / $90 | $4 | 3 · 8 (4 barcos) · 16 s (1 volta), só na água |
 | CASA_ASSOMBRADA | 2×2 | $1.000 / $110 | $6 | 4 · 8 · 15 s (quase sem náusea) |
 | CORREDEIRA (rafting) | 3×3 | $1.100 / $130 | $7 | 6 · 6 (1 bote) · 20 s (1 volta), só na água, sem canais |
+| TREM | 4×3 | $950 / $70 | $4 | 3 · 12 (loco + 3 vagões) · 30 s (2 voltas), energia +5 |
+| TOBOGA (tobogã) | 3×2 | $600 / $60 | $3 | 5 · 6 · 14 s, descem um de cada vez (`voltas: 1` = fração da corrida) |
 
 Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes não ficam sobre CAMINHO nem água (exceto as `naAgua`).
 
@@ -258,6 +260,6 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 
 ## Ideias / backlog
 - Fila das atrações entrando só pelo portal (hoje a orientação é visual); volume da música na interface.
-- Mais cenários e objetivos (ex.: avaliação mínima + visitantes); mais atrações (trem, tiro ao alvo, tobogã);
+- Mais cenários e objetivos (ex.: avaliação mínima + visitantes); mais atrações (tiro ao alvo, bate-bate);
   vários slots de autosave; capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).

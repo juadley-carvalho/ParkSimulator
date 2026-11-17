@@ -659,6 +659,174 @@ function desenharCorredeira(cx, cy, atr, rot = 0) {
   ctx.restore();
 }
 
+// Trem (4x3): trilho oval no chão em volta de um jardim, estação coberta na frente e uma locomotiva
+// com 3 vagões (4 lugares cada) que dá "voltas" por corrida e para na estação (atr.angulo = 0).
+// Como no resto das atrações grandes, o que fica em pé entra numa lista ordenada pela profundidade no chão.
+function desenharTrem(cx, cy, atr, rot = 0) {
+  const { eixo, frente } = direcoesDe(rot);
+  const [w, h] = rot % 2 ? [3, 4] : [4, 3];
+  // (u, v) = posição em tiles ao longo do eixo e da frente, a partir do centro; z = altura em px
+  const G = (u, v, z = 0) => {
+    const p = gradeParaMundo(eixo[0] * u + frente[0] * v, eixo[1] * u + frente[1] * v);
+    return { x: cx + p.x, y: cy + p.y - z, chao: cy + p.y };
+  };
+  const RU = 1.55, RV = 1.0;                                       // raios do oval
+  const noOval = (a, k = 1, z = 0) => G(RU * k * Math.cos(a), RV * k * Math.sin(a), z);
+  const A0 = Math.PI / 2;                                          // a estação fica no meio da frente
+  const rodando = !!atr && atr.fase === 'rodando';
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 1.45, -1.3, OBJETOS.TREM.cor);
+  ctx.save();
+  ctx.lineCap = 'round';
+  if (frenteAtras(rot)) portal();
+  caixaRet(cx, cy, w - 0.1, h - 0.1, 3, '#7cb342', '#558b2f', '#689f38');   // gramado
+  // Trilho: dormentes e dois trilhos (é chato: vai antes de tudo que fica em pé)
+  ctx.strokeStyle = '#6d4c41'; ctx.lineWidth = 3;
+  for (let i = 0; i < 40; i++) {
+    const a = i / 40 * Math.PI * 2, A = noOval(a, 0.9, 3), B = noOval(a, 1.1, 3);
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  }
+  ctx.strokeStyle = '#90a4ae'; ctx.lineWidth = 1.5;
+  for (const k of [0.94, 1.06]) {
+    ctx.beginPath();
+    for (let i = 0; i <= 64; i++) { const p = noOval(i / 64 * Math.PI * 2, k, 3); if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y); }
+    ctx.stroke();
+  }
+  const itens = [];
+  // Jardim no meio: um morrinho, árvores e um lago
+  const lago = G(0.45, -0.15, 3);
+  itens.push({ d: lago.chao - 30, f: () => { ctx.fillStyle = '#4fc3f7'; ctx.beginPath(); ctx.ellipse(lago.x, lago.y, 16, 7, 0, 0, Math.PI * 2); ctx.fill(); } });
+  for (const [u, v] of [[-0.6, -0.2], [-0.15, 0.25], [0.95, 0.3]]) {
+    const t = G(u, v, 3);
+    itens.push({ d: t.chao, f: () => { ctx.save(); ctx.translate(t.x, t.y); ctx.scale(0.7, 0.7); desenharArvore(0, 0); ctx.restore(); } });
+  }
+  // Estação: plataforma do lado de fora do trilho, 4 postes e telhado listrado
+  const E = (u, v, z) => G(u, v, z);
+  itens.push({ d: G(0, 1.3).chao, f: () => {
+    const pl = G(0, 1.3, 3);
+    caixaRet(pl.x, pl.y, eixo[0] ? 1.0 : 0.3, eixo[0] ? 0.3 : 1.0, 4, '#bcaaa4', '#8d6e63', '#a1887f');
+    ctx.strokeStyle = '#eceff1'; ctx.lineWidth = 2;
+    for (const [u, v] of [[-0.5, 1.15], [0.5, 1.15], [-0.5, 1.45], [0.5, 1.45]]) {
+      const a = E(u, v, 7), b = E(u, v, 30); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    for (let k = 0; k < 4; k++)
+      poligono([E(-0.55 + k * 0.275, 1.1, 30), E(-0.55 + (k + 1) * 0.275, 1.1, 30), E(-0.55 + (k + 1) * 0.275, 1.5, 30), E(-0.55 + k * 0.275, 1.5, 30)],
+               k % 2 ? '#fafafa' : OBJETOS.TREM.cor);
+  } });
+  // Locomotiva (na frente) e 3 vagões, 0,38 rad atrás um do outro
+  const aLoco = A0 + (atr ? atr.angulo : 0);
+  const ocupados = atr ? atr.passageiros.length : 0;
+  const CORES = ['#fdd835', '#42a5f5', '#66bb6a'];
+  for (let c = 0; c < 4; c++) {
+    const P = noOval(aLoco - c * 0.38, 1, 3);
+    itens.push({ d: P.chao + 0.5, f: () => {
+      if (c === 0) {                                             // locomotiva: corpo, cabine e chaminé
+        ctx.fillStyle = '#c62828'; ctx.fillRect(P.x - 8, P.y - 10, 16, 8);
+        ctx.fillStyle = '#37474f'; ctx.fillRect(P.x - 8, P.y - 17, 7, 7);
+        ctx.fillStyle = '#212121'; ctx.fillRect(P.x + 3, P.y - 16, 3, 6);
+        ctx.fillStyle = '#ffeb3b'; ctx.fillRect(P.x - 6.5, P.y - 15.5, 4, 3);   // janela da cabine
+      } else {                                                   // vagão com até 4 cabeças
+        ctx.fillStyle = CORES[c - 1]; ctx.fillRect(P.x - 7, P.y - 8, 14, 6);
+        ctx.fillStyle = '#f1c9a5';
+        for (let k = 0; k < Math.max(0, Math.min(4, ocupados - (c - 1) * 4)); k++) {
+          ctx.beginPath(); ctx.arc(P.x - 4.5 + k * 3, P.y - 10, 1.8, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.fillStyle = '#263238';                                 // rodas
+      ctx.beginPath(); ctx.arc(P.x - 4, P.y - 1.5, 1.8, 0, Math.PI * 2); ctx.arc(P.x + 4, P.y - 1.5, 1.8, 0, Math.PI * 2); ctx.fill();
+    } });
+  }
+  itens.sort((a, b) => a.d - b.d).forEach(it => it.f());
+  // Fumaça: bolinhas que sobem da chaminé e somem (só andando)
+  if (rodando) {
+    const L = noOval(aLoco, 1, 3);
+    for (let k = 0; k < 4; k++) {
+      const f = (tempo * 1.5 + k / 4) % 1;
+      ctx.globalAlpha = 0.6 * (1 - f); ctx.fillStyle = '#eceff1';
+      ctx.beginPath(); ctx.arc(L.x + 4.5 - f * 6, L.y - 18 - f * 22, 2.5 + f * 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (!frenteAtras(rot)) portal();
+  ctx.restore();
+}
+
+// Tobogã (3x2): torre na ponta "-eixo" e uma rampa larga de 4 pistas coloridas com ondas, até o chão
+// na ponta "+eixo". Na corrida, os passageiros descem um de cada vez, sentados num saco: a fração
+// atr.angulo / 2π ("voltas: 1") diz quem está descendo e onde. Os outros esperam no alto da torre.
+const PISTAS_TOBOGA = ['#fdd835', '#e53935', '#1e88e5', '#43a047'];
+function alturaDoToboga(t) {   // t = 0 no alto da torre, 1 no fim da rampa (px acima do chão)
+  return 4 + 58 * (1 - t) ** 1.4 + 9 * Math.sin(t * Math.PI * 3) ** 2 * (1 - t);
+}
+function desenharToboga(cx, cy, atr, rot = 0) {
+  const { eixo, frente } = direcoesDe(rot);
+  const G = (u, v, z = 0) => {
+    const p = gradeParaMundo(eixo[0] * u + frente[0] * v, eixo[1] * u + frente[1] * v);
+    return { x: cx + p.x, y: cy + p.y - z, chao: cy + p.y };
+  };
+  const U0 = -0.65, U1 = 1.45, V = 0.85, N = 24, ALT = 64;   // rampa de U0 a U1, largura 2V; torre com ALT px
+  const uDe = t => U0 + (U1 - U0) * t;
+  const portal = () => desenharPortalAtracao(cx, cy, rot, 0.95, -1.05, OBJETOS.TOBOGA.cor);
+  ctx.save();
+  if (frenteAtras(rot)) portal();
+  const [w, h] = rot % 2 ? [2, 3] : [3, 2];
+  // Piso de grama: o chão aparece por baixo da rampa elevada, entre os pilares (em areia clara parecia uma parede)
+  caixaRet(cx, cy, w - 0.1, h - 0.1, 2, '#7cb342', '#558b2f', '#689f38');
+  const itens = [];
+  // Torre: caixa de madeira com mureta vermelha e bandeira
+  const T = G(-1.08, 0);
+  itens.push({ d: T.chao, f: () => {
+    const [tw, th] = eixo[0] ? [0.8, 1.8] : [1.8, 0.8];
+    caixaRet(T.x, T.y, tw, th, ALT, '#a1887f', '#6d4c41', '#8d6e63');
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;   // degraus (traços na lateral)
+    for (let z = 8; z < ALT; z += 8) { const a = G(-1.48, 0.9, z), b = G(-0.68, 0.9, z); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    caixaRet(T.x, T.y - ALT, tw, th, 6, '#ef5350', '#b71c1c', '#c62828');
+    const m = G(-1.08, -0.6, ALT + 6);
+    ctx.fillStyle = '#eceff1'; ctx.fillRect(m.x - 1, m.y - 22, 2, 22);
+    poligono([{ x: m.x + 1, y: m.y - 22 }, { x: m.x + 13, y: m.y - 18 + Math.sin(tempo * 5) }, { x: m.x + 1, y: m.y - 14 }], OBJETOS.TOBOGA.cor);
+  } });
+  // Rampa: um quadrilátero por pista e por trecho, cada um na sua profundidade (como o terreno)
+  for (let i = 0; i < N; i++) {
+    const t0 = i / N, t1 = (i + 1) / N, z0 = alturaDoToboga(t0), z1 = alturaDoToboga(t1);
+    for (let j = 0; j < 4; j++) {
+      const v0 = -V + j * V / 2, v1 = v0 + V / 2;
+      const c = G((uDe(t0) + uDe(t1)) / 2, (v0 + v1) / 2);
+      itens.push({ d: c.chao + 0.2, f: () => {
+        poligono([G(uDe(t0), v0, z0), G(uDe(t1), v0, z1), G(uDe(t1), v1, z1), G(uDe(t0), v1, z0)],
+                 PISTAS_TOBOGA[j], 'rgba(0,0,0,0.15)');
+      } });
+    }
+    if (i % 4 === 2) for (const v of [-V, V]) {   // pilares sob as bordas
+      const p = G(uDe(t0), v, z0);
+      itens.push({ d: p.chao, f: () => { ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.chao); ctx.stroke(); } });
+    }
+  }
+  // Passageiros: quem está descendo (um de cada vez) e quem espera no alto
+  const n = atr ? atr.passageiros.length : 0;
+  const rodando = !!atr && atr.fase === 'rodando';
+  const p = rodando ? atr.angulo / (2 * Math.PI) : 0;
+  const descendo = rodando ? Math.min(n - 1, Math.floor(p * n)) : -1;
+  for (let k = 0; k < n; k++) {
+    const pista = (k % 4) * V / 2 - V + V / 4;
+    if (k === descendo) {
+      const t = p * n - k, P = G(uDe(t), pista, alturaDoToboga(t) + 2);
+      itens.push({ d: P.chao + 0.4, f: () => {
+        ctx.fillStyle = '#a1887f'; ctx.fillRect(P.x - 5, P.y - 4, 10, 4);   // saco
+        ctx.fillStyle = CORES_BARCO[k % 4][0]; ctx.fillRect(P.x - 2, P.y - 9, 4, 5);
+        ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(P.x, P.y - 11, 2.3, 0, Math.PI * 2); ctx.fill();
+      } });
+    } else if (k > descendo) {                       // na fila do alto da torre
+      const P = G(-1.3 + (k % 3) * 0.2, -0.5 + Math.floor(k / 3) * 0.5, ALT + 6);
+      itens.push({ d: T.chao + 0.01, f: () => {
+        ctx.fillStyle = CORES_BARCO[k % 4][0]; ctx.fillRect(P.x - 2, P.y - 6, 4, 6);
+        ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(P.x, P.y - 8, 2.3, 0, Math.PI * 2); ctx.fill();
+      } });
+    }
+  }
+  itens.sort((a, b) => a.d - b.d).forEach(it => it.f());
+  if (!frenteAtras(rot)) portal();
+  ctx.restore();
+}
+
 // Portão de circo: duas torres listradas (vermelho e branco) com telhado de tenda e bandeirola,
 // um arco colorido entre elas com franja de lona e uma placa com o nome do parque.
 // As torres ficam nas laterais do caminho, ao longo de gx (o caminho de entrada corre ao longo de gy).

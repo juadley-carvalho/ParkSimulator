@@ -65,6 +65,17 @@ const OBJETOS = {
             naAgua: true, desenhar: desenharCorredeira,
             servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 20, voltas: 1, intensidade: 6,
                                     efeitos: { felicidade: +38, nausea: +16, energia: -10 } } } },
+  // Trem: calmo (quase sem náusea e até descansa: energia +), comprido (2 voltas, 30 s) e com muitos lugares.
+  // Intensidade 3: em terra, preenche o vão entre a roda-gigante (2) e a casa (4). Com 1, só ~15% dos
+  // convidados (tolerância até 3) aceitavam: 22 usos em 20 min, prejuízo certo.
+  TREM: { categoria: 'atracoes', icone: '🚂', nome: 'Trem', cor: '#c62828', tam: { w: 4, h: 3 }, altura: 58, desenhar: desenharTrem,
+          servicos: { diversao: { atividade: 'brinquedo', capacidade: 12, duracao: 30, voltas: 2, intensidade: 3,
+                                  efeitos: { felicidade: +30, nausea: +4, energia: +5 } } } },
+  // Tobogã: rampa gigante com ondas, descida sentado num saco. "voltas: 1" aqui não é um circuito: é a
+  // fração da corrida (0 a 2π) que diz quem está descendo (um de cada vez). Subir a escada cansa.
+  TOBOGA: { categoria: 'atracoes', icone: '🛝', nome: 'Tobogã', cor: '#ff9800', tam: { w: 3, h: 2 }, altura: 96, desenhar: desenharToboga,
+            servicos: { diversao: { atividade: 'brinquedo', capacidade: 6, duracao: 14, voltas: 1, intensidade: 5,
+                                    efeitos: { felicidade: +32, nausea: +10, energia: -12 } } } },
   // Lixeira: fica sobre o caminho, na borda (como o banco), mas sozinha no tile. "lixeira" = capacidade.
   LIXEIRA: { categoria: 'cenario', icone: '🗑️', nome: 'Lixeira', cor: '#2e7d32', desenhar: desenharLixeira, sobreCaminho: true,
              lixeira: { capacidade: LIXO.capacidadeLixeira } },

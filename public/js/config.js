@@ -50,6 +50,8 @@ const ECONOMIA = {          // custo = construção; manutencao = por mês
   LIXEIRA: { custo: 50, manutencao: 3 },
   CASA_ASSOMBRADA: { custo: 1000, manutencao: 110 },
   CORREDEIRA: { custo: 1100, manutencao: 130 },
+  TREM: { custo: 950, manutencao: 70 },
+  TOBOGA: { custo: 600, manutencao: 60 },
 };
 
 const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_SORVETE: { comida: 3 },
@@ -57,7 +59,8 @@ const PRECO_PADRAO = { BANCO: { descanso: 0 }, BARRACA: { comida: 4 }, BARRACA_S
                       RODA_GIGANTE: { diversao: 6 },
                       MONTANHA_RUSSA: { diversao: 8 },
                       BARRACA_BEBIDAS: { bebida: 3 }, NAVIO_PIRATA: { diversao: 7 },
-                      BARCOS: { diversao: 4 }, CASA_ASSOMBRADA: { diversao: 6 }, CORREDEIRA: { diversao: 7 } };
+                      BARCOS: { diversao: 4 }, CASA_ASSOMBRADA: { diversao: 6 }, CORREDEIRA: { diversao: 7 },
+                      TREM: { diversao: 4 }, TOBOGA: { diversao: 3 } };
 
 const CUSTO_TERRENO = { GRAMA: 0, CAMINHO: 10, AGUA: 25 };   // cobrado ao trocar o terreno do tile
 
