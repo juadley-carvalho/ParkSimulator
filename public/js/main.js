@@ -4,21 +4,26 @@
    ============================================================ */
 
 // Terreno e construções com que o parque começa. Edite à vontade.
+// As coordenadas são de um bloco 24 x 24. Num mapa maior, o bloco vai para o meio da borda de baixo,
+// colado na entrada (dx, dy = deslocamento): se ficasse no centro do mapa, todo convidado andaria
+// dezenas de tiles de caminho vazio (e de felicidade perdida) até o primeiro brinquedo.
 function montarMapaInicial() {
-  for (let i = 0; i < MAPA; i++) { mapa[12][i] = 'CAMINHO'; mapa[i][12] = 'CAMINHO'; }
-  for (let gy = 3; gy <= 6; gy++) for (let gx = 3; gx <= 7; gx++) mapa[gy][gx] = 'AGUA';
-  [[9,9],[15,15],[16,9],[9,16],[2,10]].forEach(([gx, gy]) => objetos[gy][gx] = 'ARVORE');
-  construir('BANCO', 13, 11);
-  construir('BARRACA', 14, 13);
-  construir('BANHEIRO', 10, 11);
-  construir('CARROSSEL', 8, 13);
-  construir('RODA_GIGANTE', 15, 10);
-  construir('MONTANHA_RUSSA', 2, 13);
-  construir('NAVIO_PIRATA', 20, 10);
-  construir('BARRACA_BEBIDAS', 13, 17);
-  construir('LIXEIRA', 14, 12);   // perto da comida e da bebida, onde o lixo nasce
-  construir('LIXEIRA', 12, 15);
-  contratarFaxineiro(12, 20);
+  const dx = ENTRADA.gx - 12, dy = MAPA - 24, B = 24;   // no mapa 24 x 24: dx = dy = 0
+  for (let i = 0; i < B; i++) { mapa[12 + dy][i + dx] = 'CAMINHO'; mapa[i + dy][12 + dx] = 'CAMINHO'; }
+  for (let gy = 3; gy <= 6; gy++) for (let gx = 3; gx <= 7; gx++) mapa[gy + dy][gx + dx] = 'AGUA';
+  [[9,9],[15,15],[16,9],[9,16],[2,10]].forEach(([gx, gy]) => objetos[gy + dy][gx + dx] = 'ARVORE');
+  const por = (chave, gx, gy) => construir(chave, gx + dx, gy + dy);
+  por('BANCO', 13, 11);
+  por('BARRACA', 14, 13);
+  por('BANHEIRO', 10, 11);
+  por('CARROSSEL', 8, 13);
+  por('RODA_GIGANTE', 15, 10);
+  por('MONTANHA_RUSSA', 2, 13);
+  por('NAVIO_PIRATA', 20, 10);
+  por('BARRACA_BEBIDAS', 13, 17);
+  por('LIXEIRA', 14, 12);   // perto da comida e da bebida, onde o lixo nasce
+  por('LIXEIRA', 12, 15);
+  contratarFaxineiro(12 + dx, 20 + dy);
 }
 
 // Um passo da simulação (dt em segundos de JOGO, no máximo PASSO_MAX)

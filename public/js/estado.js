@@ -21,6 +21,18 @@ const mapa = criarMatriz(MAPA, 'GRAMA');
 
 const objetos = criarMatriz(MAPA, null);
 
+// Troca o tamanho da grade e deixa tudo vazio (grama, sem objetos). mapa e objetos são const:
+// esvaziamos (length = 0) e enchemos de novo as MESMAS listas, em vez de criar outras. Quem limpa o
+// resto do parque (atrações, convidados...) é limparParque; aplicarJogo chama esta função depois de validar.
+function redimensionarMapa(n) {
+  MAPA = n;
+  ENTRADA.gx = Math.floor(n / 2);
+  ENTRADA.gy = n - 1;
+  mapa.length = 0;
+  objetos.length = 0;
+  for (let i = 0; i < n; i++) { mapa.push(Array(n).fill('GRAMA')); objetos.push(Array(n).fill(null)); }
+}
+
 // Estado das atrações com fila, indexado pela âncora ("gx,gy").
 const atracoes = new Map();
 

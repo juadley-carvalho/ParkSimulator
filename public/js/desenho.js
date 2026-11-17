@@ -784,8 +784,12 @@ function desenhar() {
 
   // PASSADA 1: todo o terreno. PASSADA 2: objetos, de trás para frente.
   // Separar as passadas evita que o chão de um tile da frente cubra um objeto alto.
+  // Só o que aparece na tela: num mapa 64 x 64 são 4096 tiles, e de perto se vê uma fração deles.
+  // Testar se um tile está na vista é bem mais barato do que desenhar o losango.
+  const vista = vistaNaGrade();
+  const vistaObj = vistaNaGrade(6, 14);   // objetos: pegada até 4 tiles e altura até ~200 px
   for (let gy = 0; gy < MAPA; gy++)
-    for (let gx = 0; gx < MAPA; gx++) desenharTile(gx, gy);
+    for (let gx = 0; gx < MAPA; gx++) if (naVista(vista, gx, gy)) desenharTile(gx, gy);
   desenharSujeira();
 
   // Objetos e convidados entram na MESMA lista, ordenada por profundidade (x + y).
@@ -795,6 +799,7 @@ function desenhar() {
     for (let gx = 0; gx < MAPA; gx++) {
       const obj = objetos[gy][gx];
       if (typeof obj !== 'string') continue;   // vazio, ou célula secundária de um objeto grande
+      if (!naVista(vistaObj, gx, gy)) continue;
       const rot = rotacaoDe(gx, gy);
       const { w, h } = tamanhoDe(obj, rot);
       const c = gradeParaMundo(gx + w / 2, gy + h / 2);   // centro da PEGADA do objeto

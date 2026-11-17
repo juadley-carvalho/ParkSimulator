@@ -9,9 +9,17 @@ function ajustarTamanho() {
   canvas.height = innerHeight * dpr;
 }
 
+// Zoom mínimo: 0,3, ou menos se for preciso para o mapa inteiro caber na tela (mapas grandes)
+function zoomMinimo() {
+  return Math.min(0.3, 0.9 * innerWidth / (MAPA * TILE_W), 0.9 * innerHeight / (MAPA * TILE_H));
+}
+
+// Câmera no centro do mapa ou, num mapa grande, na região da entrada (onde o parque começa).
+// O zoom inicial mostra uns 24 a 32 tiles de largura (mostrar tudo deixaria o parque minúsculo;
+// a roda do mouse afasta até zoomMinimo). No mapa 24 x 24 os dois alvos coincidem: (12, 12).
 function centralizar() {
-  const c = gradeParaMundo(MAPA / 2, MAPA / 2);
-  camera.zoom = Math.min(1, innerWidth / (MAPA * TILE_W * 0.9));
+  const c = gradeParaMundo(ENTRADA.gx, Math.max(MAPA / 2, ENTRADA.gy - 11));
+  camera.zoom = Math.max(zoomMinimo(), Math.min(1, innerWidth / (Math.min(MAPA, 32) * TILE_W * 0.9)));
   camera.x = innerWidth / 2 - c.x * camera.zoom;
   camera.y = innerHeight / 2 - c.y * camera.zoom;
 }
@@ -122,7 +130,7 @@ function iniciarEntradaUsuario() {
   canvas.addEventListener('pointercancel', soltar);
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    const novo = Math.min(3, Math.max(0.3, camera.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+    const novo = Math.min(3, Math.max(zoomMinimo(), camera.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
     const k = novo / camera.zoom;
     camera.x = e.clientX - (e.clientX - camera.x) * k;
     camera.y = e.clientY - (e.clientY - camera.y) * k;

@@ -131,6 +131,7 @@ select:focus { border-color:var(--ouro); outline:none; }
 .linha-form { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:6px 0; }
 .linha-form label { color:var(--texto-suave); }
 .botoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.modo-livre { display:inline-flex; gap:6px; align-items:center; }   /* botão + tamanho do mapa juntos */
 .dica { font-size:13px; color:var(--texto-suave); line-height:1.45; }
 .msg { min-height:1.4em; margin:8px 0; font-size:14px; }
 #empInfo, #balanco, #parqueInfo, #parqueLimpeza { line-height:1.6; }

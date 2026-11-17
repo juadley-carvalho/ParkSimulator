@@ -66,7 +66,6 @@ function atualizarAvaliacao(dt) {
 
 // Efeitos da nota (0 = péssima, 1 = máxima)
 function notaRelativa() { return avaliacao.nota / NOTA_MAX; }
-function maxConvidados() { return Math.round(CONVIDADOS_MIN + (CONVIDADOS_MAX - CONVIDADOS_MIN) * notaRelativa()); }
 function fracaoMaxEntrada() { return FRACAO_ENTRADA_MIN + (FRACAO_ENTRADA_MAX - FRACAO_ENTRADA_MIN) * notaRelativa(); }
 function escalaChegada() { return 2 ** ((NOTA_INICIAL - avaliacao.nota) / NOTA_INICIAL); }
 

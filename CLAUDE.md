@@ -65,7 +65,15 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - HUD e painéis laterais ficam abaixo da barra superior (`--abaixo-do-topo`); lado a lado, eles se sobrepunham.
 
 ## Modelo de dados
-- Grade 24×24 (`MAPA`). `mapa[gy][gx]` = chave de `TIPOS` (GRAMA, CAMINHO, AGUA). **Sempre `[gy][gx]`** (linha primeiro).
+- Grade `MAPA`×`MAPA`. `mapa[gy][gx]` = chave de `TIPOS` (GRAMA, CAMINHO, AGUA). **Sempre `[gy][gx]`** (linha primeiro).
+- **Tamanho por partida**: `MAPA` é `let` (config.js) e só `redimensionarMapa(n)` (estado.js) o muda, junto com `ENTRADA`
+  (`gx = n/2`, `gy = n − 1`) e as listas `mapa`/`objetos` (esvaziadas e enchidas no lugar). Modo livre: seletor na tela
+  inicial (`TAMANHOS_MAPA`: 24, 32, 48, 64); cenários e saves trazem o tamanho no próprio mapa (quadrado, `MAPA_MIN` 16 a
+  `MAPA_MAX` 128; saves antigos = 24, sem migração). `aplicarJogo` valida com o tamanho do SAVE e só redimensiona na etapa 2.
+  `montarMapaInicial` põe o bloco 24×24 original colado na entrada (no centro, os convidados andavam 30 tiles vazios
+  e a nota caía ~70 pontos). `centralizar` mira a região da entrada; `zoomMinimo()` deixa o mapa inteiro caber.
+  Desenho só do visível: `vistaNaGrade`/`naVista` (iso.js) em diagonais d = gx − gy, s = gx + gy (objetos com folga).
+  Nada pode guardar `MAPA` ou uma linha de `mapa` de uma partida para outra.
 - `objetos[gy][gx]`: `null` | `'CHAVE'` (âncora = canto de menor gx e gy, ou objeto 1×1) | `{ ancora: {gx, gy} }`
   (célula secundária de objeto grande). `objetoEm(gx, gy)` resolve qualquer célula para a âncora.
 - Isometria 2:1, losango 64×32: `gradeParaMundo` / `telaParaGrade` (iso.js). Com coordenadas fracionárias,
@@ -90,7 +98,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 ## Regras do jogo (valores em config.js)
 - **Tela inicial** (`#modalInicio`, classe `fixa`: Esc não fecha): Continuar, Modo livre (o parque de `montarMapaInicial`),
   Carregar save e os cenários. O botão 🏠 volta a ela (pausando). Ao abrir a página há um parque livre parado ao fundo.
-- **Cenários** (`public/cenarios/<id>.json`, ordem em `CENARIOS`): mapa como 24 textos de 24 letras (`.` grama, `#`
+- **Cenários** (`public/cenarios/<id>.json`, ordem em `CENARIOS`): mapa como N textos de N letras, N = tamanho (`.` grama, `#`
   caminho, `~` água), `objetos` `[{chave, gx, gy, rot}]`, caixa, dívida, juros, `liberados` (sem = tudo), `precosTravados`
   (brinquedos a $0, ver `precoUso`) e `objetivo {tipo, valor, prazo, meses}`. `validarCenario` confere tudo antes.
   Nos cenários não há a aba 🧪 Teste. Vencer grava o id no `localStorage` (`CHAVE_PROGRESSO`) e libera o próximo.
@@ -131,8 +139,9 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   preço de entrada (padrão $0). O ingresso é cobrado na chegada (`pagarEntrada`); quem acha caro (preço >
   `fracaoMaxEntrada()` do dinheiro que trouxe: 15% a 45% conforme a avaliação, 30% com nota 500) desiste no portão
   (`fin.recusasMes`). Com a regra antiga (30% fixo) o lucro mensal era máximo perto de $20.
-- **Chegada/saída**: convidados entram pela `ENTRADA` (tile da borda, protegido) a cada 3–8 s × `escalaChegada()` (máx
-  `maxConvidados()`: 25 a 80, ambos pela avaliação) com $30–150.
+- **Chegada/saída**: convidados entram pela `ENTRADA` (meio da borda de baixo, protegido) a cada 3–8 s × `escalaChegada()`
+  (pela avaliação) com $30–150. **Sem limite de convidados ao mesmo tempo** (o antigo `maxConvidados`, 25 a 80, saiu;
+  parque 24×24 em 6 meses: pico ~65, média ~50, +5% de visitantes). Ideia futura: superlotação tirar felicidade.
   Saem se felicidade ≤ 10 ou dinheiro < $2, andando até a entrada. Só andam em CAMINHO; se o chão some, BFS até o
   caminho mais próximo (atravessa grama, nunca água).
 - **Avaliação** (0–999, `avaliacao` em estado.js, avaliacao.js): soma de partes (`partesDaAvaliacao`, pesos em

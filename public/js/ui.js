@@ -163,7 +163,7 @@ function atualizarNotaUI() {
   $('parqueNota').innerHTML =
     `<div class='nota-topo'><span class='nota-valor'>${nota}</span><span class='dica'>de ${NOTA_MAX}</span></div>` +
     `<div class='nota-barra'><i style='width:${nota / NOTA_MAX * 100}%;background:${corDaNota(nota)}'></i></div>` + linhas +
-    `<div class='dica'>Efeitos: até ${maxConvidados()} convidados ao mesmo tempo · chegadas ` +
+    `<div class='dica'>Efeitos: chegadas ` +
     `${escalaChegada() < 1 ? 'mais rápidas' : escalaChegada() > 1 ? 'mais lentas' : 'no ritmo normal'} ` +
     `(${(1 / escalaChegada()).toFixed(1).replace('.', ',')}×).</div>`;
 }

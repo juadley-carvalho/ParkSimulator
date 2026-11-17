@@ -48,22 +48,20 @@ function atualizarEntrada(dt) {
   }
   tChegada -= dt;
   if (tChegada > 0) return;
-  // A avaliação do parque decide o limite de gente e o ritmo de chegada (ver avaliacao.js)
-  if (convidados.length < maxConvidados()) {
-    tChegada = aleatorio(3, 8) * escalaChegada();
-    semear(1, [ENTRADA.gx, ENTRADA.gy]);
-    const g = convidados[convidados.length - 1];
-    avaliacao.chegadas++;
-    if (parque.precoEntrada > g.dinheiro * fracaoMaxEntrada()) {   // achou caro: dá meia-volta no portão
-      convidados.pop();
-      fin.recusasMes++;
-      avaliacao.recusas++;
-      registrarQueixa('entrada');
-      return;
-    }
-    pagarEntrada(g);
-    fin.visitantesMes++;   // base para avaliar receita por visitante
-    partida.visitantes++;  // objetivo "visitantes" dos cenários
+  // A avaliação do parque decide o ritmo de chegada (ver avaliacao.js). Não há limite de gente
+  // ao mesmo tempo: quanto o parque enche depende só de quantos chegam e de quanto tempo ficam.
+  tChegada = aleatorio(3, 8) * escalaChegada();
+  semear(1, [ENTRADA.gx, ENTRADA.gy]);
+  const g = convidados[convidados.length - 1];
+  avaliacao.chegadas++;
+  if (parque.precoEntrada > g.dinheiro * fracaoMaxEntrada()) {   // achou caro: dá meia-volta no portão
+    convidados.pop();
+    fin.recusasMes++;
+    avaliacao.recusas++;
+    registrarQueixa('entrada');
+    return;
   }
-  else tChegada = 2;                                   // parque lotado: tenta de novo logo
+  pagarEntrada(g);
+  fin.visitantesMes++;   // base para avaliar receita por visitante
+  partida.visitantes++;  // objetivo "visitantes" dos cenários
 }

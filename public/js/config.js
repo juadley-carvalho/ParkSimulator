@@ -3,7 +3,15 @@
    Só dados: não depende de nenhum outro arquivo.
    ============================================================ */
 
-const TILE_W = 64, TILE_H = 32, MAPA = 24, PROFUNDIDADE = 14;
+const TILE_W = 64, TILE_H = 32, PROFUNDIDADE = 14;
+
+// Tamanho da grade (MAPA x MAPA). É "let" porque cada partida escolhe o seu: o modo livre oferece
+// TAMANHOS_MAPA na tela inicial, e cenários e saves trazem o tamanho no próprio mapa. Só
+// redimensionarMapa (estado.js) muda este valor. Saves e cenários aceitam de MAPA_MIN a MAPA_MAX.
+let MAPA = 24;
+const MAPA_PADRAO = 24;
+const TAMANHOS_MAPA = [24, 32, 48, 64];
+const MAPA_MIN = 16, MAPA_MAX = 128;
 
 // Fonte dos textos desenhados no canvas (a mesma da interface, declarada em style.css)
 const FONTE_JOGO = "'Fredoka', 'Segoe UI', sans-serif";
@@ -108,10 +116,9 @@ const FILA_MAX = 12;       // acima disso, quem chega desiste e tenta outra cois
 
 const TEMPO_CARGA = 5;     // segundos esperando passageiros antes de partir meio vazio
 
-const ENTRADA = { gx: 12, gy: MAPA - 1 };   // tile da borda por onde todos entram e saem (já é CAMINHO)
-
-// Limite de convidados ao mesmo tempo: depende da avaliação do parque (ver avaliacao.js)
-const CONVIDADOS_MIN = 25, CONVIDADOS_MAX = 80;
+// Tile da borda por onde todos entram e saem (já é CAMINHO): meio da borda de baixo.
+// O objeto é constante, mas gx e gy mudam com o tamanho do mapa (redimensionarMapa).
+const ENTRADA = { gx: MAPA / 2, gy: MAPA - 1 };
 
 // Volume da música de fundo (0 a 1). As faixas são os .mp3 de public/musicas (ver musica.js).
 const VOLUME_MUSICA = 0.35;

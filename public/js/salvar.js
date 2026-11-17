@@ -16,7 +16,7 @@ function serializarJogo() {
   const comoIndices = lista => lista.map(g => indice.get(g));
   return {
     versao: VERSAO_SAVE,
-    resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length, cenario: partida.nome },
+    resumo: { mes: fin.mes, caixa: fin.caixa, convidados: convidados.length, cenario: partida.nome, tamanho: MAPA },
     estado: {
       mapa, objetos, fin, parque, avaliacao, partida, tempo, tChegada, stats,
       gestao: Object.fromEntries(gestao),
@@ -43,8 +43,9 @@ function migrar(doc) {
   return doc.estado;
 }
 
-function matrizValida(m) {
-  return Array.isArray(m) && m.length === MAPA && m.every(l => Array.isArray(l) && l.length === MAPA);
+// Matriz quadrada n x n. O tamanho do mapa vem do próprio save (os antigos têm 24 x 24).
+function matrizValida(m, n) {
+  return Array.isArray(m) && m.length === n && m.every(l => Array.isArray(l) && l.length === n);
 }
 
 const num = (v, padrao) => (Number.isFinite(v) ? v : padrao);
@@ -71,7 +72,11 @@ function soNumeros(o) {
 // atual fica intacto); 2) só então substitui o estado.
 function aplicarJogo(doc) {
   const e = migrar(doc);
-  if (!matrizValida(e.mapa) || !matrizValida(e.objetos)) throw new Error('Save inválido: o mapa não tem o tamanho esperado');
+  const n = Array.isArray(e.mapa) ? e.mapa.length : 0;
+  if (n < MAPA_MIN || n > MAPA_MAX || !matrizValida(e.mapa, n) || !matrizValida(e.objetos, n))
+    throw new Error('Save inválido: o mapa não é quadrado ou tem um tamanho fora do permitido');
+  // Na etapa 1 o mapa atual ainda tem o tamanho antigo: "dentro" usa o tamanho do save
+  const dentro = (x, y) => x >= 0 && y >= 0 && x < n && y < n;
 
   // --- etapa 1: sanear terrenos e objetos (chaves que não existem mais viram grama / vazio) ---
   const novoMapa = e.mapa.map(l => l.map(c => (TIPOS[c] ? c : 'GRAMA')));
@@ -80,16 +85,17 @@ function aplicarJogo(doc) {
     if (c && c.ancora && Number.isInteger(c.ancora.gx) && Number.isInteger(c.ancora.gy)) return { ancora: { gx: c.ancora.gx, gy: c.ancora.gy } };
     return null;
   }));
-  for (let gy = 0; gy < MAPA; gy++)          // célula secundária sem âncora válida: vazia
-    for (let gx = 0; gx < MAPA; gx++) {
+  for (let gy = 0; gy < n; gy++)          // célula secundária sem âncora válida: vazia
+    for (let gx = 0; gx < n; gx++) {
       const c = novoObjetos[gy][gx];
       if (c && typeof c !== 'string') {
         const { gx: ax, gy: ay } = c.ancora;
-        if (!dentroDoMapa(ax, ay) || typeof novoObjetos[ay][ax] !== 'string') novoObjetos[gy][gx] = null;
+        if (!dentro(ax, ay) || typeof novoObjetos[ay][ax] !== 'string') novoObjetos[gy][gx] = null;
       }
     }
 
   // --- etapa 2: substituir o estado (mapa e objetos são constantes: copiamos linha a linha) ---
+  redimensionarMapa(n);   // daqui em diante MAPA e ENTRADA já são os do save
   novoMapa.forEach((l, gy) => { mapa[gy] = l; });
   novoObjetos.forEach((l, gy) => { objetos[gy] = l; });
 
@@ -260,7 +266,9 @@ async function salvarEm(nome, id = slugDoNome(nome)) {
 }
 
 async function carregarDe(id) {
+  const tamanhoAntes = MAPA;
   aplicarJogo(await chamarApi(`${SAVES_URL}/${encodeURIComponent(id)}`));
+  if (MAPA !== tamanhoAntes) centralizar();   // outro tamanho: a câmera antiga pode mirar fora do mapa
   montarBarra();   // o cenário do save pode liberar outros objetos
   jogoEmAndamento = true; fase = 'jogando';
   reiniciarAutosave();
@@ -338,7 +346,7 @@ function iniciarSalvar() {
     const titulo = document.createElement('b'); titulo.textContent = s.nome || s.id;
     const detalhe = document.createElement('small');
     const r = s.resumo || {};
-    detalhe.textContent = `${r.cenario ? '🎯 ' + r.cenario + ' · ' : ''}${new Date(s.salvoEm).toLocaleString('pt-BR')} · ${r.mes ? nomeDoMes(r.mes) : '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados`;
+    detalhe.textContent = `${r.cenario ? '🎯 ' + r.cenario + ' · ' : ''}${new Date(s.salvoEm).toLocaleString('pt-BR')} · ${r.mes ? nomeDoMes(r.mes) : '?'} · ${moeda(r.caixa ?? 0)} · ${r.convidados ?? 0} convidados · ${r.tamanho ?? 24}×${r.tamanho ?? 24}`;   // saves antigos: 24
     info.append(titulo, detalhe);
 
     const carregar = document.createElement('button'); carregar.className = 'btn'; carregar.textContent = 'Carregar';

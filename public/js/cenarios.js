@@ -4,7 +4,7 @@
    (chama em tempo de execução centralizar e montarMapaInicial, de input.js e main.js)
    ============================================================ */
 
-// Letras do terreno nos arquivos de cenário: o mapa é uma lista de MAPA textos de MAPA letras
+// Letras do terreno nos arquivos de cenário: o mapa é uma lista de N textos de N letras (N = tamanho)
 const LETRAS_TERRENO = { '.': 'GRAMA', '#': 'CAMINHO', '~': 'AGUA' };
 
 // Tipos de objetivo. Cada um sabe medir o valor atual, dizer se cumpriu e se descrever.
@@ -49,8 +49,10 @@ function validarCenario(c) {
   const erro = msg => { throw new Error('Cenário inválido: ' + msg); };
   if (!c || typeof c !== 'object') erro('não é um objeto');
   if (typeof c.nome !== 'string' || !c.nome) erro('sem nome');
-  if (!Array.isArray(c.mapa) || c.mapa.length !== MAPA || !c.mapa.every(l => typeof l === 'string' && l.length === MAPA))
-    erro(`o mapa precisa de ${MAPA} linhas de ${MAPA} letras`);
+  // O tamanho vem do próprio mapa: N linhas de N letras (quadrado), de MAPA_MIN a MAPA_MAX
+  const n = Array.isArray(c.mapa) ? c.mapa.length : 0;
+  if (n < MAPA_MIN || n > MAPA_MAX || !c.mapa.every(l => typeof l === 'string' && l.length === n))
+    erro(`o mapa precisa ser quadrado (N linhas de N letras, N de ${MAPA_MIN} a ${MAPA_MAX})`);
   const o = c.objetivo || {};
   if (!TIPOS_OBJETIVO[o.tipo]) erro('tipo de objetivo desconhecido: ' + o.tipo);
   if (!Number.isFinite(o.valor) || !Number.isInteger(o.prazo) || o.prazo < 1) erro('objetivo sem valor ou prazo');
@@ -71,9 +73,9 @@ function validarCenario(c) {
 }
 
 // ---------- Começar uma partida ----------
-// Deixa tudo como num jogo novo e vazio (mapa, objetos, convidados, finanças, ferramenta)
-function limparParque() {
-  for (let gy = 0; gy < MAPA; gy++) { mapa[gy].fill('GRAMA'); objetos[gy].fill(null); }   // muta as linhas no lugar
+// Deixa tudo como num jogo novo e vazio (mapa do tamanho pedido, objetos, convidados, finanças, ferramenta)
+function limparParque(tamanho = MAPA) {
+  redimensionarMapa(tamanho);
   atracoes.clear(); gestao.clear(); rotacoes.clear(); convidados.length = 0;
   sujeira.clear(); lixeiras.clear(); funcionarios.length = 0; selFunc = null;
   Object.assign(fin, finInicial()); Object.assign(parque, parqueInicial()); Object.assign(partida, partidaInicial());
@@ -91,14 +93,14 @@ function comecarPartida() {
   reiniciarAutosave();
 }
 
-function novoJogoLivre() {
-  limparParque();
+function novoJogoLivre(tamanho = MAPA_PADRAO) {
+  limparParque(tamanho);
   montarMapaInicial();
   comecarPartida();
 }
 
 function iniciarCenario(id, def) {
-  limparParque();
+  limparParque(def.mapa.length);   // o cenário define o tamanho
   def.mapa.forEach((linha, gy) => { mapa[gy] = [...linha]; });   // cópia: a definição guardada não muda
   mapa[ENTRADA.gy][ENTRADA.gx] = 'CAMINHO';                       // a entrada sempre existe
   for (const o of def.objetos) {
@@ -239,9 +241,17 @@ function mostrarFim(venceu) {
 function iniciarCenarios() {
   $('btnInicio').addEventListener('click', abrirInicio);
   $('btnContinuar').addEventListener('click', fecharInicio);
+  // Tamanho do mapa do modo livre (os cenários têm o seu): uma opção por TAMANHOS_MAPA
+  const sel = $('selTamanhoMapa');
+  sel.replaceChildren(...TAMANHOS_MAPA.map(n => {
+    const op = el('option', '', `${n} × ${n}`);
+    op.value = n;
+    return op;
+  }));
+  sel.value = MAPA_PADRAO;
   $('btnModoLivre').addEventListener('click', () => {
     if (jogoEmAndamento && !confirm('Começar um parque novo no modo livre? O parque atual (se não foi salvo) será perdido.')) return;
-    novoJogoLivre();
+    novoJogoLivre(Number(sel.value));   // o valor de um <select> é sempre texto: "48" -> 48
     $('modalInicio').classList.remove('aberto');
   });
   $('btnInicioCarregar').addEventListener('click', () => $('btnJogo').click());   // a janela de saves abre por cima
