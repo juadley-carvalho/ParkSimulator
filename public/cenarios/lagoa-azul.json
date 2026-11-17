@@ -7,7 +7,7 @@
   "divida": 12000,
   "objetivo": {
     "tipo": "nota",
-    "valor": 600,
+    "valor": 550,
     "meses": 3,
     "prazo": 18
   },

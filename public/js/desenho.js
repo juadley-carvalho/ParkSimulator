@@ -774,6 +774,20 @@ function corDaFerramenta() {
   return '#e53935';
 }
 
+// Mancha vermelha nos tiles de caminho lotados (mais forte quanto maior o excesso): mostra ao jogador
+// onde alargar o caminho. Só olha os tiles com gente (as chaves de lotacao), não o mapa inteiro.
+function desenharLotacao() {
+  ctx.save();
+  for (const k of lotacao.keys()) {
+    const [gx, gy] = k.split(',').map(Number);
+    const excesso = excessoEm(gx, gy);
+    if (!excesso) continue;
+    ctx.globalAlpha = Math.min(0.4, 0.15 + 0.12 * excesso);
+    poligono(cantos(gx, gy), '#e53935', null);
+  }
+  ctx.restore();
+}
+
 function desenhar() {
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -790,6 +804,7 @@ function desenhar() {
   const vistaObj = vistaNaGrade(6, 14);   // objetos: pegada até 4 tiles e altura até ~200 px
   for (let gy = 0; gy < MAPA; gy++)
     for (let gx = 0; gx < MAPA; gx++) if (naVista(vista, gx, gy)) desenharTile(gx, gy);
+  desenharLotacao();
   desenharSujeira();
 
   // Objetos e convidados entram na MESMA lista, ordenada por profundidade (x + y).

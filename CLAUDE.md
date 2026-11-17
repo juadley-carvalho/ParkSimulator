@@ -141,7 +141,16 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   (`fin.recusasMes`). Com a regra antiga (30% fixo) o lucro mensal era máximo perto de $20.
 - **Chegada/saída**: convidados entram pela `ENTRADA` (meio da borda de baixo, protegido) a cada 3–8 s × `escalaChegada()`
   (pela avaliação) com $30–150. **Sem limite de convidados ao mesmo tempo** (o antigo `maxConvidados`, 25 a 80, saiu;
-  parque 24×24 em 6 meses: pico ~65, média ~50, +5% de visitantes). Ideia futura: superlotação tirar felicidade.
+  parque 24×24 em 6 meses: pico ~65, média ~50, +5% de visitantes). Isso deixou a Lagoa Azul inviável (nota ~530) e o
+  Primeiro parque fácil (760 visitantes): metas recalibradas na v1.9.0 (550 por 3 meses; 700 visitantes).
+- **Superlotação** (`LOTACAO` em config.js, `atualizarLotacao` em convidados.js, chamada em `simular` ANTES de `atualizar`):
+  `lotacao` (Map "gx,gy" → convidados ANDANDO, derivado, fora do save) é refeito a cada passo. Densidade de um convidado =
+  gente no tile dele + 4 vizinhos ÷ tiles de CAMINHO entre esses 5 (caminho largo = mais tiles = menos denso). Acima de
+  `limite` (2,5): perde `felicPorSeg` × excesso por segundo (máx `felicMax`), passo × (1 − 0,25 × excesso) (mín 0,5;
+  `fatorDeLotacao`), queixa `lotado` com excesso ≥ 0,5. Efeito contínuo com dt (não "ao entrar no tile", como a sujeira).
+  Tiles lotados ganham mancha vermelha (`desenharLotacao`); janela do parque, seção Lotação (`resumoLotacao`). Quem
+  espera/brinca/usa não conta. Com limite 1,5 o cruzamento do parque inicial já lotava (nota 585 → 517); com 2,5 o
+  parque inicial perde pouco, e no cenário cheio alargar o cruzamento devolve 30–50 pontos.
   Saem se felicidade ≤ 10 ou dinheiro < $2, andando até a entrada. Só andam em CAMINHO; se o chão some, BFS até o
   caminho mais próximo (atravessa grama, nunca água).
 - **Avaliação** (0–999, `avaliacao` em estado.js, avaliacao.js): soma de partes (`partesDaAvaliacao`, pesos em

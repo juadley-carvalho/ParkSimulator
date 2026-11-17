@@ -29,6 +29,7 @@ function montarMapaInicial() {
 // Um passo da simulação (dt em segundos de JOGO, no máximo PASSO_MAX)
 function simular(dt) {
   tempo += dt;
+  atualizarLotacao(dt);   // antes de andar: o passo de cada um depende do aperto
   atualizar(dt);
   atualizarFuncionarios(dt);
   atualizarAtracoes(dt);

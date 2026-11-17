@@ -7,7 +7,7 @@
   "divida": 6000,
   "objetivo": {
     "tipo": "visitantes",
-    "valor": 550,
+    "valor": 700,
     "prazo": 12
   },
   "liberados": [

@@ -83,6 +83,48 @@ function escolherAlvo(g) {
   }
 }
 
+// ---------- Superlotação ----------
+// Convidados andando por tile de caminho no tile (gx, gy) e nos 4 vizinhos (0 se não houver caminho)
+function densidadeEm(gx, gy) {
+  let gente = 0, tiles = 0;
+  for (const [dx, dy] of [[0, 0], ...VIZINHOS]) {
+    if (!ehCaminho(gx + dx, gy + dy)) continue;
+    tiles++;
+    gente += lotacao.get(chaveAtr(gx + dx, gy + dy)) || 0;
+  }
+  return tiles ? gente / tiles : 0;
+}
+
+// Quanto a densidade passa do limite (0 = sem aperto)
+function excessoEm(gx, gy) { return Math.max(0, densidadeEm(gx, gy) - LOTACAO.limite); }
+
+// Multiplicador do passo: 1 sem aperto, até LOTACAO.velocidadeMin. "|| 0": convidado de save antigo não tem aperto.
+function fatorDeLotacao(g) { return Math.max(LOTACAO.velocidadeMin, 1 - LOTACAO.lentidao * (g.aperto || 0)); }
+
+// A cada passo: conta quem anda em cada tile e aplica o aperto. É contínuo (por segundo, com dt), e não
+// "ao entrar no tile" como a sujeira: assim quem fica parado no meio da multidão continua incomodado,
+// e quem só cruza um trecho cheio perde pouco.
+function atualizarLotacao(dt) {
+  lotacao.clear();
+  for (const g of convidados) {
+    if (g.estado !== 'andando') continue;
+    const k = chaveAtr(Math.floor(g.x), Math.floor(g.y));
+    lotacao.set(k, (lotacao.get(k) || 0) + 1);
+  }
+  for (const g of convidados) {
+    g.aperto = g.estado === 'andando' ? excessoEm(Math.floor(g.x), Math.floor(g.y)) : 0;
+    if (!g.aperto) continue;
+    g.n.felicidade = limitar(g.n.felicidade - Math.min(LOTACAO.felicMax, g.aperto * LOTACAO.felicPorSeg) * dt);
+    if (g.aperto >= LOTACAO.queixaA) pensar(g, 'lotado');
+  }
+}
+
+// Para a janela do parque: quantos estão no aperto agora
+function resumoLotacao() {
+  return { apertados: convidados.filter(g => g.aperto > 0).length,
+           tiles: [...lotacao.keys()].filter(k => { const [x, y] = k.split(',').map(Number); return excessoEm(x, y) > 0; }).length };
+}
+
 // UPDATE: só mexe nos dados, nunca desenha. dt = segundos desde o último quadro.
 function atualizar(dt) {
   for (const g of convidados) {
@@ -95,7 +137,7 @@ function atualizar(dt) {
     if (invalido) { escolherAlvo(g); if (!g.alvo) continue; }   // sem alvo: fica parado e tenta de novo
 
     const tx = g.alvo.gx + 0.5 + g.ox, ty = g.alvo.gy + 0.5 + g.oy;
-    const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = g.velocidade * dt;
+    const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = g.velocidade * fatorDeLotacao(g) * dt;
     if (dist <= passo) { g.x = tx; g.y = ty; escolherAlvo(g); }   // chegou: decide o próximo
     else { g.x += dx / dist * passo; g.y += dy / dist * passo; }
   }

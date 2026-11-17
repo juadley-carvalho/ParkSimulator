@@ -190,6 +190,7 @@ function aplicarJogo(doc) {
       }
   // Sujeira: só itens conhecidos, sobre caminho, no máximo LIXO.maxPorTile por tile
   sujeira.clear();
+  lotacao.clear();   // é refeita no próximo passo; sem isso, pausado, mostraria a multidão do parque anterior
   for (const [k, lista] of Object.entries(e.sujeira || {})) {
     const [gx, gy] = k.split(',').map(Number);
     if (!ehCaminho(gx, gy) || !Array.isArray(lista)) continue;

@@ -190,6 +190,21 @@ const PENSAMENTOS = {
   sujeira:  { icone: '🗑️', texto: 'Que sujeira!' },
   nojo:     { icone: '😖', texto: 'Que nojo, pisei em vômito!' },
   enjoo:    { icone: '🤮', texto: 'Passei mal...' },
+  lotado:   { icone: '😣', texto: 'Que aperto! Lotado demais aqui' },
+};
+
+// ---------- Superlotação (ver atualizarLotacao em convidados.js) ----------
+// Densidade de um convidado = convidados ANDANDO no tile dele e nos 4 vizinhos, dividido pelo número de
+// tiles de CAMINHO entre esses 5. Caminho de 1 tile de largura tem 3 tiles na vizinhança (o dele + 2);
+// alargado para 2, tem 4 ou 5: a mesma multidão fica menos densa. Acima do "limite", cada unidade de
+// excesso tira felicidade por segundo e deixa o passo mais lento (ele fica mais tempo no aperto).
+const LOTACAO = {
+  limite: 2.5,          // convidados por tile de caminho (com 1,5 o cruzamento do parque inicial já lotava)
+  felicPorSeg: 1,       // felicidade perdida por segundo, por unidade acima do limite...
+  felicMax: 2.5,        // ...até este máximo por segundo
+  queixaA: 0.5,         // excesso a partir do qual ele reclama (balão): aperto leve só incomoda
+  lentidao: 0.25,       // velocidade cai 25% por unidade acima do limite...
+  velocidadeMin: 0.5,   // ...até a metade
 };
 const DURACAO_PENSAMENTO = 3;     // s que o balão fica na tela
 const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA queixa (senão contaria a cada tile)

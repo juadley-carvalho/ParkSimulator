@@ -33,6 +33,10 @@ function redimensionarMapa(n) {
   for (let i = 0; i < n; i++) { mapa.push(Array(n).fill('GRAMA')); objetos.push(Array(n).fill(null)); }
 }
 
+// Convidados ANDANDO em cada tile ("gx,gy" -> quantos). É derivado das posições: refeito a cada passo
+// da simulação (atualizarLotacao) e não vai no save.
+const lotacao = new Map();
+
 // Estado das atrações com fila, indexado pela âncora ("gx,gy").
 const atracoes = new Map();
 

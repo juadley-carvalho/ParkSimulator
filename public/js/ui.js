@@ -148,6 +148,13 @@ function atualizarParqueUI() {
     `Lixeiras: ${l.lixeiras}${l.cheias ? ` (<b>${l.cheias}</b> para esvaziar)` : ''}<br>` +
     `Faxineiros: ${funcionarios.length} · recolheram ${l.recolheuMes} itens neste mês` +
     (funcionarios.length ? '' : `<div class='dica'>Contrate na aba 👷 Funcionários da barra de construção.</div>`);
+  const lot = resumoLotacao();
+  $('parqueLotacao').innerHTML = lot.apertados
+    ? `<b>${lot.apertados}</b> convidado${lot.apertados === 1 ? '' : 's'} no aperto agora · ${lot.tiles} tile${lot.tiles === 1 ? '' : 's'} lotado${lot.tiles === 1 ? '' : 's'} (em vermelho no mapa)`
+    : 'Ninguém no aperto agora 🙂';
+  $('parqueLotacao').innerHTML += `<div class='dica'>Mais de ${String(LOTACAO.limite).replace('.', ',')} convidado por tile de ` +
+    `caminho (contando os vizinhos) é aperto: andam devagar e perdem felicidade. Caminhos mais largos e rotas ` +
+    `alternativas espalham a multidão.</div>`;
 }
 
 // Cor da nota: de vermelho (0) a verde (máxima), como as barras do convidado
