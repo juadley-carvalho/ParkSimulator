@@ -90,6 +90,14 @@ const ANIMACAO = {
   braco: 1.6,            // balanço da mão, ao contrário da perna do mesmo lado
   quique: 0.8,           // o corpo sobe um pouco a cada passo
   zoomMinimo: 0.5,       // abaixo deste zoom os membros teriam ~1 px: volta o boneco simples
+  // Poses (todas só visuais). Usam o relógio do JOGO (tempo): na pausa, todo mundo congela.
+  pulo: { felicidade: 85, intervalo: 7, duracao: 0.45, altura: 4 },   // bem feliz: um pulinho de braços para cima a cada ~7 s
+  impaciencia: { desde: 0.4, balanco: 1.4, batePe: 0.7 },   // na fila: fração da paciência gasta; batendo o pé a partir de 70%
+  nausea: { desde: 50, verde: 70, inclina: 1.6 },           // cambaleia a partir de 50 de náusea; rosto esverdeado a partir de 70
+};
+// Uniforme de cada função de funcionário: a cor da roupa diz o que ele faz
+const UNIFORMES = {
+  faxineiro: { camisa: '#2e7d32', calca: '#1b5e20', bone: '#1b5e20', ferramenta: 'vassoura' },
 };
 // Cores de calça (sorteadas em semear): a camisa sozinha deixava muitos convidados parecidos
 const CORES_CALCA = ['#2f4f7f', '#3b5d99', '#37474f', '#212121', '#6d4c41', '#8d7b5a', '#2e5e3a', '#5d4037'];

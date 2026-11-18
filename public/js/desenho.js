@@ -121,19 +121,25 @@ function desenharSujeira() {
   }
 }
 
-// Faxineiro: uniforme verde, boné e vassoura (que balança enquanto ele varre)
+// Funcionário: o mesmo boneco animado dos convidados (desenharBoneco), com o uniforme da função
+// (UNIFORMES em config.js), boné e a ferramenta na mão. Faxineiro: vassoura, que balança ao varrer.
 function desenharFaxineiro(f) {
   const { x, y } = gradeParaMundo(f.x, f.y);
+  const u = UNIFORMES[f.funcao] || UNIFORMES.faxineiro;
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
-  const balanco = f.trabalho > 0 ? Math.sin(tempo * 12) * 4 : 0;
-  ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(x + 4, y - 9); ctx.lineTo(x + 7 + balanco, y + 1); ctx.stroke();    // cabo
-  ctx.fillStyle = '#fdd835'; ctx.fillRect(x + 4 + balanco, y, 6, 2);                             // cerdas
-  ctx.fillStyle = '#2e7d32'; ctx.fillRect(x - 3, y - 11, 6, 9);                                  // uniforme
-  ctx.fillStyle = '#f1c9a5'; ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#1b5e20'; ctx.fillRect(x - 4, y - 18.5, 8, 2.5);                               // boné
+  const p = poseDoFuncionario(f);
+  desenharBoneco(x, y, p);
+  ctx.fillStyle = u.bone; ctx.fillRect(p.cabecaX - 4, p.cabecaY - 4.5, 8, 2.5);   // boné
+  if (u.ferramenta === 'vassoura') {
+    // O cabo passa pela mão (que balança ao andar) e desce até o chão; varrendo, a ponta vai e vem
+    const balanco = f.trabalho > 0 ? Math.sin(tempo * 12) * 4 : 0;
+    const bx = p.maoX + 2.5 + balanco, by = y + 1;
+    ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(p.maoX - 0.8, p.maoY - 4); ctx.lineTo(bx, by); ctx.stroke();   // cabo
+    ctx.fillStyle = '#fdd835'; ctx.fillRect(bx - 2, by - 1, 6, 2);                              // cerdas
+  }
   if (f === selFunc) {
     ctx.strokeStyle = '#ffe14d'; ctx.lineWidth = 2 / camera.zoom;
     ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.stroke();
@@ -897,39 +903,120 @@ function desenharFila(a, cx, cy, alt = 84) {
   ctx.fillStyle = '#fff'; ctx.fillText(t, cx, cy - alt + 12);
 }
 
+// ---------- Bonecos animados (convidados e funcionários) ----------
+// A POSE (o que o corpo está fazendo) é calculada à parte do DESENHO: poseDoConvidado e
+// poseDoFuncionario leem o estado da pessoa e preenchem a pose; desenharBoneco só desenha.
+// As duas reaproveitam SEMPRE o mesmo objeto, POSE: criar um objeto novo por pessoa a cada quadro
+// (300 convidados x 60 quadros = 18 mil objetos por segundo) daria trabalho à toa ao coletor de lixo.
+const POSE = { camisa: '', calca: '', pele: '', andando: false, fase: 0, fx: 1, fy: 0, desvio: 0, inclina: 0,
+               pulo: 0, sentado: false, bracosAcima: false, batePe: 0, maoX: 0, maoY: 0, cabecaX: 0, cabecaY: 0 };
+const PELE = '#f1c9a5', PELE_ENJOADA = '#cfdc9a';
+
+function limparPose(camisa, calca) {
+  const p = POSE;
+  p.camisa = camisa; p.calca = calca; p.pele = PELE; p.andando = false; p.fase = 0; p.fx = 1; p.fy = 0;
+  p.desvio = 0; p.inclina = 0; p.pulo = 0; p.sentado = false; p.bracosAcima = false; p.batePe = 0;
+  return p;
+}
+
+// Resto da divisão sempre positivo (o % do JavaScript mantém o sinal: -1 % 7 dá -1, não 6)
+function modulo(a, n) { return ((a % n) + n) % n; }
+
+function poseDoConvidado(g) {
+  const p = limparPose(g.cor, g.corCalca), A = ANIMACAO;
+  const semente = (g.ox + g.oy) * 10 + g.paciencia;   // campos sorteados em semear: cada um no seu ritmo
+  p.andando = g.estado === 'andando' && g.movendo;
+  p.fase = g.passo * A.ciclosPorTile * Math.PI * 2;
+  p.fx = g.olhaX; p.fy = g.olhaY;
+  p.sentado = g.estado === 'usando' && !!g.uso && !!g.uso.def && g.uso.def.atividade === 'sentar';
+  // Na fila: passada a fração "desde" da paciência, muda o peso de um pé para o outro, cada vez mais;
+  // perto de desistir, também bate o pé
+  if (g.estado === 'esperando' && g.uso && g.paciencia > 0) {
+    const gasto = (g.uso.espera || 0) / g.paciencia, I = A.impaciencia;
+    if (gasto > I.desde) {
+      p.desvio = Math.sin(tempo * 2.5 + semente) * I.balanco * Math.min(1, (gasto - I.desde) / (1 - I.desde));
+      if (gasto > I.batePe) p.batePe = Math.max(0, Math.sin(tempo * 9 + semente)) * 1.5;
+    }
+  }
+  // Enjoado: o tronco pende de um lado para o outro (mais quanto pior a náusea) e o rosto esverdeia
+  const nausea = g.n.nausea, N = A.nausea;
+  if (nausea >= N.desde && !p.sentado) {
+    p.inclina = Math.sin(tempo * 3 + semente) * N.inclina * (0.4 + 0.6 * (nausea - N.desde) / (100 - N.desde));
+    if (nausea >= N.verde) p.pele = PELE_ENJOADA;
+  }
+  // Muito feliz (e não enjoado nem ocupado): de vez em quando, um pulinho com os braços para cima.
+  // A semente desencontra os pulos: sem ela, todo mundo feliz pularia no mesmo instante.
+  const P = A.pulo;
+  if (g.n.felicidade >= P.felicidade && !p.inclina && g.estado !== 'usando') {
+    const c = modulo(tempo + semente * 3, P.intervalo);
+    if (c < P.duracao) { p.pulo = Math.sin(c / P.duracao * Math.PI) * P.altura; p.bracosAcima = true; }
+  }
+  return p;
+}
+
+function poseDoFuncionario(f) {
+  const u = UNIFORMES[f.funcao] || UNIFORMES.faxineiro;
+  const p = limparPose(u.camisa, u.calca);
+  p.andando = f.movendo && !(f.trabalho > 0);
+  p.fase = f.passo * ANIMACAO.ciclosPorTile * Math.PI * 2;
+  p.fx = f.olhaX; p.fy = f.olhaY;
+  return p;
+}
+
 // Pernas e braços que balançam ao andar. s = seno da fase do passo, de -1 a 1: a perna esquerda vai
 // para s e a direita para -s (uma à frente, outra atrás); cada braço vai ao contrário da perna do
-// seu lado, como numa caminhada de verdade. "Frente" é a direção do movimento NA TELA (olhaX, olhaY),
+// seu lado, como numa caminhada de verdade. "Frente" é a direção do movimento NA TELA (fx, fy),
 // por isso o pé também sobe/desce um pouco na diagonal da isometria.
 // Desempenho: os 2 membros de cada cor saem num só stroke (vários moveTo/lineTo num caminho): são
-// 5 chamadas de desenho por convidado (sombra, pernas, tronco, braços, cabeça) contra 3 antes.
-function desenharCorpoAnimado(g, x, y) {
-  const andando = g.estado === 'andando' && g.movendo;
-  const fase = g.passo * ANIMACAO.ciclosPorTile * Math.PI * 2;
-  const s = andando ? Math.sin(fase) : 0;
-  const sobe = andando ? Math.abs(Math.cos(fase)) * ANIMACAO.quique : 0;   // mais alto com as pernas juntas
-  const fx = g.olhaX, fy = g.olhaY;
-  const quadril = y - 5 - sobe, ombro = y - 10 - sobe;
-  const p = ANIMACAO.perna * s, b = ANIMACAO.braco * s;
+// 5 chamadas de desenho por pessoa (sombra, pernas, tronco, braços, cabeça) contra 3 do boneco simples.
+// Deixa em p a posição da mão direita (maoX, maoY: lixo, vassoura) e da cabeça (cabecaX, cabecaY: boné).
+function desenharBoneco(x, y, p) {
+  const s = p.andando ? Math.sin(p.fase) : 0;
+  const sobe = (p.andando ? Math.abs(Math.cos(p.fase)) * ANIMACAO.quique : 0) + p.pulo;   // mais alto com as pernas juntas
+  const abaixa = p.sentado ? 3 : 0;
+  const xq = x + p.desvio, xt = xq + p.inclina * 0.6, xc = xq + p.inclina;   // quadril, tronco e cabeça (a cabeça pende mais)
+  const quadril = y - 5 - sobe + abaixa, ombro = y - 10 - sobe + abaixa;
+  p.cabecaX = xc; p.cabecaY = y - 14 - sobe + abaixa;
+  if (camera.zoom < ANIMACAO.zoomMinimo) {   // de longe: o boneco simples (membros teriam ~1 px)
+    ctx.fillStyle = p.camisa; ctx.fillRect(xt - 3, ombro - 1, 6, 9 - abaixa);
+    ctx.fillStyle = p.pele; ctx.beginPath(); ctx.arc(p.cabecaX, p.cabecaY, 3.5, 0, Math.PI * 2); ctx.fill();
+    p.maoX = xt + 3.5; p.maoY = ombro + 4;
+    return;
+  }
+  const pe = ANIMACAO.perna * s, b = ANIMACAO.braco * s, fx = p.fx, fy = p.fy;
   // Sem ctx.save()/restore(): eles copiam TODO o estado do contexto, e com 300 convidados medi
   // ~4,8 ms por quadro contra ~4,0 ms devolvendo à mão só o que muda aqui (espessura e ponta da linha)
   const espessura = ctx.lineWidth;
   ctx.lineCap = 'round';
   ctx.lineWidth = 2;
-  ctx.strokeStyle = g.corCalca;   // pernas
+  ctx.strokeStyle = p.calca;   // pernas
   ctx.beginPath();
-  ctx.moveTo(x - 1.3, quadril); ctx.lineTo(x - 1.3 + p * fx, y - 0.5 + p * fy * 0.5);
-  ctx.moveTo(x + 1.3, quadril); ctx.lineTo(x + 1.3 - p * fx, y - 0.5 - p * fy * 0.5);
+  if (p.sentado) {   // coxas para a frente (para quem olha) e canelas descendo até o chão
+    ctx.moveTo(xq - 1.3, quadril); ctx.lineTo(xq - 1.9, quadril + 1.6); ctx.lineTo(xq - 1.9, y - 0.3);
+    ctx.moveTo(xq + 1.3, quadril); ctx.lineTo(xq + 1.9, quadril + 1.6); ctx.lineTo(xq + 1.9, y - 0.3);
+  } else {
+    const chao = y - 0.5 - p.pulo;
+    ctx.moveTo(xq - 1.3, quadril); ctx.lineTo(xq - 1.3 + pe * fx, chao + pe * fy * 0.5);
+    ctx.moveTo(xq + 1.3, quadril); ctx.lineTo(xq + 1.3 - pe * fx, chao - pe * fy * 0.5 - p.batePe);
+  }
   ctx.stroke();
-  ctx.fillStyle = g.cor;   // tronco (camisa)
-  ctx.fillRect(x - 3, y - 11 - sobe, 6, 6.5);
-  ctx.strokeStyle = '#f1c9a5'; ctx.lineWidth = 1.6;   // braços (manga curta: a pele contrasta com a camisa)
+  ctx.fillStyle = p.camisa;   // tronco
+  ctx.fillRect(xt - 3, ombro - 1, 6, 6.5);
+  ctx.strokeStyle = p.pele; ctx.lineWidth = 1.6;   // braços (manga curta: a pele contrasta com a camisa)
   ctx.beginPath();
-  ctx.moveTo(x - 3.2, ombro); ctx.lineTo(x - 3.6 - b * fx, ombro + 4.5 - b * fy * 0.5);
-  ctx.moveTo(x + 3.2, ombro); ctx.lineTo(x + 3.6 + b * fx, ombro + 4.5 + b * fy * 0.5);
+  if (p.bracosAcima) {   // comemorando
+    ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 4.8, ombro - 4.5);
+    ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 4.8, p.maoY = ombro - 4.5);
+  } else if (p.sentado) {   // mãos no colo
+    ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 2.6, quadril + 0.8);
+    ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 2.6, p.maoY = quadril + 0.8);
+  } else {
+    ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 3.6 - b * fx, ombro + 4.5 - b * fy * 0.5);
+    ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 3.6 + b * fx, p.maoY = ombro + 4.5 + b * fy * 0.5);
+  }
   ctx.stroke();
-  ctx.fillStyle = '#f1c9a5';   // cabeça
-  ctx.beginPath(); ctx.arc(x, y - 14 - sobe, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = p.pele;   // cabeça
+  ctx.beginPath(); ctx.arc(p.cabecaX, p.cabecaY, 3.5, 0, Math.PI * 2); ctx.fill();
   ctx.lineWidth = espessura; ctx.lineCap = 'butt';
 }
 
@@ -937,15 +1024,11 @@ function desenharConvidado(g) {
   const { x, y } = gradeParaMundo(g.x, g.y);   // com coordenadas contínuas, já dá o ponto no chão
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
-  if (camera.zoom < ANIMACAO.zoomMinimo) {   // de longe: o boneco simples (membros teriam ~1 px)
-    ctx.fillStyle = g.cor;
-    ctx.fillRect(x - 3, y - 11, 6, 9);
-    ctx.fillStyle = '#f1c9a5';
-    ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
-  } else desenharCorpoAnimado(g, x, y);
+  const p = poseDoConvidado(g);
+  desenharBoneco(x, y, p);
   if (g.lixo) {   // o lixo na mão, procurando lixeira
     ctx.fillStyle = g.lixo.tipo === 'copo' ? '#e53935' : g.lixo.tipo === 'palito' ? '#a1887f' : '#f5f5f5';
-    ctx.fillRect(x + 3, y - 8, 3, 4);
+    ctx.fillRect(p.maoX - 0.5, p.maoY - 2.5, 3, 4);
   }
   if (g === selecionado) {
     ctx.strokeStyle = '#ffe14d'; ctx.lineWidth = 2 / camera.zoom;

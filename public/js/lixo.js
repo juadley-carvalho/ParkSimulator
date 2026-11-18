@@ -140,8 +140,9 @@ function irAteLixeira(g, cx, cy) {
 // ---------- Faxineiros ----------
 function contratarFaxineiro(gx, gy) {
   const numero = Math.max(0, ...funcionarios.map(f => f.numero || 0)) + 1;
-  funcionarios.push({ numero, nome: `Faxineiro ${numero}`, x: gx + 0.5, y: gy + 0.5, alvo: null, anterior: null,
-                      tarefa: null, trabalho: 0, recolheu: 0, recolheuMes: 0 });
+  funcionarios.push({ numero, nome: `Faxineiro ${numero}`, funcao: 'faxineiro', x: gx + 0.5, y: gy + 0.5, alvo: null, anterior: null,
+                      tarefa: null, trabalho: 0, recolheu: 0, recolheuMes: 0,
+                      passo: Math.random(), movendo: false, olhaX: 1, olhaY: 0 });   // animação: ver registrarPasso
 }
 
 function demitirFuncionario(f) {
@@ -207,6 +208,7 @@ function decidirFaxineiro(f) {
 
 function atualizarFuncionarios(dt) {
   for (const f of funcionarios) {
+    f.movendo = false;   // volta a true só se ele der um passo agora
     if (f.trabalho > 0) {
       f.trabalho -= dt;
       if (f.trabalho <= 0) { f.trabalho = 0; concluirTrabalho(f); decidirFaxineiro(f); }   // mais trabalho aqui?
@@ -215,6 +217,7 @@ function atualizarFuncionarios(dt) {
     if (!f.alvo || mapa[f.alvo.gy][f.alvo.gx] === 'AGUA') { decidirFaxineiro(f); if (!f.alvo) continue; }
     const tx = f.alvo.gx + 0.5, ty = f.alvo.gy + 0.5;
     const dx = tx - f.x, dy = ty - f.y, dist = Math.hypot(dx, dy), passo = LIXO.velocidade * dt;
+    registrarPasso(f, dx, dy, dist, passo);
     if (dist <= passo) { f.x = tx; f.y = ty; f.alvo = null; decidirFaxineiro(f); }
     else { f.x += dx / dist * passo; f.y += dy / dist * passo; }
   }

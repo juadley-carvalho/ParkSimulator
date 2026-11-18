@@ -129,6 +129,17 @@ function resumoLotacao() {
            tiles: [...lotacao.keys()].filter(k => { const [x, y] = k.split(',').map(Number); return excessoEm(x, y) > 0; }).length };
 }
 
+// Animação (só visual), para convidados e funcionários: conta a distância andada (a fase do passo) e
+// guarda a direção NA TELA (a mesma conta de gradeParaMundo: x = gx - gy, y = (gx + gy) / 2), com tamanho 1.
+// (dx, dy) = até o alvo, dist = tamanho disso, passo = quanto ele anda neste dt.
+function registrarPasso(p, dx, dy, dist, passo) {
+  if (dist < 1e-6) return;
+  p.passo += Math.min(dist, passo);
+  p.movendo = true;
+  const sx = dx - dy, sy = (dx + dy) / 2, n = Math.hypot(sx, sy);
+  p.olhaX = sx / n; p.olhaY = sy / n;
+}
+
 // UPDATE: só mexe nos dados, nunca desenha. dt = segundos desde o último quadro.
 function atualizar(dt) {
   for (const g of convidados) {
@@ -143,14 +154,7 @@ function atualizar(dt) {
 
     const tx = g.alvo.gx + 0.5 + g.ox, ty = g.alvo.gy + 0.5 + g.oy;
     const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = g.velocidade * fatorDeLotacao(g) * dt;
-    if (dist > 1e-6) {
-      // Animação: conta a distância andada e guarda a direção na tela (a mesma conta de gradeParaMundo:
-      // x da tela = gx - gy, y da tela = (gx + gy) / 2), normalizada para tamanho 1
-      g.passo += Math.min(dist, passo);
-      g.movendo = true;
-      const sx = dx - dy, sy = (dx + dy) / 2, n = Math.hypot(sx, sy);
-      g.olhaX = sx / n; g.olhaY = sy / n;
-    }
+    registrarPasso(g, dx, dy, dist, passo);
     if (dist <= passo) { g.x = tx; g.y = ty; escolherAlvo(g); }   // chegou: decide o próximo
     else { g.x += dx / dist * passo; g.y += dy / dist * passo; }
   }

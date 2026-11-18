@@ -94,12 +94,18 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   árvores encostadas à esquerda). Só é correto com `|w − h| ≤ 1`: atração mais alongada exige ordenação topológica.
 - Convidado: campos em `semear`. Estados: `andando | usando | esperando | brincando`. Necessidades em `g.n`:
   fome, sede, banheiro, nausea (100 = pior) e energia, felicidade (100 = melhor).
-- **Animação de caminhada** (`ANIMACAO`, `CORES_CALCA` em config.js; `desenharCorpoAnimado`): pernas e braços por
-  senoide da fase `g.passo` (tiles ANDADOS, somados em `atualizar`, não tempo: acompanha velocidade, aperto e pausa);
-  `g.movendo` (deu passo no último subpasso) e `g.olhaX/olhaY` (direção na tela). Só visual; vão no save com padrão em
-  `base`. Abaixo de `ANIMACAO.zoomMinimo`, boneco simples. Sem `ctx.save()/restore()` (caro com centenas): devolve
-  `lineWidth`/`lineCap` à mão. Convidados e faxineiros fora da tela não entram na lista de desenho (`vistaNaGrade(1, 4)`).
-  Medido (Edge headless, 300 convidados na tela): ~1,9 ms → ~2,2 ms por quadro.
+- **Bonecos animados** (`ANIMACAO`, `CORES_CALCA`, `UNIFORMES` em config.js; desenho.js): convidados e funcionários usam
+  o mesmo `desenharBoneco(x, y, pose)`. A pose sai de `poseDoConvidado`/`poseDoFuncionario`, que preenchem SEMPRE o
+  mesmo objeto `POSE` (sem criar objetos por quadro). Pernas e braços por senoide da fase `passo` (tiles ANDADOS,
+  somados por `registrarPasso`, convidados.js, não tempo: acompanha velocidade, aperto e pausa); `movendo` (deu passo
+  no último subpasso) e `olhaX/olhaY` (direção na tela). Poses: sentado (serviço `sentar`), impaciente na fila
+  (`uso.espera / paciencia` > 0,4: balança; > 0,7: bate o pé), enjoado (náusea ≥ 50 cambaleia, ≥ 70 rosto verde),
+  pulinho de braços para cima (felicidade ≥ 85, a cada ~7 s, desencontrado por uma semente de `ox`, `oy`, `paciencia`).
+  Usam `tempo` (pausa congela). `desenharBoneco` devolve em `POSE` a mão (`maoX/maoY`: lixo, vassoura) e a cabeça (boné).
+  Funcionário tem `funcao` (chave de `UNIFORMES`; save antigo = faxineiro). Tudo só visual; vai no save com padrão.
+  Abaixo de `ANIMACAO.zoomMinimo`, boneco simples. Sem `ctx.save()/restore()` no boneco (caro com centenas): devolve
+  `lineWidth`/`lineCap` à mão. Pessoas fora da tela não entram na lista de desenho (`vistaNaGrade(1, 4)`).
+  Medido (Edge headless, 300 convidados na tela, 1/3 enjoados e 1/3 felizes): ~1,5 ms simples → ~2,0 ms animado.
 
 ## Regras do jogo (valores em config.js)
 - **Tela inicial** (`#modalInicio`, classe `fixa`: Esc não fecha): Continuar, Modo livre (o parque de `montarMapaInicial`),

@@ -211,7 +211,9 @@ function aplicarJogo(doc) {
     const t = f.tarefa && Number.isInteger(f.tarefa.gx) && Number.isInteger(f.tarefa.gy) && dentroDoMapa(f.tarefa.gx, f.tarefa.gy) ? { gx: f.tarefa.gx, gy: f.tarefa.gy } : null;
     funcionarios.push({ numero, nome: typeof f.nome === 'string' ? f.nome.slice(0, 30) : `Faxineiro ${numero}`, x: f.x, y: f.y,
       alvo: null, anterior: null, tarefa: t, trabalho: Math.max(0, num(f.trabalho, 0)),
-      recolheu: Math.max(0, num(f.recolheu, 0)), recolheuMes: Math.max(0, num(f.recolheuMes, 0)) });
+      recolheu: Math.max(0, num(f.recolheu, 0)), recolheuMes: Math.max(0, num(f.recolheuMes, 0)),
+      funcao: UNIFORMES[f.funcao] ? f.funcao : 'faxineiro',   // save antigo: todo funcionário era faxineiro
+      passo: num(f.passo, 0), movendo: false, olhaX: num(f.olhaX, 1), olhaY: num(f.olhaY, 0) });
   }
 
   // Avaliação: save antigo (sem ela) recalcula a partir do parque carregado
