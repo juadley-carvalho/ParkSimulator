@@ -8,7 +8,7 @@
   janela, preenche os números de página do índice e grava Manual-Parque-de-Diversoes.pdf.
   Cada <section class="pagina-inicio"> começa numa página nova (é isso que permite calcular o índice).
   As imagens vêm de img/ (geradas por capturar.js). Os números foram conferidos em public/js/config.js,
-  public/js/objetos.js e public/cenarios/*.json (versão v1.10.0).
+  public/js/objetos.js e public/cenarios/*.json (versão v1.13.1).
 -->
 <style>
 @font-face { font-family: 'Fredoka'; src: url('../../public/fonts/fredoka-latin.woff2') format('woff2'); font-weight: 300 700; }
@@ -121,6 +121,10 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
 .cenario .corpo { padding: 8pt 11pt 4pt; }
 .grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
 .mini th, .mini td { font-size: 8.8pt; padding: 2.5pt 4pt; }
+.poses { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8pt; break-inside: avoid; }
+.poses figure { margin: 0 0 8pt; }
+.poses img { width: 100%; }
+.grade3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; align-items: start; break-inside: avoid; }
 </style>
 </head>
 <body>
@@ -135,7 +139,7 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <div class="sub">Construa, cuide e encha de alegria o seu parque!</div>
   </div>
   <div class="rodape">
-    <span class="selo">🎢 Versão 1.10</span>
+    <span class="selo">🎢 Versão 1.13</span>
     <span class="txt">9 atrações · 4 cenários · mapas de 24 a 64 tiles<br>Simulador isométrico inspirado em RollerCoaster Tycoon</span>
   </div>
 </section>
@@ -151,15 +155,16 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <li data-alvo="cap3"><a href="#cap3"><span class="n">3</span><span>Terreno e construção<small>Caminhos, água, pegada, girar, prévia e demolição</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap4"><a href="#cap4"><span class="n">4</span><span>As atrações<small>Uma ficha para cada brinquedo</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap5"><a href="#cap5"><span class="n">5</span><span>Serviços e decoração<small>Barracas, banheiro, banco, lixeira e árvore</small></span></a><span class="pg"></span></li>
-    <li data-alvo="cap6"><a href="#cap6"><span class="n">6</span><span>Os convidados<small>Necessidades, intensidade, dinheiro e pensamentos</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap6"><a href="#cap6"><span class="n">6</span><span>Os convidados<small>Necessidades, poses, intensidade, dinheiro e pensamentos</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap7"><a href="#cap7"><span class="n">7</span><span>Filas e preços<small>Como os convidados escolhem e quanto cobrar</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap8"><a href="#cap8"><span class="n">8</span><span>A avaliação do parque<small>De onde vêm e para onde vão os pontos</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap9"><a href="#cap9"><span class="n">9</span><span>Finanças<small>Caixa, empréstimo, juros, manutenção, salários e ingresso</small></span></a><span class="pg"></span></li>
     <li data-alvo="cap10"><a href="#cap10"><span class="n">10</span><span>Limpeza<small>Lixo, lixeiras, vômito e faxineiros</small></span></a><span class="pg"></span></li>
-    <li data-alvo="cap11"><a href="#cap11"><span class="n">11</span><span>Multidões e caminhos largos<small>Superlotação</small></span></a><span class="pg"></span></li>
-    <li data-alvo="cap12"><a href="#cap12"><span class="n">12</span><span>Tempo, saves e música<small>Velocidade, pausa, salvar, carregar e autosave</small></span></a><span class="pg"></span></li>
-    <li data-alvo="cap13"><a href="#cap13"><span class="n">13</span><span>Os cenários<small>Objetivos, prazos e estratégia recomendada</small></span></a><span class="pg"></span></li>
-    <li data-alvo="cap14"><a href="#cap14"><span class="n">14</span><span>Dominando o jogo<small>Estratégias avançadas, erros comuns, tabelas e atalhos</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap11"><a href="#cap11"><span class="n">11</span><span>Quebras e mecânicos<small>Desgaste, brinquedo parado, passageiros presos e conserto</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap12"><a href="#cap12"><span class="n">12</span><span>Multidões e caminhos largos<small>Superlotação</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap13"><a href="#cap13"><span class="n">13</span><span>Tempo, saves e música<small>Velocidade, pausa, salvar, carregar e autosave</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap14"><a href="#cap14"><span class="n">14</span><span>Os cenários<small>Objetivos, prazos e estratégia recomendada</small></span></a><span class="pg"></span></li>
+    <li data-alvo="cap15"><a href="#cap15"><span class="n">15</span><span>Dominando o jogo<small>Estratégias avançadas, erros comuns, tabelas e atalhos</small></span></a><span class="pg"></span></li>
   </ol>
 </section>
 
@@ -184,8 +189,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
       <p>Ao abrir o jogo você vê a tela inicial, com um parque parado ao fundo:</p>
       <ul>
         <li><b>▶ Continuar</b> volta ao parque em andamento (só aparece depois do primeiro jogo).</li>
-        <li><b>🌳 Modo livre</b> começa um parque novo, já com alguns brinquedos, barracas, duas lixeiras e um
-          faxineiro. Ao lado, o seletor 🗺️ escolhe o tamanho do terreno: <b>24×24, 32×32, 48×48 ou 64×64</b> tiles.
+        <li><b>🌳 Modo livre</b> começa um parque novo, já com alguns brinquedos, barracas, um banco, duas
+          lixeiras e um faxineiro. Ao lado, o seletor 🗺️ escolhe o tamanho do terreno: <b>24×24, 32×32, 48×48 ou 64×64</b> tiles.
           O parque inicial fica sempre junto do portão; o resto do terreno é seu para crescer.</li>
         <li><b>💾 Carregar save</b> abre a lista de jogos salvos.</li>
         <li><b>🎯 Cenários</b>: cada cartão mostra a descrição, o objetivo e o prazo. Só o primeiro começa liberado;
@@ -253,21 +258,21 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   <figure><img src="img/barra-atracoes.png" alt=""><figcaption>Aba Atrações (aqui alargada para mostrar todos os cartões; no jogo, a barra rola para o lado).</figcaption></figure>
   <table>
     <tr><th style="width:22%">Aba</th><th>Conteúdo</th></tr>
-    <tr><td>🧰 Ferramentas</td><td><b>🔍 Inspecionar</b> (detalhes de convidados, objetos e faxineiros; preços) e <b>🔨 Demolir</b> (devolve 50% do custo).</td></tr>
+    <tr><td>🧰 Ferramentas</td><td><b>🔍 Inspecionar</b> (detalhes de convidados, objetos e funcionários; preços) e <b>🔨 Demolir</b> (devolve 50% do custo).</td></tr>
     <tr><td>⛰️ Terreno</td><td>Grama (grátis), Caminho ($10 por tile) e Água ($25 por tile).</td></tr>
     <tr><td>🌳 Cenário</td><td>Árvore, Banco e Lixeira.</td></tr>
     <tr><td>🍔 Serviços</td><td>Barraca de comida, Barraca de bebidas, Sorveteria e Banheiro.</td></tr>
     <tr><td>🎢 Atrações</td><td>Os nove brinquedos (capítulo 4).</td></tr>
-    <tr><td>👷 Funcionários</td><td>Faxineiro: clique num caminho para contratar.</td></tr>
+    <tr><td>👷 Funcionários</td><td><b>Faxineiro</b> e <b>Mecânico</b>: escolha um e clique num caminho para contratar.</td></tr>
     <tr><td>🧪 Teste</td><td>Só no modo livre: <b>+5 convidados</b> e <b>Limpar</b> (remove todos os convidados).</td></tr>
   </table>
   <p>Nos cenários, só aparecem os objetos liberados naquele cenário.</p>
 
   <h3>Os painéis laterais</h3>
-  <p>Com <b>🔍 Inspecionar</b>, clique num convidado, numa barraca ou brinquedo, ou num faxineiro: um painel abre à
+  <p>Com <b>🔍 Inspecionar</b>, clique num convidado, numa barraca ou brinquedo, ou num funcionário: um painel abre à
   direita. O do convidado mostra as necessidades em barras (verde = bem, vermelho = mal), o dinheiro, a
-  tolerância e o que ele está fazendo; o do objeto, os preços (editáveis) e as estatísticas; o do faxineiro, o
-  trabalho do mês e o botão <b>Demitir</b>. Feche com ✕ ou <span class="tecla">Esc</span>.</p>
+  tolerância e o que ele está fazendo; o do objeto, os preços (editáveis) e as estatísticas (nos brinquedos,
+  também o estado de conservação); o do faxineiro ou do mecânico, o trabalho do mês e o botão <b>Demitir</b>. Feche com ✕ ou <span class="tecla">Esc</span>.</p>
 </section>
 
 <!-- ======================= 3 ======================= -->
@@ -483,6 +488,9 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
 
   <div class="quadro dica"><span class="t">Variedade vale pontos</span>Cada <b>tipo</b> diferente de atração soma
   40 pontos na avaliação, até cinco tipos (200 pontos). Um segundo carrossel não soma, mas aumenta a capacidade.</div>
+  <div class="quadro atencao"><span class="t">Todo brinquedo quebra um dia</span>As nove atrações se desgastam com a
+  idade e com o uso e podem quebrar no meio de uma viagem (barracas, banheiro, banco e lixeira nunca quebram).
+  Quebrado, o brinquedo para de render e de contar na avaliação até um <b>mecânico</b> consertá-lo (capítulo 11).</div>
 </section>
 
 <!-- ======================= 5 ======================= -->
@@ -552,7 +560,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
         <tr><td>Preço inicial</td><td>grátis</td></tr>
         <tr><td>Uso</td><td>6 s sentado · energia +40 · náusea −35</td></tr>
       </table>
-      <p>Barato e poderoso: recupera o cansaço e cura o enjoo. Coloque perto da saída dos brinquedos intensos.</p>
+      <p>Barato e poderoso: recupera o cansaço e cura o enjoo. Coloque perto da saída dos brinquedos intensos.
+      Há <b>dois lugares em cada lado</b> com banco: num caminho reto, quatro pessoas sentam ao mesmo tempo.</p>
     </div>
   </div>
 
@@ -611,6 +620,27 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   🚻 banheiro, 💤 descanso, 🎠 diversão, 🗑️ indo jogar o lixo fora, 👋 indo embora. Um papelzinho, copo ou palito
   na mão é o lixo que ele ainda não jogou fora.</p>
 
+  <h3>Lendo o humor pela pose</h3>
+  <p>Os convidados andam balançando braços e pernas, e o corpo deles conta como estão, sem precisar abrir o painel:</p>
+  <div class="poses">
+    <figure><img src="img/pose-andando.png" alt=""><figcaption><b>Passeando</b>: tudo em ordem.</figcaption></figure>
+    <figure><img src="img/pose-fila.png" alt=""><figcaption><b>Impaciente</b>: na fila, muda o peso de um pé para o outro e, perto de desistir, bate o pé.</figcaption></figure>
+    <figure><img src="img/pose-enjoado.png" alt=""><figcaption><b>Enjoado</b>: cambaleia; com náusea alta, o rosto fica verde. Pode vomitar.</figcaption></figure>
+    <figure><img src="img/pose-feliz.png" alt=""><figcaption><b>Muito feliz</b>: de vez em quando dá um pulinho de braços para cima.</figcaption></figure>
+  </div>
+  <div class="lado">
+    <figure class="estreita"><img src="img/banco-sentados.png" alt=""><figcaption>Quatro convidados descansando no banco do parque inicial.</figcaption></figure>
+    <div>
+      <p><b>Sentado no banco</b>, de mãos no colo, ele está recuperando a energia e o estômago (💤 sobre a cabeça).
+      Os <b>funcionários</b> usam o mesmo boneco, com uniforme: o <b>faxineiro</b> de verde, com boné e vassoura, e
+      o <b>mecânico</b> de macacão azul, boné laranja e chave inglesa.</p>
+      <p>Com o mapa bem afastado (zoom baixo), os bonecos ficam simples, sem braços e pernas. O jogo pausado
+      congela todo mundo no meio do movimento.</p>
+      <div class="quadro dica"><span class="t">Um olhar vale um relatório</span>Muita gente batendo o pé na fila pede
+      mais capacidade; rostos verdes perto de um brinquedo pedem um banco e uma barraca de bebidas por perto.</div>
+    </div>
+  </div>
+
   <h3>Intensidade × tolerância</h3>
   <p>Todo convidado tem uma <b>tolerância</b> de 1 a 10 (veja no painel). A maioria fica no meio: tolerância 5 ou 6
   é o mais comum, e 1 ou 10 são raríssimos. Ele aceita brinquedos com intensidade até <b>2 pontos acima ou abaixo</b>
@@ -641,6 +671,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <tr><td>😖</td><td>Que nojo, pisei em vômito!</td><td>Pisou em vômito. Faxineiros (eles limpam vômito primeiro).</td></tr>
     <tr><td>🤮</td><td>Passei mal...</td><td>Vomitou. Bancos e bebidas perto dos brinquedos intensos.</td></tr>
     <tr><td>😣</td><td>Que aperto! Lotado demais aqui</td><td>Caminho lotado. Alargue o caminho ou crie rotas alternativas.</td></tr>
+    <tr><td>🛠️</td><td>O brinquedo quebrou!</td><td>Estava na fila (ou indo para ela) quando o brinquedo quebrou. Contrate um mecânico (capítulo 11).</td></tr>
+    <tr><td>😰</td><td>Fiquei preso no brinquedo!</td><td>Estava a bordo na hora da quebra e ficou preso. Quanto antes o conserto, menos ele sofre.</td></tr>
   </table>
   <p>As queixas do mês ficam na janela <b>🎡 Parque</b>, das mais comuns para as menos comuns: é o melhor
   termômetro do que está faltando.</p>
@@ -663,16 +695,17 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
 
   <h3>Filas e viagens</h3>
   <div class="lado">
-    <figure class="estreita"><img src="img/painel-objeto.png" alt=""><figcaption>Painel da montanha-russa: preço, receita, usos, fila e espera.</figcaption></figure>
+    <figure class="estreita"><img src="img/painel-objeto.png" alt=""><figcaption>Painel da montanha-russa: preço, receita, usos, fila, espera e estado de conservação.</figcaption></figure>
     <div>
       <ul>
         <li>Cada atração aceita até <b>12 pessoas na fila</b> (o rótulo “Fila n/12” aparece sobre ela). Com a fila
           cheia, quem chega desiste e tenta outra coisa.</li>
         <li>O ingresso é cobrado no <b>embarque</b>. Quem não tem mais dinheiro sai da fila.</li>
         <li>A viagem parte quando lota ou <b>5 segundos</b> depois que o primeiro passageiro sentou.</li>
-        <li>Cada convidado aguenta de <b>25 a 45 segundos</b> na fila. Depois desiste, fica mais triste e evita
-          aquela atração por um tempo.</li>
+        <li>Cada convidado aguenta de <b>25 a 45 segundos</b> na fila. Depois desiste, fica mais triste e passa 40 segundos
+          sem procurar brinquedos.</li>
         <li>O painel mostra a <b>espera estimada</b> para quem entrar agora na fila.</li>
+        <li>Brinquedo <b>quebrado</b> não tem fila: ela se desfaz na hora e ninguém escolhe ir até ele.</li>
       </ul>
     </div>
   </div>
@@ -691,7 +724,7 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
 <section class="pagina-inicio" id="cap8">
   <div class="cabeca"><span class="n">8</span><h2>A avaliação do parque</h2><span class="ic">⭐</span></div>
   <div class="lado">
-    <figure class="estreita"><img src="img/janela-parque.png" alt=""><figcaption>Janela 🎡 Parque: nome, avaliação e suas partes, entrada, portão, limpeza, lotação e queixas.</figcaption></figure>
+    <figure class="estreita"><img src="img/janela-parque.png" alt=""><figcaption>Janela 🎡 Parque: nome, avaliação e suas partes, entrada, portão, limpeza, manutenção, lotação e queixas.</figcaption></figure>
     <div>
       <p>A <b>avaliação</b> (⭐ na barra superior) vai de <b>0 a 999</b>. Ela é recalculada a cada 5 segundos e o
       número mostrado anda suavemente até o novo valor. A janela <b>🎡 Parque</b> mostra exatamente de onde vêm os
@@ -699,7 +732,7 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
       <table class="mini">
         <tr><th>Parte</th><th class="num">Máximo</th><th>Como ganhar</th></tr>
         <tr><td>😊 Felicidade</td><td class="num">400</td><td>felicidade média dos convidados × 4</td></tr>
-        <tr><td>🎢 Variedade de atrações</td><td class="num">200</td><td>40 por tipo diferente de atração</td></tr>
+        <tr><td>🎢 Variedade de atrações</td><td class="num">200</td><td>40 por tipo diferente de atração funcionando (quebrada não conta)</td></tr>
         <tr><td>🍔 Serviços</td><td class="num">150</td><td>ter comida, bebida, banheiro e descanso (37,5 cada)</td></tr>
         <tr><td>💧 Necessidades em dia</td><td class="num">250</td><td>fome, sede, banheiro e náusea baixas</td></tr>
         <tr><td>😞 Saíram infelizes</td><td class="num">−150</td><td>fração dos que saíram reclamando</td></tr>
@@ -716,11 +749,11 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
           com nota 500, cerca de 30%.</li>
       </ul>
       <p>Não há limite de convidados ao mesmo tempo: o parque enche conforme a gente chega e fica.</p>
+      <div class="quadro dica"><span class="t">Caminho rápido para uma boa nota</span>Cinco tipos de atração (200) +
+      os quatro serviços (150) já garantem 350 pontos sem depender de ninguém, desde que nenhum brinquedo fique
+      quebrado. O resto vem de convidados felizes e bem cuidados, de um parque limpo e de uma entrada justa.</div>
     </div>
   </div>
-  <div class="quadro dica"><span class="t">Caminho rápido para uma boa nota</span>Cinco tipos de atração (200) +
-  os quatro serviços (150) já garantem 350 pontos sem depender de ninguém. O resto vem de convidados felizes e bem
-  cuidados, de um parque limpo e de uma entrada justa.</div>
 </section>
 
 <!-- ======================= 9 ======================= -->
@@ -747,10 +780,11 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   <ul>
     <li><b>juros</b> = dívida × taxa (com $15.000 a 3%, são $450 por mês);</li>
     <li><b>manutenção</b> de todos os objetos (veja as fichas: de $2 por árvore a $200 pela montanha-russa);</li>
-    <li><b>salários</b>: $150 por faxineiro.</li>
+    <li><b>salários</b>: $150 por faxineiro e $200 por mecânico.</li>
   </ul>
-  <p>O <b>balanço</b> do mês (receita − manutenção − juros − salários, número de visitantes e receita por
-  visitante) fica na janela Finanças. O caixa pode ficar <b>negativo</b> no fechamento: não há falência, mas sem
+  <p>O <b>balanço</b> do mês (receita − manutenção − juros − salários, número de visitantes, receita por
+  visitante e quantos brinquedos quebraram) fica na janela Finanças. Brinquedo quebrado continua cobrando
+  manutenção. O caixa pode ficar <b>negativo</b> no fechamento: não há falência, mas sem
   dinheiro você não constrói, não contrata e não paga parcelas.</p>
   <h3>Construir e demolir</h3>
   <p>Construir cobra o preço na hora; sem saldo, nada é construído (“Saldo insuficiente”). Demolir devolve
@@ -787,7 +821,7 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <div>
       <h3 style="margin-top:0">Faxineiros</h3>
       <p>Na aba <b>👷 Funcionários</b>, escolha o Faxineiro e clique num caminho para contratar: <b>$500</b> na hora
-      e <b>$150 por mês</b> de salário. Ele anda sozinho pelos caminhos e escolhe o trabalho mais importante por
+      e <b>$150 por mês</b> de salário. De uniforme verde e vassoura na mão, ele anda sozinho pelos caminhos e escolhe o trabalho mais importante por
       perto: primeiro <b>vômito</b>, depois <b>lixeiras quase cheias</b> (75% ou mais) e então o lixo do chão. Dois
       faxineiros nunca correm para o mesmo lugar. Sem nada para limpar, ele patrulha.</p>
       <p>Para ver o trabalho dele ou <b>demitir</b>, use 🔍 Inspecionar e clique nele (a contratação não é devolvida).</p>
@@ -802,7 +836,87 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
 
 <!-- ======================= 11 ======================= -->
 <section class="pagina-inicio" id="cap11">
-  <div class="cabeca"><span class="n">11</span><h2>Multidões e caminhos largos</h2><span class="ic">👥</span></div>
+  <div class="cabeca"><span class="n">11</span><h2>Quebras e mecânicos</h2><span class="ic">🔧</span></div>
+  <p class="abre">Brinquedo novo quase nunca quebra. Brinquedo velho e muito usado quebra, e sempre na pior hora:
+  com gente a bordo.</p>
+
+  <h3>Por que os brinquedos quebram</h3>
+  <p>Cada atração tem um <b>desgaste</b>, que só cresce:</p>
+  <ul>
+    <li><b>+1 ponto por mês</b> de jogo, mesmo parada (a idade);</li>
+    <li><b>+1 ponto a cada 20 viagens</b> (o uso): o brinquedo mais popular envelhece mais depressa.</li>
+  </ul>
+  <p>A cada viagem que parte, o jogo sorteia se ela vai quebrar. A chance começa em <b>0,3%</b> por viagem num
+  brinquedo novo e sobe <b>0,15%</b> por ponto de desgaste, até no máximo <b>6%</b>. Um brinquedo com um ano de
+  idade e 200 viagens (desgaste 22) já tem 3,6% por viagem. Só as <b>atrações</b> quebram: barracas, banheiro,
+  banco e lixeira não.</p>
+
+  <div class="grade2">
+    <figure><img src="img/quebrado.png" alt=""><figcaption>Quebrado: rótulo vermelho piscando, fumaça escura, passageiros presos e a antiga fila reclamando 🛠️.</figcaption></figure>
+    <figure><img src="img/consertando.png" alt=""><figcaption>O mecânico chegou: o rótulo fica laranja (“Consertando”) e a fumaça clareia.</figcaption></figure>
+  </div>
+
+  <h3>O que acontece quando quebra</h3>
+  <ul>
+    <li>A viagem para no meio. Um aviso aparece na barra superior (“Navio pirata quebrou!”) e, sobre o brinquedo, o
+      rótulo <b>⚠️ Quebrado</b> pisca em vermelho, com fumaça.</li>
+    <li>A <b>fila se desfaz</b>: todos reclamam 🛠️ “O brinquedo quebrou!” e passam 60 segundos sem procurar diversão.
+      Ninguém mais escolhe ir até ele enquanto estiver quebrado; quem já estava a caminho desiste ao chegar.</li>
+    <li>Quem estava a bordo fica <b>preso</b> 😰 e perde felicidade a cada segundo. Se o conserto termina, a viagem
+      continua de onde parou. Se em <b>60 segundos</b> nenhum mecânico estiver consertando, a equipe
+      <b>evacua</b> os passageiros: eles recebem o ingresso de volta (sai do seu caixa), mas saem bem mais tristes.</li>
+    <li>Enquanto estiver quebrado, o brinquedo <b>não conta na variedade</b> da avaliação (até −40 pontos) e não
+      rende nada, mas a manutenção mensal continua sendo cobrada.</li>
+  </ul>
+  <div class="quadro atencao"><span class="t">Sem mecânico, quebrado para sempre</span>Brinquedo quebrado só volta a
+  funcionar com um mecânico. Num parque sem nenhum, as quebras se acumulam mês após mês e a avaliação despenca.</div>
+
+  <h3>O mecânico</h3>
+  <div class="lado">
+    <div>
+      <p>Na aba <b>👷 Funcionários</b>, escolha o <b>🔧 Mecânico</b> e clique num caminho: <b>$600</b> na hora e
+      <b>$200 por mês</b> de salário. Ele anda um pouco mais rápido que o faxineiro e, quando um brinquedo quebra,
+      vai pelos caminhos até o <b>mais perto</b> que nenhum outro mecânico está atendendo. Sem nada quebrado,
+      patrulha.</p>
+      <p>Encostado no brinquedo, trabalha <b>10 segundos</b>. O conserto tira <b>30% do desgaste</b> e dá uma
+      <b>garantia de 15 viagens</b> sem quebrar. Um brinquedo velho consertado continua mais frágil que um novo.</p>
+      <p>Para demitir, use 🔍 Inspecionar e clique nele (a contratação não é devolvida).</p>
+    </div>
+    <figure class="estreita"><img src="img/mecanico.png" alt=""><figcaption>O mecânico com a chave inglesa (que solta faíscas enquanto ele trabalha).</figcaption></figure>
+  </div>
+  <figure><img src="img/barra-funcionarios.png" alt=""><figcaption>A aba Funcionários, com os dois cartões.</figcaption></figure>
+
+  <h3>Acompanhando a manutenção</h3>
+  <div class="grade3">
+    <figure><img src="img/painel-objeto.png" alt=""><figcaption>Brinquedo novo: funcionando, desgaste quase zero e chance de 0,3% por viagem.</figcaption></figure>
+    <figure><img src="img/painel-quebrado.png" alt=""><figcaption>Brinquedo velho, quebrado há 24 s, com passageiros presos e 3,8% de chance por viagem.</figcaption></figure>
+    <figure><img src="img/painel-mecanico.png" alt=""><figcaption>Painel do mecânico: o que está consertando e os consertos do mês.</figcaption></figure>
+  </div>
+  <ul>
+    <li>No <b>painel do brinquedo</b> (🔍 Inspecionar): <b>Estado</b> (funcionando, em conserto ou QUEBRADA, há quanto
+      tempo e quantos presos), <b>Desgaste</b>, <b>chance de quebrar</b> na próxima viagem, a garantia que resta,
+      o total de viagens (“Corridas”) e de consertos.</li>
+    <li>Na janela <b>🎡 Parque</b>, a seção <b>🔧 Manutenção</b> lista os brinquedos quebrados agora, as quebras do
+      mês, quantos mecânicos você tem e quantos consertos eles fizeram.</li>
+    <li>O <b>balanço</b> da janela Finanças conta as quebras de cada mês.</li>
+  </ul>
+  <figure class="centro"><img src="img/manutencao.png" alt="" style="width:55%"><figcaption style="text-align:center">A seção Manutenção da janela do parque.</figcaption></figure>
+
+  <h3>Quando contratar</h3>
+  <ul>
+    <li><b>Um mecânico</b> assim que o primeiro brinquedo quebrar (no parque inicial, isso costuma acontecer nos
+      primeiros meses). Ele custa $200 por mês; um brinquedo parado custa até 40 pontos de avaliação, visitantes e a
+      receita dele.</li>
+    <li><b>Mais um</b> quando os brinquedos começarem a esperar na fila do conserto (dois quebrados ao mesmo tempo,
+      ou mecânico atravessando o parque inteiro): espalhe-os por regiões, como os faxineiros.</li>
+    <li>Brinquedo muito velho (chance perto de 6%) quebra toda hora mesmo consertado. Trocá-lo por um novo zera o
+      desgaste, mas demolir só devolve metade do custo: faça a conta.</li>
+  </ul>
+</section>
+
+<!-- ======================= 12 ======================= -->
+<section class="pagina-inicio" id="cap12">
+  <div class="cabeca"><span class="n">12</span><h2>Multidões e caminhos largos</h2><span class="ic">👥</span></div>
   <p class="abre">Parque cheio é bom, até o caminho virar um engarrafamento.</p>
   <figure><img src="img/lotacao.png" alt=""><figcaption>A mesma quantidade de gente: à esquerda, num caminho de 1 tile (lotado, em vermelho, com queixas 😣); à direita, num caminho de 3 tiles de largura (sem aperto).</figcaption></figure>
   <ul>
@@ -824,9 +938,9 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   (chegando e saindo). Um caminho largo nos primeiros tiles depois do portão evita o primeiro gargalo.</div>
 </section>
 
-<!-- ======================= 12 ======================= -->
-<section class="pagina-inicio" id="cap12">
-  <div class="cabeca"><span class="n">12</span><h2>Tempo, saves e música</h2><span class="ic">⏱️</span></div>
+<!-- ======================= 13 ======================= -->
+<section class="pagina-inicio" id="cap13">
+  <div class="cabeca"><span class="n">13</span><h2>Tempo, saves e música</h2><span class="ic">⏱️</span></div>
 
   <h3>Velocidade e pausa</h3>
   <div class="lado">
@@ -848,8 +962,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
       <b>Salvar</b>; se já existir um save com esse nome, o jogo pergunta antes de substituir.</p>
       <p>A lista mostra cada save com o cenário (se houver), a data em que foi salvo, o mês do jogo, o caixa, os
       convidados e o tamanho do mapa. <b>Carregar</b> substitui o parque atual; <b>Apagar</b> remove o save para
-      sempre. O save guarda tudo: terreno, objetos, preços, filas, finanças, convidados, sujeira, faxineiros e o
-      andamento do cenário.</p>
+      sempre. O save guarda tudo: terreno, objetos, preços, filas, finanças, convidados, sujeira, faxineiros,
+      mecânicos, o desgaste e as quebras dos brinquedos e o andamento do cenário.</p>
       <h4>Salvamento automático</h4>
       <p>Escolha <b>Desligado</b>, <b>A cada 1 minuto</b> (de tempo real), <b>A cada virada de mês</b> ou <b>A cada
       virada de ano</b>. O autosave grava sempre no mesmo save, “Autosave · nome do parque”, substituindo o
@@ -864,9 +978,9 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   jogo usa o som sintetizado. O navegador só deixa o som começar depois do primeiro clique ou tecla.</p>
 </section>
 
-<!-- ======================= 13 ======================= -->
-<section class="pagina-inicio" id="cap13">
-  <div class="cabeca"><span class="n">13</span><h2>Os cenários</h2><span class="ic">🎯</span></div>
+<!-- ======================= 14 ======================= -->
+<section class="pagina-inicio" id="cap14">
+  <div class="cabeca"><span class="n">14</span><h2>Os cenários</h2><span class="ic">🎯</span></div>
   <p class="abre">Cada cenário é um desafio com terreno, dinheiro e objetivo próprios. Cumpra o objetivo antes do
   fim do prazo. Os objetivos de visitantes, dívida e lucro vencem <b>na hora</b> em que são cumpridos; o de
   avaliação conta nos <b>fechamentos de mês</b>. Nos cenários não existe a aba 🧪 Teste.</p>
@@ -892,6 +1006,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
         <li>Assim que o caixa deixar: <b>roda-gigante</b> e depois a <b>montanha-russa</b>, completando os quatro
           tipos liberados (160 pontos de variedade).</li>
         <li>Um <b>faxineiro</b> quando o lixo aparecer, e bancos perto do navio e da montanha-russa.</li>
+        <li>Quando o primeiro brinquedo quebrar, um <b>mecânico</b>: brinquedo parado não atrai ninguém e tira pontos
+          da avaliação, e a avaliação é o que traz os visitantes.</li>
         <li>Acompanhe o contador no HUD; se a avaliação cair, veja as queixas na janela Parque.</li>
       </ol>
     </div>
@@ -919,6 +1035,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
           dia</b>: barracas e bancos espalhados, filas curtas (um segundo carrossel ajuda) e preços moderados.</li>
         <li>Evite penalidades: entrada barata, <b>lixeiras e um faxineiro</b> desde cedo, e nada de convidados saindo
           infelizes. Só comece a contar os três meses quando a nota estiver estável acima de 550.</li>
+        <li>Com só três tipos de atração, cada uma vale 40 pontos: um brinquedo quebrado num fechamento pode zerar a
+          sequência. Tenha um <b>mecânico</b> antes de começar a contar os meses.</li>
       </ol>
     </div>
   </div>
@@ -973,6 +1091,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
           delas razoáveis para não ouvir 💸.</li>
         <li>Uma avaliação alta faz chegar mais gente e faz cada um aceitar uma entrada mais cara: lixeiras,
           faxineiro, bancos e uma ou duas atrações baratas (o tobogã custa $600 e $60/mês) ajudam.</li>
+        <li>O prazo é longo (24 meses): os brinquedos vão envelhecer e quebrar. Um <b>mecânico</b> ($600 + $200/mês)
+          protege a avaliação, e com ela o movimento do portão.</li>
         <li><b>Pague a dívida</b> quando sobrar caixa: pagar não muda o patrimônio, mas acaba com os juros ($240 por
           mês no começo), que são puro prejuízo.</li>
         <li>O objetivo vence no instante em que o lucro chega a $6.000.</li>
@@ -987,9 +1107,9 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
   </div>
 </section>
 
-<!-- ======================= 14 ======================= -->
-<section class="pagina-inicio" id="cap14">
-  <div class="cabeca"><span class="n">14</span><h2>Dominando o jogo</h2><span class="ic">🏆</span></div>
+<!-- ======================= 15 ======================= -->
+<section class="pagina-inicio" id="cap15">
+  <div class="cabeca"><span class="n">15</span><h2>Dominando o jogo</h2><span class="ic">🏆</span></div>
 
   <h3>Estratégias avançadas</h3>
   <ul>
@@ -1006,6 +1126,10 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <li><b>Use a pausa.</b> Planeje grandes obras pausado e só então volte a acelerar.</li>
     <li><b>Mapas grandes</b>: cresça a partir do portão. Convidados não cruzam dezenas de tiles vazios de bom humor.</li>
     <li><b>Leia as queixas.</b> A lista da janela Parque diz exatamente o que construir a seguir.</li>
+    <li><b>Mecânico é seguro barato.</b> Um brinquedo quebrado prende passageiros, desfaz a fila, perde a receita e
+      até 40 pontos de avaliação. Com um mecânico por região, o conserto começa em segundos.</li>
+    <li><b>Olhe para os bonecos.</b> Gente batendo o pé na fila, rostos verdes e pulinhos de alegria mostram onde o
+      parque está falhando ou acertando antes de qualquer número.</li>
   </ul>
 
   <h3>Erros comuns</h3>
@@ -1016,6 +1140,7 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <tr><td>Entrada cara demais</td><td>Desistências no portão custam visitantes e até 100 pontos.</td></tr>
     <tr><td>Preços altos nos brinquedos</td><td>O convidado prefere outro ou não vai a nenhum. Mais visitantes rende mais.</td></tr>
     <tr><td>Lixeiras sem faxineiro</td><td>Elas enchem e transbordam: contrate pelo menos um.</td></tr>
+    <tr><td>Nenhum mecânico</td><td>Brinquedo quebrado fica parado para sempre; contrate um na primeira quebra.</td></tr>
     <tr><td>Corredor único de 1 tile</td><td>Alargue perto do portão e das filas; crie anéis.</td></tr>
     <tr><td>Dívida esquecida</td><td>Juros todo mês: pague parcelas quando sobrar caixa.</td></tr>
     <tr><td>Construir tudo de uma vez</td><td>Manutenção acumulada; cresça conforme a receita.</td></tr>
@@ -1036,7 +1161,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <tr><td>🎢 Montanha-russa</td><td>4×3</td><td class="num">$1.200</td><td class="num">$200</td><td class="num">$8</td><td class="num">8</td><td class="num">12</td><td class="num">25 s</td><td class="num">+45</td><td class="num">+30</td><td class="num">50%</td><td class="num">144</td></tr>
   </table>
   <p style="font-size:8.8pt;color:var(--suave)">* Passageiros por mês com a fila sempre cheia (máximo teórico: 300 s ÷ duração × lugares).
-  “Público” = fatia aproximada dos convidados cuja tolerância aceita o brinquedo normalmente.</p>
+  “Público” = fatia aproximada dos convidados cuja tolerância aceita o brinquedo normalmente. Todas as atrações
+  quebram do mesmo jeito: 0,3% por viagem quando novas, +0,15% por ponto de desgaste, até 6%.</p>
 
   <h3>Serviços em resumo</h3>
   <table class="mini">
@@ -1048,7 +1174,8 @@ figcaption { font-size: 8.8pt; color: var(--suave); margin-top: 3pt; font-style:
     <tr><td>🪑 Banco</td><td class="num">$60</td><td class="num">$5</td><td class="num">$0</td><td>energia +40, náusea −35</td></tr>
     <tr><td>🗑️ Lixeira</td><td class="num">$50</td><td class="num">$3</td><td class="num">—</td><td>guarda 30 itens</td></tr>
     <tr><td>🌳 Árvore</td><td class="num">$30</td><td class="num">$2</td><td class="num">—</td><td>decoração</td></tr>
-    <tr><td>🧹 Faxineiro</td><td class="num">$500</td><td class="num">$150</td><td class="num">—</td><td>limpa vômito, lixeiras e lixo</td></tr>
+    <tr><td>🧹 Faxineiro</td><td class="num">$500</td><td class="num">$150</td><td class="num">—</td><td>limpa vômito, lixeiras e lixo (salário)</td></tr>
+    <tr><td>🔧 Mecânico</td><td class="num">$600</td><td class="num">$200</td><td class="num">—</td><td>conserta brinquedos quebrados (salário)</td></tr>
   </table>
 
   <h3>Atalhos</h3>

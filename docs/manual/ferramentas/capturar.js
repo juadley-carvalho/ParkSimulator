@@ -37,7 +37,12 @@ window.por = (chave, gx, gy, rot = 0) => {
   construir(chave, gx, gy, rot);
 };
 
-// O parque de demonstração (32 x 32): todas as atrações, serviços, lixeiras e faxineiros
+// Garantia "infinita" contra quebras: as cenas que não são sobre defeitos não podem ter um brinquedo
+// quebrado por azar (a chance é sorteada a cada corrida). semGarantia() volta ao normal.
+window.semQuebras = () => { for (const a of atracoes.values()) a.garantia = 1e6; };
+window.semGarantia = () => { for (const a of atracoes.values()) a.garantia = 0; };
+
+// O parque de demonstração (32 x 32): todas as atrações, serviços, lixeiras, faxineiros e um mecânico
 window.parqueDemo = () => {
   fecharJanelas();
   limparParque(32);
@@ -53,9 +58,10 @@ window.parqueDemo = () => {
   por('LIXEIRA', 16, 25); por('LIXEIRA', 16, 19); por('LIXEIRA', 13, 10); por('LIXEIRA', 25, 20); por('LIXEIRA', 4, 13);
   [[2,8],[3,22],[6,23],[9,25],[20,24],[24,23],[27,26],[2,12],[30,12],[30,17],[22,6],[13,5],[19,3],[26,8],[5,7],
    [14,12],[10,15],[15,17],[18,12],[12,26],[21,28],[11,29],[24,29],[1,18],[30,22],[8,14],[26,13],[17,13],[3,4],[29,4]].forEach(([x, y]) => arvore(x, y));
-  contratarFaxineiro(16, 21); contratarFaxineiro(8, 20);
+  contratarFuncionario('faxineiro', 16, 21); contratarFuncionario('faxineiro', 8, 20);
+  contratarFuncionario('mecanico', 16, 15);
   parque.nome = 'Parque Arco-Íris';
-  comecarPartida(); velocidade = 0;
+  comecarPartida(); velocidade = 0; semQuebras();
   semear(45);
 };
 
@@ -90,6 +96,7 @@ window.animarVitrine = (chave, gx, gy) => {
     if (nomeServ === 'descanso') g.n.energia = 15;
   }
   const a = atracoes.get(chaveAtr(gx, gy));
+  if (a) a.garantia = 1e6;   // a ficha mostra o brinquedo funcionando
   // Para no meio da corrida; os barcos somem no lago no meio do passeio, então ali paramos no começo
   const fracao = chave === 'BARCOS' ? 0.85 : 0.55;
   if (a) rodar(120, () => a.fase === 'rodando' && a.resta < defDeFila(chave).duracao * fracao);
@@ -153,10 +160,11 @@ async function main() {
     await avaliar(`$('barra').style.width = ''; true`);
 
     // Painel de um objeto (preços) e de um faxineiro
-    await avaliar(`selecionado = null; selecionarObjeto(chaveAtr(6, 11)); true`);
+    // (sem a garantia das cenas, para o painel mostrar a chance de quebra de verdade)
+    await avaliar(`semGarantia(); selecionado = null; selecionarObjeto(chaveAtr(6, 11)); true`);
     await quadro();
     await salvar('painel-objeto.png', await avaliar(`(r => ({ x: r.x - 6, y: r.y - 6, width: r.width + 12, height: r.height + 12 }))(retangulo('#painelObj'))`));
-    await avaliar(`selObj = null; selecionarFuncionario(funcionarios[0]); true`);
+    await avaliar(`semQuebras(); selObj = null; selecionarFuncionario(funcionarios.find(f => f.funcao === 'faxineiro')); true`);
     await quadro();
     await salvar('painel-faxineiro.png', await avaliar(`(r => ({ x: r.x - 6, y: r.y - 6, width: r.width + 12, height: r.height + 12 }))(retangulo('#painelObj'))`));
     await avaliar(`selFunc = null; true`);
@@ -171,7 +179,8 @@ async function main() {
     await avaliar(`for (const g of convidados) g.pensamento = null; true`);
 
     // Janelas (antes, mais um mês de jogo: o balanço das finanças precisa de um mês fechado)
-    await avaliar(`rodar(300); velocidade = 0; true`);
+    // Depois, a roda-gigante quebra: a seção Manutenção da janela do parque mostra o brinquedo parado
+    await avaliar(`rodar(300); velocidade = 0; semGarantia(); quebrar(atracoes.get(chaveAtr(13, 14))); true`);
     const janela = sel => avaliar(`(r => ({ x: r.x - 4, y: r.y - 4, width: r.width + 8, height: r.height + 8 }))(retangulo('${sel} .janela'))`);
     await avaliar(`mostrarUI(true); $('btnFin').click(); true`);
     await quadro();
@@ -181,7 +190,8 @@ async function main() {
     await avaliar(`$('btnParque').click(); true`);
     await quadro();
     await salvar('janela-parque.png', await janela('#modalParque'));
-    await avaliar(`fecharJanelas(); true`);
+    await salvar('manutencao.png', await avaliar(`(r => ({ x: r.x - 4, y: r.y - 4, width: r.width + 8, height: r.height + 8 }))($('parqueManutencao').closest('.secao').getBoundingClientRect())`));
+    await avaliar(`fecharJanelas(); consertar(atracoes.get(chaveAtr(13, 14))); semQuebras(); true`);
     await tamanho(L, A);
     await avaliar(`salvarEm('Parque Arco-Íris').then(() => { definirModoAutosave('mes'); $('btnJogo').click(); return true; })`);
     await esperar(800);
@@ -205,13 +215,85 @@ async function main() {
       lixeiras.set(chaveAtr(10, 14), 30);
       sujar(9, 14, 'papel'); sujar(9, 14, 'copo'); sujar(11, 14, 'papel'); sujar(8, 14, 'palito'); sujar(7, 14, 'copo');
       sujar(12, 16, 'vomito'); sujar(12, 12, 'papel'); sujar(14, 14, 'copo'); sujar(15, 14, 'palito');
-      contratarFaxineiro(13, 14); funcionarios[0].x = 13.6; funcionarios[0].trabalho = 1;
+      contratarFuncionario('faxineiro', 13, 14); funcionarios[0].x = 13.6; funcionarios[0].trabalho = 1;
       comecarPartida(); velocidade = 0; mostrarUI(false); semFerramenta(); tChegada = 1e9;
       semear(1, [11, 14]); semear(1, [12, 15]); semear(1, [8, 14]);
       convidados[0].lixo = { tipo: 'copo', ate: 1e9 }; convidados[1].pensamento = { tipo: 'nojo', ate: 1e9 };
       convidados[2].pensamento = { tipo: 'sujeira', ate: 1e9 };
       mirar(11.5, 14, 2.8); true`);
     await salvar('lixo.png', { x: 200, y: 160, width: 1000, height: 560 });
+
+    // Defeitos: o navio pirata quebra no meio da corrida (passageiros presos, fila desfeita)
+    const navio = await avaliar(`(() => { const v = vitrine('NAVIO_PIRATA'); mostrarUI(false); semFerramenta();
+      animarVitrine('NAVIO_PIRATA', v.gx, v.gy); velocidade = 0;
+      const a = atracoes.get(chaveAtr(v.gx, v.gy)); a.garantia = 0; quebrar(a);
+      // Um brinquedo que já trabalhou bastante (só para o painel mostrar números de um parque em andamento)
+      a.desgaste = 23.6; a.corridas = 412; a.consertos = 3; a.tQuebrada = 24;
+      fin.aviso = ''; mirar(v.cx, v.cy + 0.6, 2.2); return { ...v, presos: a.passageiros.length }; })()`);
+    console.log('    navio quebrado:', JSON.stringify(navio));
+    const recorteNavio = { x: L / 2 - 330, y: A / 2 - 300, width: 660, height: 480 };
+    await salvar('quebrado.png', recorteNavio);
+    await avaliar(`mostrarUI(true); selecionarObjeto(chaveAtr(${navio.gx}, ${navio.gy})); true`);
+    await quadro();
+    await salvar('painel-quebrado.png', await avaliar(`(r => ({ x: r.x - 6, y: r.y - 6, width: r.width + 12, height: r.height + 12 }))(retangulo('#painelObj'))`));
+    // O mecânico chega e conserta (no caminho encostado na frente do navio). O tempo é escolhido para a
+    // chave inglesa soltar faísca na foto (sin(tempo x 10) perto de 1).
+    // (quem estava na fila já foi embora: só ficam os presos a bordo)
+    await avaliar(`selObj = null; mostrarUI(false);
+      for (let i = convidados.length - 1; i >= 0; i--) if (convidados[i].estado !== 'brincando') convidados.splice(i, 1);
+      contratarFuncionario('mecanico', 13, 14);
+      const f = funcionarios[funcionarios.length - 1];
+      f.x = 13.5; f.y = 14.3; f.conserto = chaveAtr(${navio.gx}, ${navio.gy}); f.tarefa = { gx: 13, gy: 14 }; f.trabalho = 6;
+      f.olhaX = 0.89; f.olhaY = -0.45;
+      tempo = Math.ceil(tempo / (2 * Math.PI / 10)) * (2 * Math.PI / 10) + Math.PI / 20; true`);
+    await salvar('consertando.png', recorteNavio);
+    await avaliar(`mirar(13.2, 13.9, 5); true`);
+    await salvar('mecanico.png', { x: L / 2 - 150, y: A / 2 - 150, width: 300, height: 260 });
+    await avaliar(`mirar(${navio.cx}, ${navio.cy + 0.6}, 2.2); true`);
+    await avaliar(`mostrarUI(true); selecionarFuncionario(funcionarios[funcionarios.length - 1]); true`);
+    await quadro();
+    await salvar('painel-mecanico.png', await avaliar(`(r => ({ x: r.x - 6, y: r.y - 6, width: r.width + 12, height: r.height + 12 }))(retangulo('#painelObj'))`));
+    await avaliar(`selFunc = null; mostrarUI(false); true`);
+
+    // Convidados sentados no banco do parque livre (12, 11): dois em cada lado sem caminho
+    await avaliar(`fecharJanelas(); novoJogoLivre(24); velocidade = 0; mostrarUI(false); semFerramenta(); tChegada = 1e9;
+      convidados.length = 0; funcionarios.length = 0;
+      const ancora = { gx: 12, gy: 11 };
+      semear(4, [12, 11]);
+      for (const g of convidados) {
+        g.estado = 'usando'; g.alvo = null; g.lixo = null;
+        g.uso = { servico: 'descanso', def: OBJETOS.BANCO.servicos.descanso, ancora, resta: 999 };
+        sentarNoBanco(g, ancora);
+      }
+      semear(1, [12, 13]);
+      for (const g of convidados.slice(4)) { g.movendo = true; g.passo = 0.2; g.olhaX = -0.9; g.olhaY = -0.45; g.n.felicidade = 70; g.n.nausea = 0; g.lixo = null; }
+      mirar(12.4, 11.9, 4); true`);
+    await salvar('banco-sentados.png', { x: L / 2 - 270, y: A / 2 - 240, width: 540, height: 420 });
+
+    // Poses: o mesmo boneco andando, impaciente na fila, enjoado e pulando de alegria.
+    // As poses dependem do relógio do jogo (tempo) e da "semente" de cada um ((ox + oy) x 10 + paciencia):
+    // os valores abaixo põem cada pose no seu momento mais visível.
+    const POSES = [['pose-andando', 4], ['pose-fila', 8], ['pose-enjoado', 16], ['pose-feliz', 20]];
+    await avaliar(`fecharJanelas(); limparParque(24); linha(14, 0, 23); coluna(12, 14, 23);
+      comecarPartida(); velocidade = 0; mostrarUI(false); semFerramenta(); tChegada = 1e9; tempo = 100;
+      const T = tempo, m = (a, n) => ((a % n) + n) % n;
+      for (const [, x] of ${JSON.stringify(POSES)}) semear(1, [x, 14]);
+      for (const g of convidados) { g.ox = 0; g.oy = 0; g.x = Math.floor(g.x) + 0.5; g.y = Math.floor(g.y) + 0.5; g.alvo = null;
+        g.n.felicidade = 70; g.n.nausea = 0; g.lixo = null; g.pensamento = null; g.olhaX = 0.9; g.olhaY = 0.45; }
+      const [anda, fila, enjoo, feliz] = convidados;
+      anda.movendo = true; anda.passo = 0.2;                  // pernas abertas no meio da passada
+      fila.estado = 'esperando';                               // 95% da paciência gasta: batendo o pé
+      fila.paciencia = 10 * Math.PI + m(Math.PI / 2 - 9 * T, 2 * Math.PI);
+      fila.uso = { servico: 'diversao', def: OBJETOS.CARROSSEL.servicos.diversao, ancora: { gx: 0, gy: 0 }, espera: 0.95 * fila.paciencia };
+      enjoo.n.nausea = 90; enjoo.movendo = true; enjoo.passo = 0.45;   // rosto verde e o corpo pendendo
+      enjoo.paciencia = 10 * Math.PI + m(Math.PI / 2 - 3 * T, 2 * Math.PI);
+      feliz.n.felicidade = 95;                                 // no alto do pulinho
+      feliz.paciencia = 30 + m(0.225 - T - 90, 7) / 3;
+      true`);
+    for (const [nome, x] of POSES) {
+      await avaliar(`mirar(${x + 0.2}, 14.2, 6); true`);   // um pouco acima dos pés: o boneco inteiro no centro
+      await salvar(nome + '.png', { x: L / 2 - 110, y: A / 2 - 130, width: 220, height: 230 });
+    }
 
     // Terreno: grama, caminho e água
     await avaliar(`fecharJanelas(); limparParque(24); linha(14, 0, 23); coluna(12, 14, 23); coluna(7, 8, 14); linha(8, 7, 15);
