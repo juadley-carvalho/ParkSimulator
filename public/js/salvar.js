@@ -117,7 +117,8 @@ function aplicarJogo(doc) {
   // Convidados: completa campos que um save antigo possa não ter e descarta os inválidos.
   const base = { ox: 0, oy: 0, alvo: null, anterior: null, resgate: false, estado: 'andando', objetivo: null, uso: null,
                  dinheiro: 50, tolerancia: 5, paciencia: 35, evitar: {}, pensou: {}, pensamento: null, lixo: null, capricho: 0.5,
-                 saindo: false, foi: false, cor: 'hsl(200 70% 55%)' };
+                 saindo: false, foi: false, cor: 'hsl(200 70% 55%)', corCalca: CORES_CALCA[0],
+                 passo: 0, movendo: false, olhaX: 1, olhaY: 0 };
   const baseN = { fome: 0, sede: 0, banheiro: 0, nausea: 0, energia: 100, felicidade: 100 };
   const porIndice = (Array.isArray(e.convidados) ? e.convidados : []).map(s => {
     if (!s || !Number.isFinite(s.x) || !Number.isFinite(s.y)) return null;
@@ -131,6 +132,9 @@ function aplicarJogo(doc) {
              capricho: Math.max(0, Math.min(1, num(s.capricho, base.capricho))),
              dinheiro: Math.max(0, num(s.dinheiro, base.dinheiro)), tolerancia: num(s.tolerancia, base.tolerancia),
              paciencia: num(s.paciencia, base.paciencia), ox: num(s.ox, 0), oy: num(s.oy, 0),
+             // animação: save antigo (sem esses campos) ou editado à mão cai no padrão
+             corCalca: CORES_CALCA.includes(s.corCalca) ? s.corCalca : base.corCalca,
+             passo: num(s.passo, 0), movendo: s.movendo === true, olhaX: num(s.olhaX, 1), olhaY: num(s.olhaY, 0),
              velocidade: num(s.velocidade, VELOCIDADE) > 0 ? num(s.velocidade, VELOCIDADE) : VELOCIDADE };
   });
   convidados.length = 0;

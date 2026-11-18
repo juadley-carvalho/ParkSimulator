@@ -81,6 +81,19 @@ const SALDO_INICIAL = 15000, DIVIDA_INICIAL = 15000, JUROS_MENSAL = 0.03;
 const VELOCIDADE = 1.6;                                   // tiles por segundo (média)
 const VARIACAO_VELOCIDADE = 0.15;                         // cada convidado anda até 15% mais rápido ou mais devagar
 
+// Animação de caminhada (só visual: não muda nenhuma regra). A fase do passo cresce com a DISTÂNCIA
+// andada, não com o tempo: quem anda mais rápido mexe as pernas mais depressa, o aperto da multidão
+// (que encurta o passo) aparece nas pernas e o pé não "patina" sobre o chão.
+const ANIMACAO = {
+  ciclosPorTile: 1.25,   // passadas completas (esquerda + direita) por tile: a 1,6 tile/s dá 2 por segundo
+  perna: 2.2,            // quanto o pé vai para frente/trás (px de mundo)
+  braco: 1.6,            // balanço da mão, ao contrário da perna do mesmo lado
+  quique: 0.8,           // o corpo sobe um pouco a cada passo
+  zoomMinimo: 0.5,       // abaixo deste zoom os membros teriam ~1 px: volta o boneco simples
+};
+// Cores de calça (sorteadas em semear): a camisa sozinha deixava muitos convidados parecidos
+const CORES_CALCA = ['#2f4f7f', '#3b5d99', '#37474f', '#212121', '#6d4c41', '#8d7b5a', '#2e5e3a', '#5d4037'];
+
 const VIZINHOS = [[1, 0], [-1, 0], [0, 1], [0, -1]];     // direita, esquerda, baixo, cima
 
 // Quanto a felicidade cai por segundo, conforme a atividade atual

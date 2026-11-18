@@ -31,6 +31,10 @@ function semear(n, ponto) {
       n: { fome: aleatorio(10, 50), sede: aleatorio(10, 50), banheiro: aleatorio(0, 30),
            nausea: aleatorio(0, 10), energia: aleatorio(60, 100), felicidade: aleatorio(60, 100) },
       cor: `hsl(${Math.floor(Math.random() * 360)} 70% 55%)`,
+      corCalca: CORES_CALCA[Math.floor(Math.random() * CORES_CALCA.length)],
+      // Animação (só visual): passo = tiles andados (começa sorteado, senão todos marchariam juntos),
+      // movendo = andou no último passo da simulação, olhaX/olhaY = direção na TELA (para onde o pé vai)
+      passo: Math.random(), movendo: false, olhaX: 1, olhaY: 0,
     });
   }
 }
@@ -128,6 +132,7 @@ function resumoLotacao() {
 // UPDATE: só mexe nos dados, nunca desenha. dt = segundos desde o último quadro.
 function atualizar(dt) {
   for (const g of convidados) {
+    g.movendo = false;   // volta a true só se ele der um passo agora (parado = pernas juntas)
     atualizarNecessidades(g, dt);
     if (g.estado === 'esperando' || g.estado === 'brincando') continue;   // quem cuida deles é a atração
     if (g.estado === 'usando') { usar(g, dt); continue; }   // parado, aproveitando o serviço
@@ -138,6 +143,14 @@ function atualizar(dt) {
 
     const tx = g.alvo.gx + 0.5 + g.ox, ty = g.alvo.gy + 0.5 + g.oy;
     const dx = tx - g.x, dy = ty - g.y, dist = Math.hypot(dx, dy), passo = g.velocidade * fatorDeLotacao(g) * dt;
+    if (dist > 1e-6) {
+      // Animação: conta a distância andada e guarda a direção na tela (a mesma conta de gradeParaMundo:
+      // x da tela = gx - gy, y da tela = (gx + gy) / 2), normalizada para tamanho 1
+      g.passo += Math.min(dist, passo);
+      g.movendo = true;
+      const sx = dx - dy, sy = (dx + dy) / 2, n = Math.hypot(sx, sy);
+      g.olhaX = sx / n; g.olhaY = sy / n;
+    }
     if (dist <= passo) { g.x = tx; g.y = ty; escolherAlvo(g); }   // chegou: decide o próximo
     else { g.x += dx / dist * passo; g.y += dy / dist * passo; }
   }

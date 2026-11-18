@@ -94,6 +94,12 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   árvores encostadas à esquerda). Só é correto com `|w − h| ≤ 1`: atração mais alongada exige ordenação topológica.
 - Convidado: campos em `semear`. Estados: `andando | usando | esperando | brincando`. Necessidades em `g.n`:
   fome, sede, banheiro, nausea (100 = pior) e energia, felicidade (100 = melhor).
+- **Animação de caminhada** (`ANIMACAO`, `CORES_CALCA` em config.js; `desenharCorpoAnimado`): pernas e braços por
+  senoide da fase `g.passo` (tiles ANDADOS, somados em `atualizar`, não tempo: acompanha velocidade, aperto e pausa);
+  `g.movendo` (deu passo no último subpasso) e `g.olhaX/olhaY` (direção na tela). Só visual; vão no save com padrão em
+  `base`. Abaixo de `ANIMACAO.zoomMinimo`, boneco simples. Sem `ctx.save()/restore()` (caro com centenas): devolve
+  `lineWidth`/`lineCap` à mão. Convidados e faxineiros fora da tela não entram na lista de desenho (`vistaNaGrade(1, 4)`).
+  Medido (Edge headless, 300 convidados na tela): ~1,9 ms → ~2,2 ms por quadro.
 
 ## Regras do jogo (valores em config.js)
 - **Tela inicial** (`#modalInicio`, classe `fixa`: Esc não fecha): Continuar, Modo livre (o parque de `montarMapaInicial`),

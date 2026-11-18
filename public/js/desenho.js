@@ -897,14 +897,52 @@ function desenharFila(a, cx, cy, alt = 84) {
   ctx.fillStyle = '#fff'; ctx.fillText(t, cx, cy - alt + 12);
 }
 
+// Pernas e braços que balançam ao andar. s = seno da fase do passo, de -1 a 1: a perna esquerda vai
+// para s e a direita para -s (uma à frente, outra atrás); cada braço vai ao contrário da perna do
+// seu lado, como numa caminhada de verdade. "Frente" é a direção do movimento NA TELA (olhaX, olhaY),
+// por isso o pé também sobe/desce um pouco na diagonal da isometria.
+// Desempenho: os 2 membros de cada cor saem num só stroke (vários moveTo/lineTo num caminho): são
+// 5 chamadas de desenho por convidado (sombra, pernas, tronco, braços, cabeça) contra 3 antes.
+function desenharCorpoAnimado(g, x, y) {
+  const andando = g.estado === 'andando' && g.movendo;
+  const fase = g.passo * ANIMACAO.ciclosPorTile * Math.PI * 2;
+  const s = andando ? Math.sin(fase) : 0;
+  const sobe = andando ? Math.abs(Math.cos(fase)) * ANIMACAO.quique : 0;   // mais alto com as pernas juntas
+  const fx = g.olhaX, fy = g.olhaY;
+  const quadril = y - 5 - sobe, ombro = y - 10 - sobe;
+  const p = ANIMACAO.perna * s, b = ANIMACAO.braco * s;
+  // Sem ctx.save()/restore(): eles copiam TODO o estado do contexto, e com 300 convidados medi
+  // ~4,8 ms por quadro contra ~4,0 ms devolvendo à mão só o que muda aqui (espessura e ponta da linha)
+  const espessura = ctx.lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = g.corCalca;   // pernas
+  ctx.beginPath();
+  ctx.moveTo(x - 1.3, quadril); ctx.lineTo(x - 1.3 + p * fx, y - 0.5 + p * fy * 0.5);
+  ctx.moveTo(x + 1.3, quadril); ctx.lineTo(x + 1.3 - p * fx, y - 0.5 - p * fy * 0.5);
+  ctx.stroke();
+  ctx.fillStyle = g.cor;   // tronco (camisa)
+  ctx.fillRect(x - 3, y - 11 - sobe, 6, 6.5);
+  ctx.strokeStyle = '#f1c9a5'; ctx.lineWidth = 1.6;   // braços (manga curta: a pele contrasta com a camisa)
+  ctx.beginPath();
+  ctx.moveTo(x - 3.2, ombro); ctx.lineTo(x - 3.6 - b * fx, ombro + 4.5 - b * fy * 0.5);
+  ctx.moveTo(x + 3.2, ombro); ctx.lineTo(x + 3.6 + b * fx, ombro + 4.5 + b * fy * 0.5);
+  ctx.stroke();
+  ctx.fillStyle = '#f1c9a5';   // cabeça
+  ctx.beginPath(); ctx.arc(x, y - 14 - sobe, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = espessura; ctx.lineCap = 'butt';
+}
+
 function desenharConvidado(g) {
   const { x, y } = gradeParaMundo(g.x, g.y);   // com coordenadas contínuas, já dá o ponto no chão
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = g.cor;
-  ctx.fillRect(x - 3, y - 11, 6, 9);
-  ctx.fillStyle = '#f1c9a5';
-  ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
+  if (camera.zoom < ANIMACAO.zoomMinimo) {   // de longe: o boneco simples (membros teriam ~1 px)
+    ctx.fillStyle = g.cor;
+    ctx.fillRect(x - 3, y - 11, 6, 9);
+    ctx.fillStyle = '#f1c9a5';
+    ctx.beginPath(); ctx.arc(x, y - 14, 3.5, 0, Math.PI * 2); ctx.fill();
+  } else desenharCorpoAnimado(g, x, y);
   if (g.lixo) {   // o lixo na mão, procurando lixeira
     ctx.fillStyle = g.lixo.tipo === 'copo' ? '#e53935' : g.lixo.tipo === 'palito' ? '#a1887f' : '#f5f5f5';
     ctx.fillRect(x + 3, y - 8, 3, 4);
@@ -995,8 +1033,13 @@ function desenhar() {
       itens.push({ prof: gx + gy + (w + h) / 2,
         desenhar: () => { OBJETOS[obj].desenhar(c.x, c.y, atr, rot, { gx, gy }); if (atr) desenharFila(atr, c.x, c.y, OBJETOS[obj].altura); } });
     }
-  for (const g of convidados) if (g.estado !== 'brincando') itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
-  for (const f of funcionarios) itens.push({ prof: f.x + f.y, desenhar: () => desenharFaxineiro(f) });
+  // Pessoas fora da tela não entram na lista (nem na ordenação): num parque grande, a maioria
+  const vistaGente = vistaNaGrade(1, 4);   // "alto" 4: abaixo da borda, cabeça, ícone e balão (~60 px) ainda aparecem
+  for (const g of convidados)
+    if (g.estado !== 'brincando' && naVista(vistaGente, Math.floor(g.x), Math.floor(g.y)))
+      itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
+  for (const f of funcionarios)
+    if (naVista(vistaGente, Math.floor(f.x), Math.floor(f.y))) itens.push({ prof: f.x + f.y, desenhar: () => desenharFaxineiro(f) });
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });
   itens.sort((a, b) => a.prof - b.prof);
   for (const it of itens) it.desenhar();
