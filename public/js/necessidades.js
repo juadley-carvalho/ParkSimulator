@@ -46,7 +46,7 @@ function servicosPerto(x, y, servico, g = null) {
 // dist = tiles de caminho até o ponto de acesso.
 function atratividade(g, servico, def, ancora, dist) {
   const a = atracoes.get(chaveAtr(ancora.gx, ancora.gy));
-  if (!a || a.fila.length >= FILA_MAX) return -Infinity;   // fila cheia: nem considera
+  if (!a || a.quebrada || a.fila.length >= FILA_MAX) return -Infinity;   // quebrada ou fila cheia: nem considera
   const ganho = efeitosFinais(g, def).felicidade || 0;
   const preferencia = PREFERENCIA_INTENSIDADE * Math.abs(diferencaIntensidade(g, def));
   const andar = dist / g.velocidade * FELIC_POR_ATIVIDADE.andar;   // quem anda devagar "sente" mais a distância
@@ -90,6 +90,26 @@ function buscarServico(sx, sy, servico, g = null) {
   return melhor ? resultado(melhor) : null;
 }
 
+// Leva o convidado para um lugar no assento do banco: o lado (sem caminho, onde há assento) e a posição
+// ao longo dele (lugar −1 ou +1) com menos gente. Ele fica dentro do tile do banco (um caminho), então
+// depois levanta e segue andando normalmente. O desenho (desenharBanco) o põe entre o assento e o encosto.
+function sentarNoBanco(g, ancora) {
+  const lados = ladosSemCaminho(ancora.gx, ancora.gy);
+  if (!lados.length) return;
+  const mesmoBanco = convidados.filter(o => o !== g && o.estado === 'usando' && o.uso && o.uso.lado && o.uso.ancora &&
+                                            o.uso.ancora.gx === ancora.gx && o.uso.ancora.gy === ancora.gy);
+  let melhor = null;
+  for (const lado of lados)
+    for (const lugar of [-1, 1]) {
+      const n = mesmoBanco.filter(o => o.uso.lado[0] === lado[0] && o.uso.lado[1] === lado[1] && o.uso.lugar === lugar).length;
+      if (!melhor || n < melhor.n) melhor = { lado, lugar, n };
+    }
+  const [dx, dy] = melhor.lado, ao = ASSENTO_BANCO.espaco * melhor.lugar;   // "ao longo": eixo gy se o lado é em gx
+  g.uso.lado = [dx, dy]; g.uso.lugar = melhor.lugar;
+  g.x = ancora.gx + 0.5 + dx * ASSENTO_BANCO.dist + (dx ? 0 : ao);
+  g.y = ancora.gy + 0.5 + dy * ASSENTO_BANCO.dist + (dx ? ao : 0);
+}
+
 // Chamada quando o convidado chega ao ponto de acesso. Devolve false se desistiu.
 function iniciarServico(g, servico, r) {
   if (!r.def.capacidade) {   // serviço simples: usa na hora
@@ -97,9 +117,11 @@ function iniciarServico(g, servico, r) {
     if (g.dinheiro < preco) { g.evitar[servico] = tempo + 20; return false; }   // o preço mudou: sem dinheiro
     pagar(g, r.ancora, servico, preco);
     g.estado = 'usando'; g.uso = { servico, def: r.def, ancora: r.ancora, resta: r.def.duracao }; g.alvo = null;
+    if (r.def.atividade === 'sentar') sentarNoBanco(g, r.ancora);
     return true;
   }
   const a = atracoes.get(chaveAtr(r.ancora.gx, r.ancora.gy));
+  if (a && a.quebrada) { pensar(g, 'quebrado'); g.evitar[servico] = tempo + DEFEITOS.evitar; return false; }   // quebrou no caminho
   if (!a || a.fila.length >= FILA_MAX) { g.evitar[servico] = tempo + 20; return false; }   // fila cheia
   a.fila.push(g);
   g.estado = 'esperando';

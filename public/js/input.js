@@ -60,8 +60,10 @@ function aplicar(gx, gy) {
     if (!objetoLiberado(chave)) { avisar(`${OBJETOS[chave].nome} não está liberado neste cenário`); return; }
     if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
   } else if (camada === 'contratar') {
-    if (!ehCaminho(gx, gy)) { avisar('O faxineiro começa sobre um caminho'); return; }
-    if (cobrar(LIXO.contratacao)) contratarFaxineiro(gx, gy);
+    const fn = FUNCOES[chave];
+    if (!fn) return;
+    if (!ehCaminho(gx, gy)) { avisar(`O ${fn.nome.toLowerCase()} começa sobre um caminho`); return; }
+    if (cobrar(fn.contratacao)) contratarFuncionario(chave, gx, gy);
   } else {
     removerObjeto(gx, gy);                              // demolir
   }
@@ -72,7 +74,7 @@ const pintarEm = (sx, sy) => { const g = telaParaGrade(sx, sy); aplicar(g.gx, g.
 // Ao arrastar rápido o mouse "pula" tiles. Amostramos pontos entre a posição
 // anterior e a atual para o traço ficar contínuo.
 function pintarLinha(a, b) {
-  if (ferramenta.camada === 'contratar') return;   // arrastar não contrata um faxineiro por tile
+  if (ferramenta.camada === 'contratar') return;   // arrastar não contrata um funcionário por tile
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
   const passos = Math.max(1, Math.ceil(dist / (TILE_H * camera.zoom / 2)));
   for (let i = 1; i <= passos; i++) {

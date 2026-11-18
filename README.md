@@ -26,7 +26,8 @@ npm start       # http://localhost:3000
 | Empréstimo e balanço | botão **Finanças** |
 | Salvar e carregar o parque | botão **Salvar / Carregar** |
 | Pausar / velocidade 1×, 2×, 4× | botões na barra superior, ou **Espaço** (pausa) e teclas **1**, **2**, **3** |
-| Contratar faxineiro | aba **👷 Funcionários** e clique num caminho; para demitir, **Inspecionar** o faxineiro |
+| Contratar faxineiro ou mecânico | aba **👷 Funcionários** e clique num caminho; para demitir, **Inspecionar** o funcionário |
+| Ver o estado de um brinquedo (desgaste, chance de quebrar) | **Inspecionar** o brinquedo |
 | Salvamento automático (desligado, 1 minuto, mês ou ano) | janela **Salvar / Carregar** |
 | Escolher cenário, modo livre ou carregar | tela inicial (botão **🏠** volta a ela e pausa o jogo) |
 
@@ -56,7 +57,8 @@ public/
     entrada.js       entrada/saída do parque
     financas.js      caixa, empréstimo, cobranças, fechamento do mês
     avaliacao.js     avaliação do parque (nota 0–999) e pensamentos/queixas dos convidados
-    lixo.js          lixo e vômito no chão, lixeiras e faxineiros
+    lixo.js          lixo e vômito no chão, lixeiras, faxineiros e o movimento dos funcionários
+    manutencao.js    defeitos dos brinquedos (desgaste, quebra, conserto) e mecânicos
     ui.js            painéis de detalhes e tela de finanças
     barra.js         barra de construção (abas por categoria, cartões, dicas)
     salvar.js        serializar, validar e restaurar o estado; cliente da API; tela de saves

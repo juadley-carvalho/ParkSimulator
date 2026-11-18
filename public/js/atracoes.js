@@ -11,7 +11,10 @@ function defDeFila(chave) {
 function ehAtracaoComFila(chave) { return !!defDeFila(chave); }
 
 function novaAtracao(chave, gx, gy) {
-  return { chave, ancora: { gx, gy }, fila: [], passageiros: [], fase: 'carregando', tCarga: 0, resta: 0, angulo: 0 };
+  return { chave, ancora: { gx, gy }, fila: [], passageiros: [], fase: 'carregando', tCarga: 0, resta: 0, angulo: 0,
+           // Defeitos (manutencao.js): quebraEm = segundos restantes da corrida em que ela vai quebrar (sorteado na
+           // partida; null = esta corrida vai até o fim), tQuebrada = há quanto tempo está parada
+           desgaste: 0, corridas: 0, garantia: 0, consertos: 0, quebrada: false, quebraEm: null, tQuebrada: 0 };
 }
 
 // Estimativa (segundos) de quanto quem entrar agora na fila espera até embarcar: o fim da corrida
@@ -35,6 +38,8 @@ function desmontarAtracao(gx, gy) {
 function atualizarAtracoes(dt) {
   for (const a of atracoes.values()) {
     const def = defDeFila(a.chave);
+    a.desgaste += dt / SEG_POR_MES * DEFEITOS.desgastePorMes;   // envelhece mesmo parado
+    if (a.quebrada) { atualizarQuebrada(a, dt); continue; }      // parada (e sem girar) até o conserto
 
     // 1) Paciência: quem espera demais sai da fila, mais infeliz, e evita a atração por um tempo
     for (const g of [...a.fila]) {
@@ -59,15 +64,20 @@ function atualizarAtracoes(dt) {
           continue;
         }
         pagar(g, a.ancora, servico, preco);   // o ingresso é cobrado no embarque
+        g.uso.pago = preco;                   // guardado: se for evacuado de um brinquedo quebrado, recebe de volta
         g.estado = 'brincando';
         a.passageiros.push(g);
       }
       if (a.passageiros.length) a.tCarga += dt;
       const lotado = a.passageiros.length >= def.capacidade;
-      if (lotado || (a.passageiros.length && a.tCarga >= TEMPO_CARGA)) { a.fase = 'rodando'; a.resta = def.duracao; if (def.voltas) a.angulo = 0; }
+      if (lotado || (a.passageiros.length && a.tCarga >= TEMPO_CARGA)) {
+        a.fase = 'rodando'; a.resta = def.duracao; if (def.voltas) a.angulo = 0;
+        sortearDefeito(a, def);   // esta corrida vai quebrar no meio?
+      }
     } else {
       // 3) Corrida: ao terminar, aplica os efeitos em cada passageiro e libera todos
       a.resta -= dt;
+      if (a.quebraEm != null && a.resta <= a.quebraEm) { quebrar(a); continue; }
       if (a.resta <= 0) {
         for (const g of a.passageiros) {
           for (const [campo, v] of Object.entries(efeitosFinais(g, def))) g.n[campo] = limitar(g.n[campo] + v);

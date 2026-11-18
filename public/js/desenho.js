@@ -63,6 +63,14 @@ function desenharArvore(cx, cy) {
 }
 
 // Um banco em cada lado do caminho que não se liga a outro caminho (ver ladosSemCaminho).
+// Convidados sentados, por banco ("gx,gy" -> lista), refeito a cada quadro em desenhar()
+const SENTADOS = new Map();
+function sentadoNoBanco(g) {
+  const u = g.uso;
+  return g.estado === 'usando' && !!u && !!u.lado && !!u.ancora && dentroDoMapa(u.ancora.gx, u.ancora.gy) &&
+         typeof objetos[u.ancora.gy][u.ancora.gx] === 'string' && ficaSobreCaminho(objetos[u.ancora.gy][u.ancora.gx]);
+}
+
 // Cada banco = assento (caixa baixa) + encosto (caixa fina e alta) do lado de fora, virado para o caminho.
 // "ancora" = tile do banco; sem ela (ex.: prévia), desenha os dois lados de um caminho reto.
 function desenharBanco(cx, cy, atr, rot, ancora) {
@@ -76,9 +84,18 @@ function desenharBanco(cx, cy, atr, rot, ancora) {
       const p = gradeParaMundo(dx * dist, dy * dist);             // deslocamento a partir do centro
       pecas.push({ prof: dx * dist + dy * dist, desenhar: () => caixaRet(cx + p.x, cy + p.y, w, h, alt, ...cores) });
     };
-    peca(0.3, 0.2, 6, ['#b07a40', '#6e4521', '#85552a']);     // assento
+    peca(ASSENTO_BANCO.dist, 0.2, ASSENTO_BANCO.altura, ['#b07a40', '#6e4521', '#85552a']);   // assento
     peca(0.42, 0.05, 13, ['#8b5a2b', '#5d3a1a', '#734a22']);  // encosto
   }
+  // Quem está sentado entra na MESMA ordenação, logo depois do seu assento: nos lados de trás (−gx, −gy)
+  // ele fica na frente do encosto; nos da frente (+gx, +gy) o encosto, mais à frente, cobre as costas dele.
+  // Por isso os sentados não vão na lista geral de desenhar() (ver SENTADOS).
+  const sentados = ancora && SENTADOS.get(chaveAtr(ancora.gx, ancora.gy));
+  if (sentados)
+    for (const g of sentados) {
+      const [dx, dy] = g.uso.lado;
+      pecas.push({ prof: (dx + dy) * ASSENTO_BANCO.dist + 0.01, desenhar: () => desenharConvidado(g) });
+    }
   pecas.sort((a, b) => a.prof - b.prof).forEach(p => p.desenhar());   // algoritmo do pintor, dentro do tile
 }
 
@@ -122,10 +139,11 @@ function desenharSujeira() {
 }
 
 // Funcionário: o mesmo boneco animado dos convidados (desenharBoneco), com o uniforme da função
-// (UNIFORMES em config.js), boné e a ferramenta na mão. Faxineiro: vassoura, que balança ao varrer.
-function desenharFaxineiro(f) {
+// (FUNCOES em config.js), boné e a ferramenta na mão. Faxineiro: vassoura, que balança ao varrer.
+// Mecânico: chave inglesa, que gira para lá e para cá enquanto ele conserta.
+function desenharFuncionario(f) {
   const { x, y } = gradeParaMundo(f.x, f.y);
-  const u = UNIFORMES[f.funcao] || UNIFORMES.faxineiro;
+  const u = FUNCOES[f.funcao] || FUNCOES.faxineiro;
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
@@ -139,6 +157,18 @@ function desenharFaxineiro(f) {
     ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(p.maoX - 0.8, p.maoY - 4); ctx.lineTo(bx, by); ctx.stroke();   // cabo
     ctx.fillStyle = '#fdd835'; ctx.fillRect(bx - 2, by - 1, 6, 2);                              // cerdas
+  } else if (u.ferramenta === 'chave') {
+    // Cabo saindo da mão; a "boca" da chave é um círculo cinza com um corte (outro círculo da cor do chão não
+    // serviria: o fundo muda). Consertando, o ângulo vai e vem rápido, como quem aperta um parafuso.
+    const ang = -0.9 + (f.trabalho > 0 ? Math.sin(tempo * 10) * 0.7 : 0);
+    const ex = p.maoX + Math.cos(ang) * 5, ey = p.maoY + Math.sin(ang) * 5;
+    ctx.strokeStyle = '#9e9e9e'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p.maoX, p.maoY); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(ex, ey, 1.6, ang + 0.6, ang + 2 * Math.PI - 0.6); ctx.stroke();   // boca aberta para a ponta
+    if (f.trabalho > 0 && Math.sin(tempo * 10) > 0.8) {   // faísca
+      ctx.fillStyle = '#ffeb3b'; ctx.fillRect(ex + 1.5, ey - 2.5, 1.5, 1.5); ctx.fillRect(ex - 2.5, ey - 1.5, 1.2, 1.2);
+    }
   }
   if (f === selFunc) {
     ctx.strokeStyle = '#ffe14d'; ctx.lineWidth = 2 / camera.zoom;
@@ -896,11 +926,28 @@ function desenharPortao() {
 }
 
 function desenharFila(a, cx, cy, alt = 84) {
-  const t = `Fila ${a.fila.length}/${FILA_MAX}`;
+  if (a.quebrada) desenharFumaca(cx, cy - alt + 20, emConserto(a));
+  const t = !a.quebrada ? `Fila ${a.fila.length}/${FILA_MAX}` : emConserto(a) ? '🔧 Consertando' : '⚠️ Quebrado';
   ctx.font = `500 12px ${FONTE_JOGO}`; ctx.textAlign = 'center';
   const w = ctx.measureText(t).width + 10;
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(cx - w / 2, cy - alt, w, 16);
+  // Quebrado: rótulo vermelho que pisca (pelo relógio real, para piscar também com o jogo pausado)
+  ctx.fillStyle = !a.quebrada ? 'rgba(0,0,0,0.6)' : emConserto(a) ? 'rgba(230,120,0,0.85)'
+    : (Math.floor(tempoReal * 2) % 2 ? 'rgba(200,30,30,0.9)' : 'rgba(120,10,10,0.9)');
+  ctx.fillRect(cx - w / 2, cy - alt, w, 16);
   ctx.fillStyle = '#fff'; ctx.fillText(t, cx, cy - alt + 12);
+}
+
+// Fumaça saindo do brinquedo quebrado: 4 baforadas que sobem e somem em ciclo (pelo tempo do jogo).
+// Em conserto, a fumaça fica clara (o mecânico já está cuidando).
+function desenharFumaca(x, y, clara) {
+  ctx.save();
+  for (let i = 0; i < 4; i++) {
+    const t = modulo(tempo * 0.6 + i / 4, 1);   // 0..1: idade da baforada
+    ctx.globalAlpha = 0.55 * (1 - t);
+    ctx.fillStyle = clara ? '#eeeeee' : '#616161';
+    ctx.beginPath(); ctx.arc(x + Math.sin(i * 2.3 + t * 3) * 6, y - t * 28, 4 + t * 7, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
 }
 
 // ---------- Bonecos animados (convidados e funcionários) ----------
@@ -909,13 +956,14 @@ function desenharFila(a, cx, cy, alt = 84) {
 // As duas reaproveitam SEMPRE o mesmo objeto, POSE: criar um objeto novo por pessoa a cada quadro
 // (300 convidados x 60 quadros = 18 mil objetos por segundo) daria trabalho à toa ao coletor de lixo.
 const POSE = { camisa: '', calca: '', pele: '', andando: false, fase: 0, fx: 1, fy: 0, desvio: 0, inclina: 0,
-               pulo: 0, sentado: false, bracosAcima: false, batePe: 0, maoX: 0, maoY: 0, cabecaX: 0, cabecaY: 0 };
+               pulo: 0, sentado: false, noBanco: false, joelhoX: 0, joelhoY: 0, bracosAcima: false, batePe: 0,
+               maoX: 0, maoY: 0, cabecaX: 0, cabecaY: 0 };
 const PELE = '#f1c9a5', PELE_ENJOADA = '#cfdc9a';
 
 function limparPose(camisa, calca) {
   const p = POSE;
   p.camisa = camisa; p.calca = calca; p.pele = PELE; p.andando = false; p.fase = 0; p.fx = 1; p.fy = 0;
-  p.desvio = 0; p.inclina = 0; p.pulo = 0; p.sentado = false; p.bracosAcima = false; p.batePe = 0;
+  p.desvio = 0; p.inclina = 0; p.pulo = 0; p.sentado = false; p.noBanco = false; p.bracosAcima = false; p.batePe = 0;
   return p;
 }
 
@@ -929,6 +977,12 @@ function poseDoConvidado(g) {
   p.fase = g.passo * A.ciclosPorTile * Math.PI * 2;
   p.fx = g.olhaX; p.fy = g.olhaY;
   p.sentado = g.estado === 'usando' && !!g.uso && !!g.uso.def && g.uso.def.atividade === 'sentar';
+  if (p.sentado && g.uso.lado) {
+    // No assento, virado para o centro do tile (o encosto fica do lado de fora): o joelho vai 0,13 tile
+    // para dentro. (−dx, −dy) na grade vira deslocamento na tela pela conta de gradeParaMundo.
+    const jx = -g.uso.lado[0] * 0.13, jy = -g.uso.lado[1] * 0.13;
+    p.noBanco = true; p.joelhoX = (jx - jy) * TILE_W / 2; p.joelhoY = (jx + jy) * TILE_H / 2;
+  }
   // Na fila: passada a fração "desde" da paciência, muda o peso de um pé para o outro, cada vez mais;
   // perto de desistir, também bate o pé
   if (g.estado === 'esperando' && g.uso && g.paciencia > 0) {
@@ -955,7 +1009,7 @@ function poseDoConvidado(g) {
 }
 
 function poseDoFuncionario(f) {
-  const u = UNIFORMES[f.funcao] || UNIFORMES.faxineiro;
+  const u = FUNCOES[f.funcao] || FUNCOES.faxineiro;
   const p = limparPose(u.camisa, u.calca);
   p.andando = f.movendo && !(f.trabalho > 0);
   p.fase = f.passo * ANIMACAO.ciclosPorTile * Math.PI * 2;
@@ -973,7 +1027,8 @@ function poseDoFuncionario(f) {
 function desenharBoneco(x, y, p) {
   const s = p.andando ? Math.sin(p.fase) : 0;
   const sobe = (p.andando ? Math.abs(Math.cos(p.fase)) * ANIMACAO.quique : 0) + p.pulo;   // mais alto com as pernas juntas
-  const abaixa = p.sentado ? 3 : 0;
+  // Sentado no chão (sem assento conhecido) desce 3 px; no banco, o quadril fica na altura do assento
+  const abaixa = p.noBanco ? 5 - ASSENTO_BANCO.altura : p.sentado ? 3 : 0;
   const xq = x + p.desvio, xt = xq + p.inclina * 0.6, xc = xq + p.inclina;   // quadril, tronco e cabeça (a cabeça pende mais)
   const quadril = y - 5 - sobe + abaixa, ombro = y - 10 - sobe + abaixa;
   p.cabecaX = xc; p.cabecaY = y - 14 - sobe + abaixa;
@@ -991,7 +1046,11 @@ function desenharBoneco(x, y, p) {
   ctx.lineWidth = 2;
   ctx.strokeStyle = p.calca;   // pernas
   ctx.beginPath();
-  if (p.sentado) {   // coxas para a frente (para quem olha) e canelas descendo até o chão
+  if (p.noBanco) {   // coxas sobre o assento, para dentro do tile, e canelas descendo até o chão
+    const kx = p.joelhoX, ky = p.joelhoY;
+    ctx.moveTo(xq - 1.3, quadril); ctx.lineTo(xq - 1.3 + kx, quadril + ky); ctx.lineTo(xq - 1.3 + kx, y + ky);
+    ctx.moveTo(xq + 1.3, quadril); ctx.lineTo(xq + 1.3 + kx, quadril + ky); ctx.lineTo(xq + 1.3 + kx, y + ky);
+  } else if (p.sentado) {   // coxas para a frente (para quem olha) e canelas descendo até o chão
     ctx.moveTo(xq - 1.3, quadril); ctx.lineTo(xq - 1.9, quadril + 1.6); ctx.lineTo(xq - 1.9, y - 0.3);
     ctx.moveTo(xq + 1.3, quadril); ctx.lineTo(xq + 1.9, quadril + 1.6); ctx.lineTo(xq + 1.9, y - 0.3);
   } else {
@@ -1007,9 +1066,10 @@ function desenharBoneco(x, y, p) {
   if (p.bracosAcima) {   // comemorando
     ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 4.8, ombro - 4.5);
     ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 4.8, p.maoY = ombro - 4.5);
-  } else if (p.sentado) {   // mãos no colo
-    ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 2.6, quadril + 0.8);
-    ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 2.6, p.maoY = quadril + 0.8);
+  } else if (p.sentado) {   // mãos no colo (no banco, sobre as coxas)
+    const kx = p.noBanco ? p.joelhoX * 0.6 : 0, ky = p.noBanco ? p.joelhoY * 0.6 : 0;
+    ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 2.6 + kx, quadril + 0.8 + ky);
+    ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 2.6 + kx, p.maoY = quadril + 0.8 + ky);
   } else {
     ctx.moveTo(xt - 3.2, ombro); ctx.lineTo(xt - 3.6 - b * fx, ombro + 4.5 - b * fy * 0.5);
     ctx.moveTo(xt + 3.2, ombro); ctx.lineTo(p.maoX = xt + 3.6 + b * fx, p.maoY = ombro + 4.5 + b * fy * 0.5);
@@ -1118,11 +1178,19 @@ function desenhar() {
     }
   // Pessoas fora da tela não entram na lista (nem na ordenação): num parque grande, a maioria
   const vistaGente = vistaNaGrade(1, 4);   // "alto" 4: abaixo da borda, cabeça, ícone e balão (~60 px) ainda aparecem
-  for (const g of convidados)
-    if (g.estado !== 'brincando' && naVista(vistaGente, Math.floor(g.x), Math.floor(g.y)))
-      itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
+  // Quem está sentado num banco é desenhado pelo próprio banco (desenharBanco), entre o assento e o encosto.
+  // A lista é montada aqui, ANTES de desenhar qualquer item (o banco só a lê depois da ordenação).
+  SENTADOS.clear();
+  for (const g of convidados) {
+    if (g.estado === 'brincando' || !naVista(vistaGente, Math.floor(g.x), Math.floor(g.y))) continue;
+    if (sentadoNoBanco(g)) {
+      const k = chaveAtr(g.uso.ancora.gx, g.uso.ancora.gy);
+      if (!SENTADOS.has(k)) SENTADOS.set(k, []);
+      SENTADOS.get(k).push(g);
+    } else itens.push({ prof: g.x + g.y, desenhar: () => desenharConvidado(g) });
+  }
   for (const f of funcionarios)
-    if (naVista(vistaGente, Math.floor(f.x), Math.floor(f.y))) itens.push({ prof: f.x + f.y, desenhar: () => desenharFaxineiro(f) });
+    if (naVista(vistaGente, Math.floor(f.x), Math.floor(f.y))) itens.push({ prof: f.x + f.y, desenhar: () => desenharFuncionario(f) });
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });
   itens.sort((a, b) => a.prof - b.prof);
   for (const it of itens) it.desenhar();

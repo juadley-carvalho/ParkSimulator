@@ -27,7 +27,7 @@ function montarMapaInicial() {
   por('BARRACA_BEBIDAS', 13, 17);
   por('LIXEIRA', 14, 12);   // perto da comida e da bebida, onde o lixo nasce
   por('LIXEIRA', 12, 15);
-  contratarFaxineiro(12 + dx, 20 + dy);
+  contratarFuncionario('faxineiro', 12 + dx, 20 + dy);
 }
 
 // Um passo da simulação (dt em segundos de JOGO, no máximo PASSO_MAX)

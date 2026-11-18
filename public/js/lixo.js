@@ -1,5 +1,5 @@
 /* ============================================================
-   lixo.js — lixo e vômito no chão, lixeiras e faxineiros
+   lixo.js — lixo e vômito no chão, lixeiras, faxineiros e o movimento de todos os funcionários
    Depende de: config.js, utils.js, estado.js, objetos.js, convidados.js, avaliacao.js (pensar)
    ============================================================ */
 
@@ -137,20 +137,7 @@ function irAteLixeira(g, cx, cy) {
   return true;
 }
 
-// ---------- Faxineiros ----------
-function contratarFaxineiro(gx, gy) {
-  const numero = Math.max(0, ...funcionarios.map(f => f.numero || 0)) + 1;
-  funcionarios.push({ numero, nome: `Faxineiro ${numero}`, funcao: 'faxineiro', x: gx + 0.5, y: gy + 0.5, alvo: null, anterior: null,
-                      tarefa: null, trabalho: 0, recolheu: 0, recolheuMes: 0,
-                      passo: Math.random(), movendo: false, olhaX: 1, olhaY: 0 });   // animação: ver registrarPasso
-}
-
-function demitirFuncionario(f) {
-  const i = funcionarios.indexOf(f);
-  if (i >= 0) funcionarios.splice(i, 1);
-  if (selFunc === f) selFunc = null;
-}
-
+// ---------- Faxineiros: tarefas ----------
 // Ainda há o que fazer no tile da tarefa? (outro faxineiro ou o jogador podem ter resolvido antes)
 function tarefaValida(t) { return sujeiraEm(t.gx, t.gy).length > 0 || precisaEsvaziar(t.gx, t.gy); }
 
@@ -163,7 +150,7 @@ function duracaoDoTrabalho(gx, gy) {
 // Próxima tarefa: a de menor (distância − bônus), fora as já RESERVADAS por outros faxineiros.
 // O Set das reservas evita que dois faxineiros corram para o mesmo papel.
 function escolherTarefa(f, cx, cy) {
-  const reservados = new Set(funcionarios.filter(o => o !== f && o.tarefa).map(o => chaveAtr(o.tarefa.gx, o.tarefa.gy)));
+  const reservados = new Set(funcionarios.filter(o => o !== f && o.funcao === 'faxineiro' && o.tarefa).map(o => chaveAtr(o.tarefa.gx, o.tarefa.gy)));
   const r = melhorNoCaminho(cx, cy, (x, y, d) => {
     if (reservados.has(chaveAtr(x, y))) return null;
     if (temVomito(x, y)) return d - LIXO.bonusVomito;
@@ -182,23 +169,60 @@ function concluirTrabalho(f) {
   f.recolheu += n; f.recolheuMes += n;
 }
 
-// Chamada a cada tile em que o faxineiro chega: trabalha aqui, segue para a tarefa ou patrulha
-function decidirFaxineiro(f) {
+// ---------- Funcionários (faxineiros aqui; mecânicos em manutencao.js) ----------
+// Todos andam pelos caminhos do mesmo jeito (atualizarFuncionarios); a cada tile, decidirFuncionario
+// chama a decisão da função dele. "numero" é contado por função: Faxineiro 1, 2... e Mecânico 1, 2...
+function contratarFuncionario(funcao, gx, gy) {
+  const numero = Math.max(0, ...funcionarios.filter(f => f.funcao === funcao).map(f => f.numero || 0)) + 1;
+  funcionarios.push({ numero, nome: `${FUNCOES[funcao].nome} ${numero}`, funcao, x: gx + 0.5, y: gy + 0.5, alvo: null, anterior: null,
+                      tarefa: null, trabalho: 0,
+                      recolheu: 0, recolheuMes: 0,                // faxineiro: itens recolhidos
+                      conserto: null, consertos: 0, consertosMes: 0,   // mecânico: atração (chave "gx,gy") e contagem
+                      passo: Math.random(), movendo: false, olhaX: 1, olhaY: 0 });   // animação: ver registrarPasso
+}
+
+function demitirFuncionario(f) {
+  const i = funcionarios.indexOf(f);
+  if (i >= 0) funcionarios.splice(i, 1);
+  if (selFunc === f) selFunc = null;
+}
+
+function quantosDaFuncao(funcao) { return funcionarios.filter(f => f.funcao === funcao).length; }
+
+// Chamada a cada tile em que o funcionário chega
+function decidirFuncionario(f) {
   const cx = Math.floor(f.x), cy = Math.floor(f.y);
   if (!ehCaminho(cx, cy)) {   // o caminho sumiu debaixo dele: volta para o mais próximo
     const p = proximoPassoAteCaminho(cx, cy);
-    f.alvo = p && { gx: p[0], gy: p[1] }; f.tarefa = null;
+    f.alvo = p && { gx: p[0], gy: p[1] }; f.tarefa = null; f.conserto = null;
     return;
   }
+  if (f.funcao === 'mecanico') decidirMecanico(f, cx, cy);
+  else decidirFaxineiro(f, cx, cy);
+}
+
+// Faxineiro: trabalha aqui, segue para a tarefa ou patrulha
+function decidirFaxineiro(f, cx, cy) {
   if (f.tarefa && !tarefaValida(f.tarefa)) f.tarefa = null;
   if (!f.tarefa) f.tarefa = escolherTarefa(f, cx, cy);
   if (f.tarefa) {
     if (f.tarefa.gx === cx && f.tarefa.gy === cy) { f.trabalho = duracaoDoTrabalho(cx, cy); f.alvo = null; return; }
-    const t = f.tarefa, r = melhorNoCaminho(cx, cy, (x, y) => (x === t.gx && y === t.gy ? 0 : null));
-    if (r && r.passo) { f.alvo = r.passo; f.anterior = { gx: cx, gy: cy }; return; }
+    if (irAte(f, cx, cy, f.tarefa)) return;
     f.tarefa = null;   // não dá mais para chegar lá
   }
-  // Nada para limpar: patrulha como um convidado passeando (sem voltar, a menos que seja beco)
+  patrulhar(f, cx, cy);
+}
+
+// Dá o primeiro passo da rota (só por caminhos) até o tile t. Devolve false se não há rota.
+function irAte(f, cx, cy, t) {
+  const r = melhorNoCaminho(cx, cy, (x, y) => (x === t.gx && y === t.gy ? 0 : null));
+  if (!r || !r.passo) return false;
+  f.alvo = r.passo; f.anterior = { gx: cx, gy: cy };
+  return true;
+}
+
+// Nada a fazer: patrulha como um convidado passeando (sem voltar, a menos que seja beco)
+function patrulhar(f, cx, cy) {
   const op = VIZINHOS.map(([dx, dy]) => ({ gx: cx + dx, gy: cy + dy })).filter(t => ehCaminho(t.gx, t.gy));
   const sem = op.filter(t => !(f.anterior && t.gx === f.anterior.gx && t.gy === f.anterior.gy));
   const lista = sem.length ? sem : op;
@@ -211,14 +235,18 @@ function atualizarFuncionarios(dt) {
     f.movendo = false;   // volta a true só se ele der um passo agora
     if (f.trabalho > 0) {
       f.trabalho -= dt;
-      if (f.trabalho <= 0) { f.trabalho = 0; concluirTrabalho(f); decidirFaxineiro(f); }   // mais trabalho aqui?
+      if (f.trabalho <= 0) {   // terminou: conclui e decide de novo (pode haver mais trabalho aqui)
+        f.trabalho = 0;
+        if (f.funcao === 'mecanico') concluirConserto(f); else concluirTrabalho(f);
+        decidirFuncionario(f);
+      }
       continue;
     }
-    if (!f.alvo || mapa[f.alvo.gy][f.alvo.gx] === 'AGUA') { decidirFaxineiro(f); if (!f.alvo) continue; }
+    if (!f.alvo || mapa[f.alvo.gy][f.alvo.gx] === 'AGUA') { decidirFuncionario(f); if (!f.alvo) continue; }
     const tx = f.alvo.gx + 0.5, ty = f.alvo.gy + 0.5;
-    const dx = tx - f.x, dy = ty - f.y, dist = Math.hypot(dx, dy), passo = LIXO.velocidade * dt;
+    const dx = tx - f.x, dy = ty - f.y, dist = Math.hypot(dx, dy), passo = (FUNCOES[f.funcao] || FUNCOES.faxineiro).velocidade * dt;
     registrarPasso(f, dx, dy, dist, passo);
-    if (dist <= passo) { f.x = tx; f.y = ty; f.alvo = null; decidirFaxineiro(f); }
+    if (dist <= passo) { f.x = tx; f.y = ty; f.alvo = null; decidirFuncionario(f); }
     else { f.x += dx / dist * passo; f.y += dy / dist * passo; }
   }
 }
@@ -228,5 +256,6 @@ function resumoLimpeza() {
   let lixo = 0, vomito = 0, cheias = 0;
   for (const lista of sujeira.values()) for (const it of lista) it.tipo === 'vomito' ? vomito++ : lixo++;
   for (const k of lixeiras.keys()) { const [gx, gy] = k.split(',').map(Number); if (precisaEsvaziar(gx, gy)) cheias++; }
-  return { lixo, vomito, lixeiras: lixeiras.size, cheias, recolheuMes: funcionarios.reduce((s, f) => s + f.recolheuMes, 0) };
+  return { lixo, vomito, lixeiras: lixeiras.size, cheias, recolheuMes: funcionarios.reduce((s, f) => s + (f.recolheuMes || 0), 0),
+           faxineiros: quantosDaFuncao('faxineiro') };
 }

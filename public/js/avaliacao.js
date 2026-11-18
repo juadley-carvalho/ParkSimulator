@@ -19,10 +19,12 @@ function partesDaAvaliacao() {
   const emDia = media(convidados, g => 1 - (g.n.fome + g.n.sede + g.n.banheiro + g.n.nausea) / 400, A.necessidadesNeutras);
   // Set guarda cada valor UMA vez: dois carrosséis contam como um tipo só
   const tipos = new Set(), servicos = new Set();
-  for (const linha of objetos)
-    for (const c of linha) {
+  for (let gy = 0; gy < MAPA; gy++)
+    for (let gx = 0; gx < MAPA; gx++) {
+      const c = objetos[gy][gx];
       if (typeof c !== 'string') continue;                       // só âncoras: cada objeto conta uma vez
-      if (OBJETOS[c].categoria === 'atracoes') tipos.add(c);
+      const a = atracoes.get(chaveAtr(gx, gy));
+      if (OBJETOS[c].categoria === 'atracoes' && !(a && a.quebrada)) tipos.add(c);   // quebrada não diverte ninguém
       for (const s of Object.keys(OBJETOS[c].servicos || {})) servicos.add(s);
     }
   const atendidos = SERVICOS_AVALIADOS.filter(s => servicos.has(s)).length;

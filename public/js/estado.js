@@ -48,7 +48,7 @@ const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto
 // do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
 function finInicial() {
   return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-           visitantesMes: 0, entradasMes: 0, recusasMes: 0, queixasMes: {}, balanco: null, aviso: '', avisoOk: false, tAviso: -99 };
+           visitantesMes: 0, entradasMes: 0, recusasMes: 0, quebrasMes: 0, queixasMes: {}, balanco: null, aviso: '', avisoOk: false, tAviso: -99 };
 }
 const fin = finInicial();
 
@@ -90,8 +90,8 @@ const convidados = [];
 // (tipo: papel, copo, palito ou vomito). lixeiras: âncora "gx,gy" -> itens dentro dela.
 const sujeira = new Map();
 const lixeiras = new Map();
-const funcionarios = [];   // faxineiros: { nome, x, y, alvo, tarefa, trabalho, recolheu, recolheuMes }
-let selFunc = null;        // faxineiro selecionado (painel com o botão Demitir)
+const funcionarios = [];   // faxineiros e mecânicos: campos em contratarFuncionario (lixo.js)
+let selFunc = null;        // funcionário selecionado (painel com o botão Demitir)
 
 let tempo = 0;
 

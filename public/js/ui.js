@@ -46,12 +46,12 @@ function selecionar(gx, gy) {
   if (melhor) { selecionado = melhor; selObj = null; selFunc = null; }
 }
 
-// Painel do faxineiro: o nome vem do save (pode ter sido editado), então entra por textContent
+// Painel do funcionário: o nome vem do save (pode ter sido editado), então entra por textContent
 function selecionarFuncionario(f) {
   selFunc = f; selObj = null; selecionado = null;
   painelObj.innerHTML = `<div class='painel-topo'><span></span><button class='fechar' title='Fechar (Esc)'>✕</button></div>` +
     `<div id='fStats'></div><div class='botoes'><button class='btn btn-perigo' id='btnDemitir'>Demitir</button></div>`;
-  painelObj.querySelector('.painel-topo span').textContent = '🧹 ' + f.nome;
+  painelObj.querySelector('.painel-topo span').textContent = (FUNCOES[f.funcao] || FUNCOES.faxineiro).icone + ' ' + f.nome;
   painelObj.querySelector('.fechar').addEventListener('click', () => { selFunc = null; });
   $('btnDemitir').addEventListener('click', () => {
     if (confirm(`Demitir ${f.nome}? O salário deixa de ser cobrado (a contratação não é devolvida).`)) demitirFuncionario(f);
@@ -83,8 +83,14 @@ function atualizarPainelObj() {
   painelObj.style.display = selObj || selFunc ? 'block' : 'none';
   if (selFunc) {
     const f = selFunc;
-    $('fStats').innerHTML = (f.trabalho > 0 ? 'Limpando 🧹' : f.tarefa ? `Indo limpar (${f.tarefa.gx}, ${f.tarefa.gy})` : 'Patrulhando os caminhos') +
-      `<br>Recolheu este mês: ${f.recolheuMes}<br>Recolheu no total: ${f.recolheu}<br>Salário: ${moeda(LIXO.salario)}/mês`;
+    const salario = `<br>Salário: ${moeda((FUNCOES[f.funcao] || FUNCOES.faxineiro).salario)}/mês`;
+    if (f.funcao === 'mecanico') {
+      const a = f.conserto && atracoes.get(f.conserto), nome = a ? OBJETOS[a.chave].nome : '';
+      $('fStats').innerHTML = (f.trabalho > 0 ? `Consertando: ${nome} 🔧 (${Math.ceil(f.trabalho)}s)` : a ? `Indo consertar: ${nome}` : 'Patrulhando os caminhos') +
+        `<br>Consertos este mês: ${f.consertosMes}<br>Consertos no total: ${f.consertos}` + salario;
+    } else
+      $('fStats').innerHTML = (f.trabalho > 0 ? 'Limpando 🧹' : f.tarefa ? `Indo limpar (${f.tarefa.gx}, ${f.tarefa.gy})` : 'Patrulhando os caminhos') +
+        `<br>Recolheu este mês: ${f.recolheuMes}<br>Recolheu no total: ${f.recolheu}` + salario;
     return;
   }
   if (!selObj) return;
@@ -95,7 +101,18 @@ function atualizarPainelObj() {
   $('oStats').innerHTML = `Receita total: ${moeda(d.receita)}<br>Usos: ${d.usos}<br>Manutenção: ${moeda(manut)}/mês` +
     (brinquedo ? `<br>Intensidade: ${brinquedo.intensidade}/10` : '') +
     (atr ? `<br>Fila: ${atr.fila.length}/${FILA_MAX} · A bordo: ${atr.passageiros.length}` +
-           `<br>Espera estimada: ${Math.ceil(esperaEstimada(atr))}s` : '');
+           (atr.quebrada ? '' : `<br>Espera estimada: ${Math.ceil(esperaEstimada(atr))}s`) + textoManutencao(atr) : '');
+}
+
+// Estado de conservação de uma atração (painel do objeto)
+function textoManutencao(a) {
+  const estado = !a.quebrada ? '<span style="color:#7bd17b">funcionando</span>'
+    : emConserto(a) ? '<b style="color:#ffb74d">em conserto 🔧</b>'
+    : `<b style="color:#ff6b6b">QUEBRADA</b> há ${Math.floor(a.tQuebrada)}s` + (a.passageiros.length ? ` · ${a.passageiros.length} preso(s)` : '');
+  const chance = (chanceDeQuebra(a) * 100).toFixed(1).replace('.', ',');
+  return `<br>Estado: ${estado}<br>Desgaste: ${a.desgaste.toFixed(1).replace('.', ',')} · chance de quebrar: ${chance}% por corrida` +
+    (a.garantia > 0 ? ` (garantia: ${a.garantia} corrida${a.garantia === 1 ? '' : 's'})` : '') +
+    `<br>Corridas: ${a.corridas} · Consertos: ${a.consertos}`;
 }
 
 function atualizarFinancasUI() {
@@ -112,7 +129,9 @@ function atualizarFinancasUI() {
     `Disponível para pegar: ${moeda(LIMITE_EMPRESTIMO - fin.divida)}<br>` +
     `Juros no próximo fechamento: ${moeda(fin.divida * fin.juros)}<br>` +
     `Manutenção mensal: ${moeda(custoManutencaoMensal())}<br>` +
-    `Salários mensais: ${moeda(salariosMensais())} (${funcionarios.length} faxineiro${funcionarios.length === 1 ? '' : 's'})`;
+    `Salários mensais: ${moeda(salariosMensais())}` + (funcionarios.length
+      ? ` (${Object.entries(FUNCOES).map(([k, fn]) => [quantosDaFuncao(k), fn.nome.toLowerCase()]).filter(([n]) => n)
+          .map(([n, nome]) => `${n} ${nome}${n === 1 ? '' : 's'}`).join(', ')})` : '');
   const b = fin.balanco;
   // Receita por visitante: quanto cada cliente rende, em média. Comparada com o custo fixo do mês
   // (manutenção + juros), mostra quantos visitantes são precisos para não ter prejuízo.
@@ -124,7 +143,8 @@ function atualizarFinancasUI() {
       (b.salarios ? ` − salários ${moeda(b.salarios)}` : '') + ` = <b>${moeda(b.receita - b.manut - b.juros - (b.salarios || 0))}</b><br>` +
       (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '') +
       (b.entradas ? ` · entradas ${moeda(b.entradas)}` : '') +
-      (b.recusas ? ` · ${b.recusas} acharam a entrada cara` : '')
+      (b.recusas ? ` · ${b.recusas} acharam a entrada cara` : '') +
+      (b.quebras ? ` · ${b.quebras} quebra${b.quebras === 1 ? '' : 's'} de brinquedo` : '')
     : 'Nenhum mês fechado ainda.');
 }
 
@@ -146,8 +166,14 @@ function atualizarParqueUI() {
   $('parqueLimpeza').innerHTML =
     `No chão: <b>${l.lixo}</b> lixo${l.lixo === 1 ? '' : 's'} · <b>${l.vomito}</b> vômito${l.vomito === 1 ? '' : 's'}<br>` +
     `Lixeiras: ${l.lixeiras}${l.cheias ? ` (<b>${l.cheias}</b> para esvaziar)` : ''}<br>` +
-    `Faxineiros: ${funcionarios.length} · recolheram ${l.recolheuMes} itens neste mês` +
-    (funcionarios.length ? '' : `<div class='dica'>Contrate na aba 👷 Funcionários da barra de construção.</div>`);
+    `Faxineiros: ${l.faxineiros} · recolheram ${l.recolheuMes} itens neste mês` +
+    (l.faxineiros ? '' : `<div class='dica'>Contrate na aba 👷 Funcionários da barra de construção.</div>`);
+  const m = resumoManutencao();
+  $('parqueManutencao').innerHTML =
+    (m.quebradas.length ? `Quebrados agora: <b>${m.quebradas.join(', ')}</b><br>` : 'Todos os brinquedos funcionando 🙂<br>') +
+    `Quebras neste mês: ${m.quebrasMes} · Mecânicos: ${m.mecanicos} · consertos neste mês: ${m.consertosMes}` +
+    `<div class='dica'>Brinquedos quebram mais com a idade e o uso. Quebrado, prende quem está a bordo e não conta na ` +
+    `variedade da avaliação. ${m.mecanicos ? '' : 'Contrate um mecânico na aba 👷 Funcionários.'}</div>`;
   const lot = resumoLotacao();
   $('parqueLotacao').innerHTML = lot.apertados
     ? `<b>${lot.apertados}</b> convidado${lot.apertados === 1 ? '' : 's'} no aperto agora · ${lot.tiles} tile${lot.tiles === 1 ? '' : 's'} lotado${lot.tiles === 1 ? '' : 's'} (em vermelho no mapa)`

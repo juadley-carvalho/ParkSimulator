@@ -28,6 +28,16 @@ function pagar(g, ancora, servico, preco) {
   if (d) { d.receita = arred(d.receita + preco); d.usos++; }
 }
 
+// Devolve um pagamento (evacuação de brinquedo quebrado): o contrário de pagar, sem desfazer o "uso"
+function devolver(g, ancora, valor) {
+  if (!(valor > 0)) return;
+  g.dinheiro = arred(g.dinheiro + valor);
+  fin.caixa = arred(fin.caixa - valor);
+  fin.receitaMes = arred(fin.receitaMes - valor);
+  const d = gestao.get(chaveAtr(ancora.gx, ancora.gy));
+  if (d) d.receita = arred(d.receita - valor);
+}
+
 // Ingresso do parque, cobrado na chegada. Entra na receita do mês e também à parte (entradasMes),
 // para o balanço mostrar quanto veio do portão e quanto dos objetos.
 function pagarEntrada(g) {
@@ -57,16 +67,16 @@ function patrimonio() {
   return arred(fin.caixa - fin.divida + objetosValem);
 }
 
-function salariosMensais() { return funcionarios.length * LIXO.salario; }
+function salariosMensais() { return funcionarios.reduce((s, f) => s + (FUNCOES[f.funcao] || FUNCOES.faxineiro).salario, 0); }
 
 // Fechamento do mês: cobra juros sobre a dívida, a manutenção e os salários (o caixa pode ficar negativo)
 function fecharMes() {
   const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal(), salarios = salariosMensais();
   fin.caixa = arred(fin.caixa - juros - manut - salarios);
-  for (const f of funcionarios) f.recolheuMes = 0;
+  for (const f of funcionarios) { f.recolheuMes = 0; f.consertosMes = 0; }
   fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, salarios, visitantes: fin.visitantesMes,
-                  entradas: fin.entradasMes, recusas: fin.recusasMes, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
-  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.queixasMes = {}; fin.mes++;
+                  entradas: fin.entradasMes, recusas: fin.recusasMes, quebras: fin.quebrasMes || 0, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
+  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.quebrasMes = 0; fin.queixasMes = {}; fin.mes++;
   objetivoNoFechamento(fin.balanco.mes);   // cenário: vitória ou fim do prazo (cenarios.js)
 }
 

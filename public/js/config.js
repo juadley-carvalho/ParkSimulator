@@ -95,10 +95,38 @@ const ANIMACAO = {
   impaciencia: { desde: 0.4, balanco: 1.4, batePe: 0.7 },   // na fila: fração da paciência gasta; batendo o pé a partir de 70%
   nausea: { desde: 50, verde: 70, inclina: 1.6 },           // cambaleia a partir de 50 de náusea; rosto esverdeado a partir de 70
 };
-// Uniforme de cada função de funcionário: a cor da roupa diz o que ele faz
-const UNIFORMES = {
-  faxineiro: { camisa: '#2e7d32', calca: '#1b5e20', bone: '#1b5e20', ferramenta: 'vassoura' },
+// Funções de funcionário: contratação, salário (cobrado no fechamento do mês), passo (tiles/s) e o
+// uniforme (a cor da roupa diz o que ele faz). A aba 👷 da barra ganha um cartão para cada função.
+const FUNCOES = {
+  faxineiro: { nome: 'Faxineiro', icone: '🧹', contratacao: 500, salario: 150, velocidade: 1.5,
+               camisa: '#2e7d32', calca: '#1b5e20', bone: '#1b5e20', ferramenta: 'vassoura',
+               dica: 'Limpa vômito, recolhe lixo e esvazia lixeiras.' },
+  mecanico:  { nome: 'Mecânico', icone: '🔧', contratacao: 600, salario: 200, velocidade: 1.7,
+               camisa: '#1565c0', calca: '#0d47a1', bone: '#ef6c00', ferramenta: 'chave',
+               dica: 'Conserta os brinquedos quebrados (vai ao mais perto que ninguém está atendendo).' },
 };
+
+// ---------- Defeitos dos brinquedos (ver manutencao.js) ----------
+// Só atrações com fila quebram (lojas, banheiros, bancos e lixeiras não). O DESGASTE cresce com a idade e
+// com o uso; a chance de quebrar é sorteada a cada corrida e cresce com o desgaste. Assim um brinquedo
+// popular (mais corridas por mês) envelhece mais depressa e quebra mais cedo que um pouco usado.
+const DEFEITOS = {
+  desgastePorMes: 1,         // idade: +1 ponto por mês de jogo
+  desgastePorCorrida: 0.05,  // uso: +1 ponto a cada 20 corridas
+  chanceBase: 0.003,         // chance por corrida de um brinquedo novo (0,3%)...
+  chancePorDesgaste: 0.0015, // ...mais 0,15% por ponto de desgaste...
+  chanceMax: 0.06,           // ...até 6% por corrida
+  reparoTira: 0.3,           // o conserto tira 30% do desgaste (velho consertado continua mais frágil que novo)
+  garantia: 15,              // e garante as próximas 15 corridas sem quebrar
+  tempoConserto: 10,         // segundos de trabalho do mecânico
+  presoFelicPorSeg: 0.4,     // quem ficou preso no brinquedo perde felicidade por segundo...
+  resgate: 60,               // ...até o conserto, ou até a equipe evacuar após 60 s (ingresso devolvido)
+  resgateFelic: 10,          // felicidade perdida a mais por quem é evacuado
+  evitar: 60,                // segundos que quem estava na fila evita o brinquedo quebrado
+};
+// Assento do banco (desenharBanco e sentarNoBanco usam as mesmas medidas): a "dist" do centro do tile, em
+// direção a cada lado sem caminho; cabem 2 pessoas por lado, a ±"espaco" ao longo dele; "altura" em px
+const ASSENTO_BANCO = { dist: 0.3, espaco: 0.1, altura: 6 };
 // Cores de calça (sorteadas em semear): a camisa sozinha deixava muitos convidados parecidos
 const CORES_CALCA = ['#2f4f7f', '#3b5d99', '#37474f', '#212121', '#6d4c41', '#8d7b5a', '#2e5e3a', '#5d4037'];
 
@@ -215,6 +243,8 @@ const PENSAMENTOS = {
   nojo:     { icone: '😖', texto: 'Que nojo, pisei em vômito!' },
   enjoo:    { icone: '🤮', texto: 'Passei mal...' },
   lotado:   { icone: '😣', texto: 'Que aperto! Lotado demais aqui' },
+  quebrado: { icone: '🛠️', texto: 'O brinquedo quebrou!' },
+  preso:    { icone: '😰', texto: 'Fiquei preso no brinquedo!' },
 };
 
 // ---------- Superlotação (ver atualizarLotacao em convidados.js) ----------
@@ -251,5 +281,5 @@ const LIXO = {
   tempoLixo: 1, tempoVomito: 3, tempoLixeira: 2,   // segundos de trabalho do faxineiro
   // Prioridade do faxineiro: escolhe a tarefa de menor (distância − bônus): vômito "parece" 8 tiles mais perto
   bonusVomito: 8, bonusLixeira: 4,
-  contratacao: 500, salario: 150, velocidade: 1.5,
+  // (contratação, salário e passo do faxineiro: FUNCOES.faxineiro)
 };

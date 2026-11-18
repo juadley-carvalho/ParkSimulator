@@ -35,7 +35,7 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - **Sem bundler, sem módulos ES, sem framework.** Scripts clássicos em `public/js/`, carregados por `<script>` no
   `public/index.html` e **compartilhando o escopo global**. **A ordem das tags importa**:
   `config, utils, dom, estado, iso, desenho, objetos, atracoes, necessidades, convidados, entrada, financas,
-  avaliacao, lixo, ui, barra, salvar, cenarios, ParkAudio, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
+  avaliacao, lixo, manutencao, ui, barra, salvar, cenarios, ParkAudio, musica, input, main`. Arquivo novo = tag nova na posição certa. `main.js` é sempre o último.
 - Código de nível superior (executado na carga) só pode usar o que já foi carregado. Funções usadas na montagem
   inicial do mapa devem ser `function` declarations. Já causou bugs: `const f = () => ...` chamada antes da linha
   que a define ("Cannot access ... before initialization", a *temporal dead zone*).
@@ -47,7 +47,8 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
 - Responsabilidades: `estado` dados · `iso` grade↔tela · `desenho` canvas · `objetos` catálogo e regras de construção ·
   `atracoes` filas/embarque/corrida · `necessidades` necessidades e busca de serviços · `convidados` criação e
   movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota do parque e pensamentos ·
-  `lixo` sujeira no chão, lixeiras, vômito e faxineiros · `ui` painéis de detalhes e janelas de
+  `lixo` sujeira no chão, lixeiras, vômito, faxineiros e o movimento de todos os funcionários ·
+  `manutencao` defeitos dos brinquedos e mecânicos · `ui` painéis de detalhes e janelas de
   finanças e do parque · `barra` barra de construção · `salvar` serialização + API + tela de saves · `cenarios` tela inicial,
   cenários, objetivos, vitória/derrota · `input` mouse/teclado/câmera.
 - **Fase** (`fase`, estado.js): `menu | jogando | vitoria | derrota`. O `loop` só chama os `atualizar*` em `jogando`
@@ -94,15 +95,17 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   árvores encostadas à esquerda). Só é correto com `|w − h| ≤ 1`: atração mais alongada exige ordenação topológica.
 - Convidado: campos em `semear`. Estados: `andando | usando | esperando | brincando`. Necessidades em `g.n`:
   fome, sede, banheiro, nausea (100 = pior) e energia, felicidade (100 = melhor).
-- **Bonecos animados** (`ANIMACAO`, `CORES_CALCA`, `UNIFORMES` em config.js; desenho.js): convidados e funcionários usam
+- **Bonecos animados** (`ANIMACAO`, `CORES_CALCA`, `FUNCOES` em config.js; desenho.js): convidados e funcionários usam
   o mesmo `desenharBoneco(x, y, pose)`. A pose sai de `poseDoConvidado`/`poseDoFuncionario`, que preenchem SEMPRE o
   mesmo objeto `POSE` (sem criar objetos por quadro). Pernas e braços por senoide da fase `passo` (tiles ANDADOS,
   somados por `registrarPasso`, convidados.js, não tempo: acompanha velocidade, aperto e pausa); `movendo` (deu passo
   no último subpasso) e `olhaX/olhaY` (direção na tela). Poses: sentado (serviço `sentar`), impaciente na fila
   (`uso.espera / paciencia` > 0,4: balança; > 0,7: bate o pé), enjoado (náusea ≥ 50 cambaleia, ≥ 70 rosto verde),
   pulinho de braços para cima (felicidade ≥ 85, a cada ~7 s, desencontrado por uma semente de `ox`, `oy`, `paciencia`).
-  Usam `tempo` (pausa congela). `desenharBoneco` devolve em `POSE` a mão (`maoX/maoY`: lixo, vassoura) e a cabeça (boné).
-  Funcionário tem `funcao` (chave de `UNIFORMES`; save antigo = faxineiro). Tudo só visual; vai no save com padrão.
+  **Banco**: `sentarNoBanco` (necessidades.js) põe o convidado no assento (`ASSENTO_BANCO`: lado sem caminho com menos
+  gente, 2 lugares por lado, em `uso.lado`/`uso.lugar`); quem está sentado é desenhado pelo próprio banco (`SENTADOS`,
+  montado em `desenhar()` antes de desenhar), entre o assento e o encosto. Usam `tempo` (pausa congela). `desenharBoneco` devolve em `POSE` a mão (`maoX/maoY`: lixo, vassoura) e a cabeça (boné).
+  Funcionário tem `funcao` (chave de `FUNCOES`; save antigo = faxineiro). Tudo só visual; vai no save com padrão.
   Abaixo de `ANIMACAO.zoomMinimo`, boneco simples. Sem `ctx.save()/restore()` no boneco (caro com centenas): devolve
   `lineWidth`/`lineCap` à mão. Pessoas fora da tela não entram na lista de desenho (`vistaNaGrade(1, 4)`).
   Medido (Edge headless, 300 convidados na tela, 1/3 enjoados e 1/3 felizes): ~1,5 ms simples → ~2,0 ms animado.
@@ -130,6 +133,23 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   lixeira ≥ 75% −4, lixo 0; reserva o alvo (`Set`) para dois não irem ao mesmo. No tile da lixeira, esvazia ANTES de
   varrer (senão ficava preso: o transbordo repunha o lixo). Parque livre começa com 2 lixeiras e 1 faxineiro.
   Calibragem (2 meses, parque livre): nada 411 · só lixeiras 403 (enchem) · só faxineiro 431 · lixeiras + 1 faxineiro 586.
+- **Funcionários** (`FUNCOES` em config.js: nome, ícone, contratação, salário, passo, uniforme e ferramenta; um cartão
+  por função na aba 👷, `ferramenta.chave` = função). `contratarFuncionario(funcao, gx, gy)` e `atualizarFuncionarios`
+  (lixo.js) servem a todos; a cada tile, `decidirFuncionario` chama `decidirFaxineiro` ou `decidirMecanico`.
+- **Defeitos e mecânicos** (`DEFEITOS` em config.js, manutencao.js): só atrações com fila quebram. `a.desgaste` cresce
+  +1/mês de idade e +0,05 por corrida; na PARTIDA de cada corrida (`sortearDefeito`) a chance é 0,3% + 0,15% por ponto
+  (máx 6%), e o instante da quebra é sorteado entre 20% e 80% da corrida (`a.quebraEm`): quebra com gente a bordo.
+  `quebrar`: a fila se desfaz (queixa `quebrado`, evita 60 s), quem está a bordo fica PRESO (−0,4 felicidade/s, queixa
+  `preso`); após 60 s sem conserto em andamento, evacuação (ingresso devolvido por `devolver`, −10 felicidade). Parada:
+  `continue` em `atualizarAtracoes` (não gira, não carrega), não conta na variedade da avaliação, rótulo vermelho e
+  fumaça. Mecânico ($600 + $200/mês): vai ao caminho encostado na atração quebrada mais perto que nenhum outro pegou
+  (`f.conserto` = chave), conserta em 10 s (`consertar`: −30% do desgaste, garantia de 15 corridas sem quebrar; com
+  passageiros, a corrida continua de onde parou). Calibragem (parque livre 24, 12 meses): sem mecânico 3 quebras, nota
+  ~670 → ~370; com 1 mecânico 13 quebras (1ª no 2º mês), maior parada 27 s, nota ~550 estável; o carrossel (323
+  corridas) teve 6 consertos, a roda-gigante (120), 1. Cenários (jogador simulado que contrata mecânico na 1ª quebra):
+  Primeiro parque 765 visitantes (meta 700); Lagoa Azul "melhor" cumpre 550 × 3 meses perto do mês 16 (prazo 18);
+  Herança falida zerava a dívida no mês 12–13 sem quebras e 14–15 com elas: prazo 12 → 15. **Só ingresso** ($3.000 de
+  lucro em 24 meses) NÃO foi vencido por nenhum jogador simulado, nem sem quebras (já estava inviável: recalibrar).
 - **Calendário**: começa em Janeiro, Ano 1. Mês = 300 s (`SEG_POR_MES`, um ano ≈ 1 h) com 30 dias (1 dia = 10 s).
   `fin.mes` é um contador crescente; nome/ano saem de `nomeDoMes`, o dia de `diaDoMes(fin.tMes)` (utils.js).
 - **Finanças ($)**: caixa e dívida iniciais $15.000; empréstimo máx $20.000 em parcelas de $1.000; juros 3%/mês
@@ -275,3 +295,5 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Mais cenários e objetivos (ex.: avaliação mínima + visitantes); mais atrações (tiro ao alvo, bate-bate);
   vários slots de autosave; capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).
+- Recalibrar o cenário Só ingresso (inviável para os jogadores simulados desde o fim do limite de convidados).
+- Mecânico com inspeção preventiva (reduzir o desgaste de brinquedos funcionando quando estiver sem conserto).

@@ -171,6 +171,11 @@ function aplicarJogo(doc) {
     nova.fila = doIndice(a.fila); nova.passageiros = doIndice(a.passageiros);
     nova.fase = a.fase === 'rodando' ? 'rodando' : 'carregando';
     nova.tCarga = num(a.tCarga, 0); nova.resta = num(a.resta, 0); nova.angulo = num(a.angulo, 0);
+    // Defeitos (save antigo: brinquedo novo, funcionando)
+    nova.desgaste = Math.max(0, num(a.desgaste, 0)); nova.corridas = Math.max(0, Math.floor(num(a.corridas, 0)));
+    nova.garantia = Math.max(0, Math.floor(num(a.garantia, 0))); nova.consertos = Math.max(0, Math.floor(num(a.consertos, 0)));
+    nova.quebrada = a.quebrada === true; nova.tQuebrada = Math.max(0, num(a.tQuebrada, 0));
+    nova.quebraEm = Number.isFinite(a.quebraEm) && nova.fase === 'rodando' ? a.quebraEm : null;
     nova.fila.forEach(g => naFila.add(g)); nova.passageiros.forEach(g => noBrinquedo.add(g));
     atracoes.set(k, nova);
   }
@@ -209,10 +214,12 @@ function aplicarJogo(doc) {
     if (!f || !Number.isFinite(f.x) || !Number.isFinite(f.y) || !dentroDoMapa(Math.floor(f.x), Math.floor(f.y))) continue;
     const numero = Number.isInteger(f.numero) && f.numero > 0 ? f.numero : funcionarios.length + 1;
     const t = f.tarefa && Number.isInteger(f.tarefa.gx) && Number.isInteger(f.tarefa.gy) && dentroDoMapa(f.tarefa.gx, f.tarefa.gy) ? { gx: f.tarefa.gx, gy: f.tarefa.gy } : null;
-    funcionarios.push({ numero, nome: typeof f.nome === 'string' ? f.nome.slice(0, 30) : `Faxineiro ${numero}`, x: f.x, y: f.y,
+    const funcao = FUNCOES[f.funcao] ? f.funcao : 'faxineiro';   // save antigo: todo funcionário era faxineiro
+    funcionarios.push({ numero, nome: typeof f.nome === 'string' ? f.nome.slice(0, 30) : `${FUNCOES[funcao].nome} ${numero}`, x: f.x, y: f.y,
       alvo: null, anterior: null, tarefa: t, trabalho: Math.max(0, num(f.trabalho, 0)),
       recolheu: Math.max(0, num(f.recolheu, 0)), recolheuMes: Math.max(0, num(f.recolheuMes, 0)),
-      funcao: UNIFORMES[f.funcao] ? f.funcao : 'faxineiro',   // save antigo: todo funcionário era faxineiro
+      funcao, conserto: typeof f.conserto === 'string' ? f.conserto : null,   // conferido na próxima decisão (decidirMecanico)
+      consertos: Math.max(0, num(f.consertos, 0)), consertosMes: Math.max(0, num(f.consertosMes, 0)),
       passo: num(f.passo, 0), movendo: false, olhaX: num(f.olhaX, 1), olhaY: num(f.olhaY, 0) });
   }
 
@@ -242,6 +249,8 @@ function aplicarJogo(doc) {
     if (g.uso) {
       const o = g.uso.ancora && dentroDoMapa(g.uso.ancora.gx, g.uso.ancora.gy) ? objetoEm(g.uso.ancora.gx, g.uso.ancora.gy) : null;
       g.uso.def = (o && OBJETOS[o.chave].servicos && OBJETOS[o.chave].servicos[g.uso.servico]) || null;
+      // Lugar no banco: um dos 4 lados; se inválido, ele só não aparece sobre o assento
+      if (g.uso.lado && !VIZINHOS.some(([dx, dy]) => Array.isArray(g.uso.lado) && g.uso.lado[0] === dx && g.uso.lado[1] === dy)) delete g.uso.lado;
     }
     if ((g.estado === 'esperando' && !naFila.has(g)) || (g.estado === 'brincando' && !noBrinquedo.has(g))
         || (g.estado === 'usando' && !(g.uso && g.uso.def)) || (g.estado === 'esperando' && !(g.uso && g.uso.def))) soltarConvidado(g);
