@@ -929,8 +929,8 @@ não aparece.
 |---|---|---|---|---|---|
 | `primeiro-parque` | 🌱 Primeiro parque | 24×24, cruz de caminhos | $6.000 / $6.000 / 3% | árvore, banco, lixeira, 3 barracas, banheiro, carrossel, roda-gigante, navio, montanha-russa | 700 visitantes até Dezembro, Ano 1 (prazo 12) |
 | `lagoa-azul` | 🚣 Lagoa Azul | 24×24, lagoa grande | $12.000 / $12.000 / 3% | árvore, banco, lixeira, 3 barracas, banheiro, carrossel, roda-gigante, passeio de barco | avaliação ≥ 550 por 3 meses seguidos até Junho, Ano 2 (prazo 18) |
-| `heranca-falida` | 💸 Herança falida | 24×24 (mapa do parque livre) | $1.500 / $20.000 / 5% | tudo | pagar toda a dívida até Dezembro, Ano 1 (prazo 12) |
-| `so-ingresso` | 🎟️ Só ingresso | 24×24, anel com lago | $8.000 / $8.000 / 3% | tudo; brinquedos a $0 (`precosTravados`) | patrimônio +$3.000 até Dezembro, Ano 2 (prazo 24) |
+| `heranca-falida` | 💸 Herança falida | 24×24 (mapa do parque livre) | $1.500 / $20.000 / 5% | tudo | pagar toda a dívida até Março, Ano 2 (prazo 15) |
+| `so-ingresso` | 🎟️ Só ingresso | 24×24, anel com lago | $8.000 / $8.000 / 3% | tudo; brinquedos a $0 (`precosTravados`) | patrimônio +$6.000 até Dezembro, Ano 2 (prazo 24) |
 
 ---
 

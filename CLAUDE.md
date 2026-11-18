@@ -148,8 +148,12 @@ npm run dev      # reinicia ao editar server.js (node --watch; Node >= 18.11)
   ~670 → ~370; com 1 mecânico 13 quebras (1ª no 2º mês), maior parada 27 s, nota ~550 estável; o carrossel (323
   corridas) teve 6 consertos, a roda-gigante (120), 1. Cenários (jogador simulado que contrata mecânico na 1ª quebra):
   Primeiro parque 765 visitantes (meta 700); Lagoa Azul "melhor" cumpre 550 × 3 meses perto do mês 16 (prazo 18);
-  Herança falida zerava a dívida no mês 12–13 sem quebras e 14–15 com elas: prazo 12 → 15. **Só ingresso** ($3.000 de
-  lucro em 24 meses) NÃO foi vencido por nenhum jogador simulado, nem sem quebras (já estava inviável: recalibrar).
+  Herança falida zerava a dívida no mês 12–13 sem quebras e 14–15 com elas: prazo 12 → 15. **Só ingresso**: a meta de
+  $3.000 saía nos meses 8–10 (fácil demais); virou $6.000 em 24 meses. Lucro (variação de `patrimonio()`, já
+  descontando as obras) com mecânico na 1ª quebra e dívida quitada aos poucos: ativo (casa assombrada, tobogã, 2
+  barracas, 2 lixeiras, faxineiro) $10 → $6.000 no mês 15, $15 → 14, $20 → ~21; médio (bebidas, 2 lixeiras, faxineiro)
+  $12 → 18, $18 → 19; entrada $30 ou só mexer no preço (sem lixeiras, a nota cai para ~100): prejuízo. Cuidado ao
+  simular: posição fixa que não cabe faz o jogador "não construir nada" (aconteceu: o cenário pareceu inviável).
 - **Calendário**: começa em Janeiro, Ano 1. Mês = 300 s (`SEG_POR_MES`, um ano ≈ 1 h) com 30 dias (1 dia = 10 s).
   `fin.mes` é um contador crescente; nome/ano saem de `nomeDoMes`, o dia de `diaDoMes(fin.tMes)` (utils.js).
 - **Finanças ($)**: caixa e dívida iniciais $15.000; empréstimo máx $20.000 em parcelas de $1.000; juros 3%/mês
@@ -295,5 +299,4 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
 - Mais cenários e objetivos (ex.: avaliação mínima + visitantes); mais atrações (tiro ao alvo, bate-bate);
   vários slots de autosave; capacidade nos serviços simples; tolerância que evolui com a experiência;
   histórico financeiro em gráfico; ícones SVG próprios; suporte a toque (o mapa só se move com o botão do meio).
-- Recalibrar o cenário Só ingresso (inviável para os jogadores simulados desde o fim do limite de convidados).
 - Mecânico com inspeção preventiva (reduzir o desgaste de brinquedos funcionando quando estiver sem conserto).
