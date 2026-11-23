@@ -76,7 +76,7 @@ iniciarMusica();
 iniciarCenarios();
 iniciarVelocidades();
 iniciarEntradaUsuario();
-ajustarTamanho();
+iniciarEstiloVisual();   // aplica o estilo salvo e já dimensiona o canvas
 novoJogoLivre();   // parque de fundo da tela inicial (parado até o jogador escolher)
 jogoEmAndamento = false;
 abrirInicio();

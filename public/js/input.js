@@ -4,9 +4,9 @@
    ============================================================ */
 
 function ajustarTamanho() {
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = innerWidth * dpr;
-  canvas.height = innerHeight * dpr;
+  const f = fatorCanvas();   // dpr, ou dpr / escala no estilo retrô (estilo.js)
+  canvas.width = Math.max(1, Math.round(innerWidth * f));
+  canvas.height = Math.max(1, Math.round(innerHeight * f));
 }
 
 // Zoom mínimo: 0,3, ou menos se for preciso para o mapa inteiro caber na tela (mapas grandes)

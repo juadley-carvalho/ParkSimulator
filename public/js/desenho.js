@@ -38,7 +38,10 @@ function desenharTile(gx, gy) {
   const [t, d, b, e] = cantos(gx, gy);
   if (gx === MAPA - 1) poligono([d, b, { x: b.x, y: b.y + PROFUNDIDADE }, { x: d.x, y: d.y + PROFUNDIDADE }], '#7a5a3a');
   if (gy === MAPA - 1) poligono([e, b, { x: b.x, y: b.y + PROFUNDIDADE }, { x: e.x, y: e.y + PROFUNDIDADE }], '#5e4429');
-  poligono([t, d, b, e], TIPOS[mapa[gy][gx]].cor[(gx + gy) % 2], 'rgba(0,0,0,0.12)');
+  const tipo = TIPOS[mapa[gy][gx]];
+  const tons = escalaPixel > 1 && tipo.corRetro ? tipo.corRetro : tipo.cor;   // retrô: tons que a paleta reduzida não funde
+  poligono([t, d, b, e], tons[(gx + gy) % 2],
+           escalaPixel > 1 ? null : 'rgba(0,0,0,0.12)');   // retrô: o contorno de 1 px viraria pontilhado
 }
 
 // Caixa isométrica retangular: w x h tiles (ao longo de gx e gy), altura alt, centrada em (cx, cy).
@@ -1138,7 +1141,7 @@ function desenharLotacao() {
 }
 
 function desenhar() {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = fatorCanvas();   // pixels do canvas por pixel de tela (muda no estilo retrô)
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.translate(camera.x, camera.y);

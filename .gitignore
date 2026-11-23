@@ -1,3 +1,7 @@
 node_modules/
 .env
 saves/
+
+# Arquivos pessoais do Claude Code (preferências e permissões locais)
+CLAUDE.local.md
+.claude/settings.local.json

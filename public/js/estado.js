@@ -6,6 +6,7 @@
 const camera = { x: 0, y: 0, zoom: 1 };
 
 let hover = null;
+let escalaPixel = 1;   // 1 = original; 2 ou 3 = estilo retrô (ver estilo.js)
 
 // Duas CAMADAS de dados, ambas indexadas como [gy][gx]:
 //   mapa    -> terreno (sempre preenchido)

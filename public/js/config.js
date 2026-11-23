@@ -18,10 +18,13 @@ const FONTE_JOGO = "'Fredoka', 'Segoe UI', sans-serif";
 
 // Catálogo de terrenos
 const TIPOS = {
-  GRAMA:   { nome: 'Grama', icone: '🌱',   cor: ['#6fbf5a', '#65b350'] },
-  CAMINHO: { nome: 'Caminho', icone: '👣', cor: ['#cbb98b', '#c3b082'] },
-  AGUA:    { nome: 'Água', icone: '💧',    cor: ['#4aa3d8', '#429bd0'] },
+  GRAMA:   { nome: 'Grama', icone: '🌱',   cor: ['#6fbf5a', '#65b350'], corRetro: ['#6fbf5a', '#65a950'] },
+  CAMINHO: { nome: 'Caminho', icone: '👣', cor: ['#cbb98b', '#c3b082'], corRetro: ['#cbb98b', '#c3b064'] },
+  AGUA:    { nome: 'Água', icone: '💧',    cor: ['#4aa3d8', '#429bd0'], corRetro: ['#4aa3d8', '#429bca'] },
 };
+// corRetro: o par do quadriculado nos estilos retrô. Os dois tons de `cor` são tão próximos que o filtro de paleta
+// (#retro em index.html) os funde e a grade some; estes foram escolhidos para continuarem DISTINTOS depois dele.
+// Mudou os níveis do filtro? Reescolha estes pares (o teste de fumaça confere).
 
 // Categorias da barra de construção (a ordem aqui é a ordem das abas). Cada objeto do catálogo
 // escolhe a sua em "categoria"; sem categoria, cai em "cenario". Categoria vazia não aparece.
@@ -283,3 +286,13 @@ const LIXO = {
   bonusVomito: 8, bonusLixeira: 4,
   // (contratação, salário e passo do faxineiro: FUNCOES.faxineiro)
 };
+
+// Estilo visual (botão 🎨 da barra superior). `escala`: cada "pixel" do desenho ocupa escala x escala
+// pixels da tela (1 = original). `paleta`: reduz as cores com o filtro SVG #retro (index.html).
+// O primeiro da lista é o padrão. A escolha fica no localStorage (CHAVE_ESTILO).
+const ESTILOS_VISUAIS = [
+  { id: 'original', nome: 'Original', escala: 1, paleta: false },
+  { id: 'retro2', nome: 'Retrô 2×', escala: 2, paleta: true },
+  { id: 'retro3', nome: 'Retrô 3×', escala: 3, paleta: true },
+];
+const CHAVE_ESTILO = 'parque.estiloVisual';

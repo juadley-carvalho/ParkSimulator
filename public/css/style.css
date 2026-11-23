@@ -191,8 +191,9 @@ select:focus { border-color:var(--ouro); outline:none; }
                              border-radius: 50%; background: var(--ouro); border: 1px solid #000; }   /* a ferramenta ativa está nesta aba */
 @media (max-width: 560px) { .aba .tx { display: none; } .cartao { width: 76px; } }
 
-/* Telas estreitas: a barra superior ocupa o topo inteiro e os painéis descem abaixo dela */
-@media (max-width: 1000px) {
+/* Telas até 1440 px: a barra superior (cerca de 1430 px com todos os botões) não cabe numa linha. Ela passa a ocupar o
+   topo inteiro, quebra em linhas e os painéis descem abaixo dela (antes disso ela estourava a tela, cortando as pontas). */
+@media (max-width: 1440px) {
   #fin { left: 10px; right: 10px; transform: none; justify-content: center; flex-wrap: wrap; white-space: normal; }
   :root { --abaixo-do-topo: calc(env(safe-area-inset-top, 0px) + 118px); }   /* a barra quebra em 2 linhas */
 }
@@ -222,3 +223,7 @@ select:focus { border-color:var(--ouro); outline:none; }
            font-weight:700; pointer-events:none; }
 #pausado[hidden] { display:none; }
 #pausado small { color:var(--texto-suave); font-weight:400; }
+
+/* Estilo retrô (js/estilo.js): o canvas fica com 1/escala da resolução e é ampliado sem suavizar */
+#tela.pixelado { image-rendering: crisp-edges; image-rendering: pixelated; }
+#tela.paleta-retro { filter: url(#retro); }   /* poucos níveis por canal de cor: filtro SVG em index.html */

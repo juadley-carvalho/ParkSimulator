@@ -8,11 +8,15 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<!-- Filtro do estilo retrô (js/estilo.js): poucos níveis por canal de cor. Para mudar a paleta, mude as listas. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="retro" color-interpolation-filters="sRGB"><feComponentTransfer>
+  <feFuncR type="discrete" tableValues="0 .2 .4 .6 .8 1"/><feFuncG type="discrete" tableValues="0 .2 .4 .6 .8 1"/><feFuncB type="discrete" tableValues="0 .25 .5 .75 1"/>
+</feComponentTransfer></filter></svg>
 <canvas id="tela"></canvas>
 <div id='barra'></div>
 <div id='painel'></div>
 <div id='painelObj'></div>
-<div id='fin'><span id='finTxt'></span><span id='velocidades'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><button class='btn' id='btnMusica' title='Música'>🎵</button><button class='btn' id='btnInicio' title='Tela inicial (cenários)'>🏠</button><span id='finAviso'></span></div>
+<div id='fin'><span id='finTxt'></span><span id='velocidades'></span><button class='btn' id='btnFin'>📊 Finanças</button><button class='btn' id='btnParque'>🎡 Parque</button><button class='btn' id='btnJogo'>💾 Salvar / Carregar</button><button class='btn' id='btnMusica' title='Música'>🎵</button><button class='btn' id='btnEstilo' title='Estilo visual'>🎨</button><button class='btn' id='btnInicio' title='Tela inicial (cenários)'>🏠</button><span id='finAviso'></span></div>
 <!-- Janelas: faixa de título (com ✕) + corpo dividido em seções. Esc fecha qualquer uma (ui.js), menos as
      "fixa" (tela inicial e fim de cenário: só os botões delas). As que vêm depois no HTML ficam por cima. -->
 <div id='modalInicio' class='modal fixa'><div class='janela janela-larga'>
@@ -141,6 +145,7 @@
 <script src="js/cenarios.js"></script>
 <script src="js/ParkAudio.js"></script>
 <script src="js/musica.js"></script>
+<script src="js/estilo.js"></script>
 <script src="js/input.js"></script>
 <script src="js/main.js"></script>
 </body>

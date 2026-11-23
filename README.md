@@ -12,6 +12,7 @@ npm start       # http://localhost:3000
 ```
 
 - `PORT=8080 npm start` usa outra porta.
+- `npm test` roda o teste de fumaça (veja "Testes" abaixo).
 - `npm run dev` reinicia o servidor ao editar o `server.js`. Para o código do jogo basta recarregar a página (o servidor manda `no-cache`).
 
 ## Controles
@@ -21,6 +22,7 @@ npm start       # http://localhost:3000
 | Pintar terreno / construir | botão esquerdo (arraste para pintar vários tiles) |
 | Mover o mapa | botão do meio pressionado |
 | Zoom | roda do mouse |
+| Estilo visual (Original, Retrô 2×, Retrô 3×) | botão **🎨** na barra superior (alterna em ciclo) |
 | Girar a atração antes de construir | tecla **Z** (muda a tecla em `TECLA_GIRAR`, `config.js`) |
 | Ver detalhes de convidado ou preços de um objeto | ferramenta **Inspecionar** |
 | Empréstimo e balanço | botão **Finanças** |
@@ -112,3 +114,21 @@ A barra inferior tem **abas por categoria** (Ferramentas, Terreno, Cenário, Ser
 
 - As categorias e a ordem das abas ficam em `CATEGORIAS` (`config.js`). Uma categoria sem itens não aparece.
 - Itens com `camada` selecionam uma ferramenta; itens com `acao` executam algo na hora (veja `listaDeItens()` em `barra.js`).
+
+## Estilo visual
+
+O botão **🎨** da barra superior alterna entre **Original**, **Retrô 2×** e **Retrô 3×** e lembra a escolha (`localStorage`). No estilo retrô o canvas é desenhado a 1/2 ou 1/3 da resolução e ampliado sem suavizar, com um filtro de paleta reduzida, o que dá o aspecto de pixel art sem mudar a lógica do jogo. Os estilos ficam em `ESTILOS_VISUAIS` (`config.js`) e a lógica em `public/js/estilo.js`. O texto desenhado no canvas e a interface em HTML ainda mantêm o visual original.
+
+## Testes
+
+`npm test` executa `tests/smoke.js` (cerca de 10 s, sem navegador nem placa de vídeo). Ele sobe o servidor numa porta livre, com os saves numa pasta temporária, abre o jogo no [jsdom](https://github.com/jsdom/jsdom) e confere:
+
+- a API de saves (inclusive ids maliciosos e arquivos corrompidos) e a carga da página;
+- o modo livre e uma simulação de 5 meses, sem valores inválidos (`NaN`) nem estados incoerentes de filas e convidados;
+- construção, custos, reembolso, regras de terreno e a rotação (tecla Z) de todas as atrações;
+- salvar e carregar, inclusive saves inválidos, de outra versão e de outro tamanho de mapa;
+- todos os cenários (carregam, iniciam e terminam no prazo), além de quebra e conserto de atrações;
+- o desenho (`desenhar()`) de todo objeto do catálogo em todas as rotações.
+
+O canvas do teste é falso: ele garante que o desenho **não lança erro**, mas não que o visual está certo, e isso se confere no navegador. Para cobrir uma regra nova, acrescente verificações em uma `secao(...)` do arquivo. Precisa de Node 18.11 ou superior.
+

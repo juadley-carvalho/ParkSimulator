@@ -5,10 +5,17 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node tests/smoke.js"
   },
   "license": "ISC",
   "dependencies": {
     "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  },
+  "engines": {
+    "node": ">=18.11"
   }
 }
