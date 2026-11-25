@@ -177,6 +177,8 @@ const ENTRADA = { gx: MAPA / 2, gy: MAPA - 1 };
 
 // Volume da música de fundo (0 a 1). As faixas são os .mp3 de public/musicas (ver musica.js).
 const VOLUME_MUSICA = 0.35;
+// Volume dos efeitos sonoros (0 a 1), independente da música de fundo.
+const VOLUME_EFEITOS = 0.18;
 
 // Parque: nome e ingresso (editáveis na janela "Parque"). O ingresso é cobrado na chegada, e o
 // convidado só entra se ele custar até uma fração do dinheiro que trouxe: de FRACAO_ENTRADA_MIN (parque

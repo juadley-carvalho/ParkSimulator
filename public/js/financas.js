@@ -26,6 +26,7 @@ function pagar(g, ancora, servico, preco) {
   fin.receitaMes = arred(fin.receitaMes + preco);
   const d = gestao.get(chaveAtr(ancora.gx, ancora.gy));
   if (d) { d.receita = arred(d.receita + preco); d.usos++; }
+  if (preco > 0) tocarSomMoeda();
 }
 
 // Devolve um pagamento (evacuação de brinquedo quebrado): o contrário de pagar, sem desfazer o "uso"

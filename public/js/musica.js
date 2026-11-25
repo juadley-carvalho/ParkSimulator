@@ -45,6 +45,8 @@ function tocar() {
   atualizarBotaoMusica();
 }
 
+function tocarSomMoeda() { musica.sintese.tocarMoeda(); }
+
 // Próximo modo do botão; sem nenhum .mp3, pula o modo 'mp3'
 function proximoModo(modo) {
   const validos = MODOS_MUSICA.filter(m => m !== 'mp3' || musica.lista.length);
@@ -92,8 +94,13 @@ async function iniciarMusica() {
     gravarPreferenciaMusica();
     tocar();
   });
-  // Primeira interação com a página: libera o som (ver tocar). "once" remove o ouvinte depois da 1ª vez.
-  const liberar = () => tocar();
+  // Primeira interação com a página libera também o contexto dos efeitos sonoros.
+  const liberar = () => {
+    musica.sintese.init();
+    if (musica.sintese.ctx.state === 'suspended')
+      musica.sintese.ctx.resume().catch(erro => console.warn('Não foi possível ativar o áudio:', erro));
+    tocar();
+  };
   addEventListener('pointerdown', liberar, { once: true, capture: true });
   addEventListener('keydown', liberar, { once: true, capture: true });
 

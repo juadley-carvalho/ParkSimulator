@@ -44,6 +44,8 @@ class ParkAudio {
     this.ctx = null;
     this.isPlaying = false;
     this.masterGain = null;
+    this.efeitosGain = null;
+    this.bufferMoeda = null;
     this.musicTimer = null;
     this.vozes = new Set();   // osciladores agendados que ainda não terminaram (para cortar no stop)
   }
@@ -56,6 +58,42 @@ class ParkAudio {
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.value = 0.25; // Volume geral suave
     this.masterGain.connect(this.ctx.destination);
+
+    this.efeitosGain = this.ctx.createGain();
+    this.efeitosGain.gain.value = VOLUME_EFEITOS;
+    this.efeitosGain.connect(this.ctx.destination);
+    this.bufferMoeda = this.criarBufferMoeda();
+  }
+
+  // Cria uma única amostra curta; cada compra só precisa iniciar uma nova fonte sobre o buffer.
+  criarBufferMoeda() {
+    const duracao = 0.22, taxa = this.ctx.sampleRate;
+    const buffer = this.ctx.createBuffer(1, Math.ceil(duracao * taxa), taxa);
+    const dados = buffer.getChannelData(0);
+    for (let i = 0; i < dados.length; i++) {
+      const t = i / taxa, queda = Math.exp(-19 * t);
+      dados[i] = queda * (
+        0.5 * Math.sin(2 * Math.PI * 1318 * t) +
+        0.3 * Math.sin(2 * Math.PI * 2240 * t) +
+        0.2 * Math.sin(2 * Math.PI * 3270 * t)
+      );
+    }
+    return buffer;
+  }
+
+  tocarMoeda() {
+    if (!this.ctx) this.init();
+    const tocar = () => {
+      const fonte = this.ctx.createBufferSource();
+      fonte.buffer = this.bufferMoeda;
+      fonte.connect(this.efeitosGain);
+      fonte.onended = () => fonte.disconnect();
+      fonte.start();
+    };
+
+    if (this.ctx.state === 'suspended')
+      this.ctx.resume().then(tocar).catch(erro => console.warn('Não foi possível reproduzir o som de moeda:', erro));
+    else tocar();
   }
 
   toggle() {

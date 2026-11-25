@@ -184,4 +184,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   andamento variando, melodia por notas do acorde perto da anterior, "um-pá-pá" e sininho; agendada no relógio do
   áudio com 1,5 s de antecedência, não nota a nota com setTimeout) → desligada (🔇). Sem mp3, pula esse modo. Preferência `musicaModo` no `localStorage`
   (a chave antiga `musicaLigada` = 'nao' vira desligada). O navegador só toca após o 1º clique/tecla (o AudioContext
-  nasce "suspended"; `tocar()` chama `resume()`). `ParkAudio.js` foi escrito como módulo: sem o `export` (scripts clássicos).
+  nasce "suspended"; a primeira interação chama `resume()`). Cada cobrança positiva em `pagar()` (lojas e embarque
+  em brinquedos) toca um tilintar sintetizado em Web Audio: um `AudioBuffer` é criado uma vez e cada compra inicia
+  uma fonte independente, sem limite de sobreposição. O ganho dos efeitos (`VOLUME_EFEITOS`) é separado do ganho
+  da música, então o efeito continua mesmo com a música desligada. `ParkAudio.js` foi escrito como módulo: sem o
+  `export` (scripts clássicos).

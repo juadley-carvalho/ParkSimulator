@@ -65,7 +65,7 @@ npm test         # teste de fumaça, ~10 s (tests/smoke.js)
   movimento · `entrada` chegada/saída · `financas` caixa/empréstimo (só lógica) · `avaliacao` nota e pensamentos ·
   `lixo` sujeira, lixeiras e o movimento de todos os funcionários · `manutencao` defeitos e mecânicos ·
   `ui` painéis e janelas · `barra` barra de construção · `salvar` serialização + API + tela de saves ·
-  `cenarios` tela inicial, cenários, objetivos, fim de jogo · `musica`/`ParkAudio` som · `estilo` estilo visual (🎨) · `input` mouse/teclado/câmera.
+  `cenarios` tela inicial, cenários, objetivos, fim de jogo · `musica`/`ParkAudio` música e efeitos sonoros · `estilo` estilo visual (🎨) · `input` mouse/teclado/câmera.
 
 ## Interface (style.css)
 - Tema único de jogo: cores em variáveis no `:root` (sem modo claro/escuro). Fonte Fredoka em `public/fonts/` (OFL,
@@ -153,7 +153,7 @@ npm test         # teste de fumaça, ~10 s (tests/smoke.js)
 - `aplicarJogo` valida tudo **antes** de alterar o jogo (save inválido não estraga o parque); chaves desconhecidas
   viram grama/vazio; convidado em estado incoerente é solto. Serviço simples em uso guarda `ancora` para refazer `def`.
 - Texto vindo do usuário (nome de save, nome do parque) entra na tela só por `textContent`, nunca `innerHTML`.
-- Autosave (id `autosave`) e música de fundo: `docs/REGRAS_DE_JOGO.md` §4.
+- Autosave (id `autosave`), música e efeito sonoro das cobranças: `docs/REGRAS_DE_JOGO.md` §4.
 
 ## Verificação
 - **`npm test`** (tests/smoke.js, ~10 s, sem navegador): servidor + API de saves, carga da página, modo livre,

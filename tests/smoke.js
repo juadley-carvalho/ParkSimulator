@@ -80,11 +80,46 @@ async function abrirJogo(base) {
     beforeParse(w) {
       const ctx = ctxFalso();
       w.HTMLCanvasElement.prototype.getContext = () => ctx;
-      w.fetch = (url, opcoes) => fetch(new URL(url, base), opcoes);   // o jsdom não tem fetch
+      w.fetch = (url, opcoes) => {
+        const destino = new URL(url, base);
+        return fetch(destino, opcoes).catch(e => {
+          if (e.cause && e.cause.code === 'ECONNRESET') return fetch(destino, opcoes);
+          throw e;
+        });
+      };   // o jsdom não tem fetch; repete uma vez se o keep-alive expirou durante a simulação síncrona
       w.requestAnimationFrame = () => 0;                               // o tempo só anda quando o teste manda
       w.confirm = () => true;
       w.alert = m => alertas.push(String(m));
       Object.assign(w.HTMLMediaElement.prototype, { play: () => Promise.resolve(), pause() {}, load() {} });
+      w.__fontesAudioIniciadas = 0;
+      w.__fontesAudioAtivas = 0;
+      w.__fontesAudioPendentes = [];
+      w.__manterFontesAudio = false;
+      w.AudioContext = class {
+        constructor() { this.state = 'running'; this.sampleRate = 8000; this.currentTime = 0; this.destination = {}; }
+        createGain() { return { gain: { value: 1 }, connect() {}, disconnect() {} }; }
+        createBuffer(canais, tamanho) {
+          const dados = Array.from({ length: canais }, () => new Float32Array(tamanho));
+          return { getChannelData: canal => dados[canal] };
+        }
+        createBufferSource() {
+          return {
+            buffer: null, onended: null, connect() {}, disconnect() {},
+            start() {
+              w.__fontesAudioIniciadas++;
+              if (w.__manterFontesAudio) {
+                w.__fontesAudioAtivas++;
+                w.__fontesAudioPendentes.push(this);
+              } else if (this.onended) this.onended();
+            },
+            terminar() {
+              w.__fontesAudioAtivas--;
+              if (this.onended) this.onended();
+            },
+          };
+        }
+        resume() { this.state = 'running'; return Promise.resolve(); }
+      };
       w.addEventListener('unhandledrejection', e => problemas.push(`promessa rejeitada: ${e.reason}`));
     },
   });
@@ -165,6 +200,27 @@ async function abrirJogo(base) {
     ok('a entrada fica sobre um caminho', run("ehCaminho(ENTRADA.gx, ENTRADA.gy)"));
     ok('o parque inicial foi construído pelas regras do jogador', run('atracoes.size > 0 && gestao.size > 0') && jogo.problemas.length === 0, jogo.problemas.join(' | '));
     ok('a barra tem um cartão para cada objeto do catálogo', run("Object.keys(OBJETOS).every(k => ITENS_BARRA.some(i => i.camada === 'objeto' && i.chave === k))"));
+  });
+
+  await secao('Efeito sonoro de compras', async () => {
+    const resultado = JSON.parse(run(`
+      const caixa = fin.caixa, receita = fin.receitaMes;
+      const g = { dinheiro: 100 }, ancora = { gx: MAPA - 1, gy: 0 };
+      window.__fontesAudioIniciadas = 0;
+      window.__fontesAudioAtivas = 0;
+      window.__fontesAudioPendentes = [];
+      window.__manterFontesAudio = true;
+      for (let i = 0; i < 12; i++) pagar(g, ancora, 'comida', 1);
+      const simultaneas = window.__fontesAudioAtivas;
+      for (const fonte of window.__fontesAudioPendentes) fonte.terminar();
+      window.__manterFontesAudio = false;
+      pagar(g, ancora, 'comida', 0);
+      const fontes = window.__fontesAudioIniciadas, dinheiro = g.dinheiro;
+      fin.caixa = caixa; fin.receitaMes = receita;
+      JSON.stringify({ fontes, simultaneas, dinheiro });
+    `));
+    ok('12 compras simultâneas iniciam 12 fontes Web Audio, sem limite', resultado.fontes === 12 && resultado.simultaneas === 12, `${resultado.simultaneas} vozes simultâneas`);
+    ok('serviço gratuito não toca o efeito', resultado.dinheiro === 88);
   });
 
   await secao('Simulação de 5 meses (modo livre)', async () => {

@@ -407,7 +407,7 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | `avisar` | `msg, ok = false` | aviso na barra superior (2,5 s reais; verde se `ok`) | várias |
 | `cobrar` | `v` | debita do caixa; sem saldo avisa e devolve false | `aplicar` |
 | `precoUso` | `ancora, servico` | preço atual do serviço (0 em diversão com `precosTravados`) | busca, embarque, painel |
-| `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto | serviços, embarque |
+| `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto; preço positivo toca o efeito de moeda | serviços, embarque |
 | `pagarEntrada` | `g` | cobra o ingresso do parque | `atualizarEntrada` |
 | `custoManutencaoMensal` | — | soma das manutenções (só âncoras) | fechamento, janela |
 | `patrimonio` | — | caixa − dívida + 50% do custo dos objetos | objetivo "lucro" |
@@ -560,8 +560,10 @@ compassos), `ESCALA_MAIOR`, `TONS` (Dó, Fá, Sol, Ré), `RITMOS`, `ANTECEDENCIA
 
 | Método | O que faz |
 |---|---|
-| `constructor()` | estado vazio (`ctx`, `isPlaying`, `masterGain`, `vozes`) |
-| `init()` | cria o `AudioContext` e o ganho geral (0,25) |
+| `constructor()` | estado vazio (`ctx`, `isPlaying`, ganhos e buffer da moeda, `vozes`) |
+| `init()` | cria o `AudioContext`, o ganho geral (0,25), o ganho de efeitos e o buffer de moeda |
+| `criarBufferMoeda()` | sintetiza uma amostra curta de tilintar, criada uma vez por contexto |
+| `tocarMoeda()` | inicia uma fonte independente para cada compra; fontes simultâneas não são limitadas |
 | `toggle()` | liga/desliga (não usado pelo jogo) |
 | `start()` / `stop()` | começa (multidão + música) / para com fade e corta as notas agendadas |
 | `startCrowdAmbience()` | ruído rosa em laço de 4 s com filtro passa-banda (multidão distante) |
@@ -581,12 +583,14 @@ compassos), `ESCALA_MAIOR`, `TONS` (Dó, Fá, Sol, Ré), `RITMOS`, `ANTECEDENCIA
 | `embaralhar` | `v` | Fisher-Yates | `tocarProxima` |
 | `tocarProxima` | — | próxima faixa mp3 (reembaralha no fim) | eventos do `<audio>` |
 | `tocar` | — | liga o modo atual e desliga o outro | botão, 1ª interação |
+| `tocarSomMoeda` | — | reproduz o efeito de cobrança usando `musica.sintese` | `pagar` |
 | `proximoModo` | `modo` | mp3 → sintetizada → desligada (pula mp3 sem arquivos) | botão |
 | `atualizarBotaoMusica` | — | ícone 🎵/🎹/🔇 e dica | vários |
 | `lerPreferenciaMusica` / `gravarPreferenciaMusica` | — | `localStorage` `musicaModo` (migra `musicaLigada`) | `iniciarMusica`, botão |
 | `iniciarMusica` | — | liga eventos, busca `/api/musicas`, tenta tocar | `main.js` |
 
 Constantes: `musica` `{ lista, ordem, pos, modo, falhas, audio, sintese }`, `MODOS_MUSICA`.
+O primeiro clique/tecla também libera o `AudioContext` para efeitos, independente do modo da música.
 
 ### input.js
 
@@ -648,6 +652,7 @@ Código de nível superior: `iniciarUI`, `iniciarSalvar`, `iniciarMusica`, `inic
 | `PASSO_MAX` | 0,1 s | maior subpasso da simulação |
 | `TECLA_GIRAR` | `'z'` | girar a atração |
 | `VOLUME_MUSICA` | 0,35 | volume dos mp3 |
+| `VOLUME_EFEITOS` | 0,18 | volume separado dos efeitos sonoros |
 
 ### Catálogos
 
@@ -990,7 +995,10 @@ compassos com progressões sorteadas, mudanças de tom e andamento, melodia pert
 acompanhamento "um-pá-pá" e sininho, agendada no relógio do áudio com 1,5 s de antecedência) → **desligada**
 (🔇). Sem mp3, o modo mp3 é pulado e o padrão vira o sintetizado. Preferência em `localStorage['musicaModo']`
 (a chave antiga `musicaLigada = 'nao'` vira desligada). O navegador só libera áudio após o 1º clique/tecla:
-`tocar()` é chamado de novo nessa interação (`resume()` do `AudioContext`).
+`tocar()` é chamado de novo nessa interação (`resume()` do `AudioContext`). Cada pagamento positivo em loja ou
+brinquedo toca um tilintar de 0,22 s, sintetizado uma vez num `AudioBuffer`; cada ocorrência cria sua própria
+fonte Web Audio sem limite de simultaneidade. Seu ganho é separado da música (`VOLUME_EFEITOS` = 0,18), então os
+efeitos continuam mesmo quando a música está desligada.
 
 ---
 
