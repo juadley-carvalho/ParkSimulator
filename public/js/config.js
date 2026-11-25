@@ -178,7 +178,7 @@ const ENTRADA = { gx: MAPA / 2, gy: MAPA - 1 };
 // Volume da música de fundo (0 a 1). As faixas são os .mp3 de public/musicas (ver musica.js).
 const VOLUME_MUSICA = 0.35;
 // Volume dos efeitos sonoros (0 a 1), independente da música de fundo.
-const VOLUME_EFEITOS = 0.18;
+const VOLUME_EFEITOS = 0.05;
 
 // Parque: nome e ingresso (editáveis na janela "Parque"). O ingresso é cobrado na chegada, e o
 // convidado só entra se ele custar até uma fração do dinheiro que trouxe: de FRACAO_ENTRADA_MIN (parque
@@ -265,7 +265,7 @@ const LOTACAO = {
   lentidao: 0.25,       // velocidade cai 25% por unidade acima do limite...
   velocidadeMin: 0.5,   // ...até a metade
 };
-const DURACAO_PENSAMENTO = 3;     // s que o balão fica na tela
+const DURACAO_PENSAMENTO = 5;     // s que o balão fica na tela
 const INTERVALO_PENSAMENTO = 30;  // s até o mesmo convidado repetir a MESMA queixa (senão contaria a cada tile)
 
 // ---------- Cenários (ver cenarios.js; cada um é um arquivo public/cenarios/<id>.json) ----------

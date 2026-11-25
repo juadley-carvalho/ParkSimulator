@@ -7,14 +7,14 @@ function atualizarNecessidades(g, dt) {
   const n = g.n;
   const atividade = g.estado === 'usando' ? g.uso.def.atividade
     : g.estado === 'esperando' ? 'esperar' : g.estado === 'brincando' ? 'brinquedo' : 'andar';
-  n.fome += 1.2 * dt;
-  n.sede += 1.6 * dt;
+  n.fome += 0.2 * dt;
+  n.sede += 0.6 * dt;
   n.banheiro += 0.25 * dt;
   n.nausea -= 0.4 * dt;
   if (atividade === 'andar') n.energia -= 0.7 * dt;
   // Necessidades críticas pioram o humor, além do custo da atividade
   const criticas = [n.fome > 80, n.sede > 80, n.banheiro > 80, n.nausea > 80, n.energia < 20].filter(Boolean).length;
-  n.felicidade -= (FELIC_POR_ATIVIDADE[atividade] + criticas) * dt;
+  n.felicidade -= (FELIC_POR_ATIVIDADE[atividade] + criticas) * dt * 0.8;
   for (const c in n) n[c] = limitar(n[c]);
 }
 
