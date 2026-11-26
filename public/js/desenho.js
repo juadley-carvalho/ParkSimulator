@@ -1118,6 +1118,27 @@ function desenharBalao(bx, by, icone) {
   ctx.restore();
 }
 
+function desenharValoresFlutuantes() {
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.font = `bold ${ANIMACAO_DINHEIRO.fonte / camera.zoom}px ${FONTE_JOGO}`;
+  ctx.lineWidth = 3 / camera.zoom;
+  for (const v of valoresFlutuantes) {
+    const idade = tempo - v.inicio;
+    if (idade < 0 || idade >= ANIMACAO_DINHEIRO.duracao) continue;
+    const c = gradeParaMundo(v.gx, v.gy);
+    ctx.strokeStyle = v.valor < 0 ? '#650b0b' : '#4a3900';
+    ctx.fillStyle = v.valor < 0 ? '#f44336' : '#ffe14d';
+    const alfa = Math.min(1, (ANIMACAO_DINHEIRO.duracao - idade) / ANIMACAO_DINHEIRO.fade);
+    ctx.globalAlpha = alfa;
+    const y = c.y - (ANIMACAO_DINHEIRO.elevacao + idade * ANIMACAO_DINHEIRO.subida +
+                     v.camada * ANIMACAO_DINHEIRO.separacao) / camera.zoom;
+    ctx.strokeText(v.texto, c.x, y);
+    ctx.fillText(v.texto, c.x, y);
+  }
+  ctx.restore();
+}
+
 function corDaFerramenta() {
   if (ferramenta.camada === 'terreno') return TIPOS[ferramenta.chave].cor[0];
   if (ferramenta.camada === 'objeto') return OBJETOS[ferramenta.chave].cor;
@@ -1197,6 +1218,7 @@ function desenhar() {
   itens.push({ prof: ENTRADA.gx + ENTRADA.gy + 1, desenhar: desenharPortao });
   itens.sort((a, b) => a.prof - b.prof);
   for (const it of itens) it.desenhar();
+  desenharValoresFlutuantes();
 
   if (hover && dentroDoMapa(hover.gx, hover.gy)) {
     ctx.lineWidth = 2 / camera.zoom;

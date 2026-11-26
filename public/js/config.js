@@ -98,6 +98,9 @@ const ANIMACAO = {
   impaciencia: { desde: 0.4, balanco: 1.4, batePe: 0.7 },   // na fila: fração da paciência gasta; batendo o pé a partir de 70%
   nausea: { desde: 50, verde: 70, inclina: 1.6 },           // cambaleia a partir de 50 de náusea; rosto esverdeado a partir de 70
 };
+const ANIMACAO_DINHEIRO = {
+  duracao: 1.4, elevacao: 30, subida: 24, separacao: 15, fonte: 16, fade: 0.3, janelaEmpilhamento: 0.3,
+};
 // Funções de funcionário: contratação, salário (cobrado no fechamento do mês), passo (tiles/s) e o
 // uniforme (a cor da roupa diz o que ele faz). A aba 👷 da barra ganha um cartão para cada função.
 const FUNCOES = {

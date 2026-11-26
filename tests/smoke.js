@@ -170,7 +170,14 @@ async function abrirJogo(base) {
   const servidor = await subirServidor();
   const { base } = servidor;
   process.on('exit', () => { try { servidor.proc.kill(); } catch { /* já encerrou */ } });
-  const json = async (rota, opcoes) => { const r = await fetch(base + rota, opcoes); let corpo = null; try { corpo = await r.json(); } catch { /* sem corpo */ } return { status: r.status, corpo }; };
+  const pedir = async (url, opcoes) => {
+    try { return await fetch(url, opcoes); }
+    catch (e) {
+      if (!e.cause || e.cause.code !== 'ECONNRESET') throw e;
+      return fetch(url, opcoes);
+    }
+  };
+  const json = async (rota, opcoes) => { const r = await pedir(base + rota, opcoes); let corpo = null; try { corpo = await r.json(); } catch { /* sem corpo */ } return { status: r.status, corpo }; };
   const put = (id, corpo) => json('/api/saves/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
 
   await secao('Servidor e API', async () => {
@@ -221,6 +228,46 @@ async function abrirJogo(base) {
     `));
     ok('12 compras simultâneas iniciam 12 fontes Web Audio, sem limite', resultado.fontes === 12 && resultado.simultaneas === 12, `${resultado.simultaneas} vozes simultâneas`);
     ok('serviço gratuito não toca o efeito', resultado.dinheiro === 88);
+  });
+
+  await secao('Valores flutuantes de transações', async () => {
+    run('novoJogoLivre(); tempo = 10; valoresFlutuantes.length = 0');
+    const compra = JSON.parse(run(`
+      pagar({ dinheiro: 20, x: 8.25, y: 9.5 }, { gx: MAPA - 1, gy: 0 }, 'comida', 2.5);
+      pagar({ dinheiro: 20, x: 8.25, y: 9.5 }, { gx: MAPA - 1, gy: 0 }, 'comida', 0);
+      JSON.stringify(valoresFlutuantes.map(v => [v.valor, v.gx, v.gy, v.texto]));
+    `));
+    ok('compra paga mostra o valor positivo na posição do convidado',
+      compra.length === 1 && compra[0][0] === 2.5 && compra[0][1] === 8.25 && compra[0][2] === 9.5 &&
+      compra[0][3] === '+$2,50');
+
+    const formatacao = JSON.parse(run(`
+      valoresFlutuantes.length = 0;
+      mostrarValorFlutuante(2, 1, 1);
+      mostrarValorFlutuante(-12.3, 2, 2);
+      JSON.stringify(valoresFlutuantes.map(v => v.texto));
+    `));
+    ok('valores inteiros e despesas exibem sempre dois dígitos de centavos',
+      JSON.stringify(formatacao) === JSON.stringify(['+$2,00', '−$12,30']), JSON.stringify(formatacao));
+
+    const despesas = JSON.parse(run(`
+      valoresFlutuantes.length = 0;
+      fecharMes();
+      JSON.stringify({
+        valores: valoresFlutuantes.map(v => v.valor),
+        objetos: objetos.flat().filter(c => typeof c === 'string').filter(c => (ECONOMIA[c] || {}).manutencao > 0).length,
+        funcionarios: funcionarios.filter(f => (FUNCOES[f.funcao] || FUNCOES.faxineiro).salario > 0).length
+      });
+    `));
+    ok('fechamento mostra manutenção negativa por objeto e salário negativo por funcionário',
+      despesas.valores.length === despesas.objetos + despesas.funcionarios &&
+      despesas.valores.every(v => v < 0) && despesas.funcionarios > 0,
+      `${despesas.valores.length} cobranças negativas`);
+    run('desenhar()');
+    ok('os valores flutuantes são desenhados sem erro', jogo.problemas.length === 0, jogo.problemas.join(' | '));
+    run('tempo += ANIMACAO_DINHEIRO.duracao; atualizarValoresFlutuantes()');
+    ok('valores flutuantes expiram após a animação', run('valoresFlutuantes.length === 0'));
+    run('novoJogoLivre()');
   });
 
   await secao('Simulação de 5 meses (modo livre)', async () => {

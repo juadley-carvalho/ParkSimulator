@@ -407,7 +407,9 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | `avisar` | `msg, ok = false` | aviso na barra superior (2,5 s reais; verde se `ok`) | várias |
 | `cobrar` | `v` | debita do caixa; sem saldo avisa e devolve false | `aplicar` |
 | `precoUso` | `ancora, servico` | preço atual do serviço (0 em diversão com `precosTravados`) | busca, embarque, painel |
-| `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto; preço positivo toca o efeito de moeda | serviços, embarque |
+| `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto; preço positivo exibe o valor e toca moeda | serviços, embarque |
+| `mostrarValorFlutuante` | `valor, gx, gy` | adiciona valor temporário à posição em coordenadas da grade; formata sempre dois dígitos de centavos | compras, fechamento mensal |
+| `atualizarValoresFlutuantes` | — | remove textos que terminaram a animação | `simular` |
 | `pagarEntrada` | `g` | cobra o ingresso do parque | `atualizarEntrada` |
 | `custoManutencaoMensal` | — | soma das manutenções (só âncoras) | fechamento, janela |
 | `patrimonio` | — | caixa − dívida + 50% do custo dos objetos | objetivo "lucro" |
@@ -652,7 +654,8 @@ Código de nível superior: `iniciarUI`, `iniciarSalvar`, `iniciarMusica`, `inic
 | `PASSO_MAX` | 0,1 s | maior subpasso da simulação |
 | `TECLA_GIRAR` | `'z'` | girar a atração |
 | `VOLUME_MUSICA` | 0,35 | volume dos mp3 |
-| `VOLUME_EFEITOS` | 0,18 | volume separado dos efeitos sonoros |
+| `VOLUME_EFEITOS` | 0,05 | volume separado dos efeitos sonoros |
+| `ANIMACAO_DINHEIRO` | duração 1,4 s; elevação 30 px | movimento, duração e legibilidade dos valores flutuantes |
 
 ### Catálogos
 
@@ -995,9 +998,12 @@ compassos com progressões sorteadas, mudanças de tom e andamento, melodia pert
 acompanhamento "um-pá-pá" e sininho, agendada no relógio do áudio com 1,5 s de antecedência) → **desligada**
 (🔇). Sem mp3, o modo mp3 é pulado e o padrão vira o sintetizado. Preferência em `localStorage['musicaModo']`
 (a chave antiga `musicaLigada = 'nao'` vira desligada). O navegador só libera áudio após o 1º clique/tecla:
-`tocar()` é chamado de novo nessa interação (`resume()` do `AudioContext`). Cada pagamento positivo em loja ou
-brinquedo toca um tilintar de 0,22 s, sintetizado uma vez num `AudioBuffer`; cada ocorrência cria sua própria
-fonte Web Audio sem limite de simultaneidade. Seu ganho é separado da música (`VOLUME_EFEITOS` = 0,18), então os
+`tocar()` é chamado de novo nessa interação (`resume()` do `AudioContext`).
+Os valores de compras e despesas usam esse mesmo reforço visual no canvas: compras positivas aparecem sobre o
+convidado; manutenção e salários negativos aparecem sobre o objeto ou funcionário correspondente. Cada pagamento
+positivo em loja ou brinquedo também toca um tilintar de 0,22 s, sintetizado uma vez num `AudioBuffer`; cada
+ocorrência cria sua própria fonte Web Audio sem limite de simultaneidade. Seu ganho é separado da música
+(`VOLUME_EFEITOS` = 0,05), então os
 efeitos continuam mesmo quando a música está desligada.
 
 ---

@@ -110,6 +110,7 @@ function aplicarJogo(doc) {
   if (typeof p.nome === 'string') parque.nome = p.nome.slice(0, NOME_PARQUE_MAX);
   parque.precoEntrada = Math.max(0, num(p.precoEntrada, PRECO_ENTRADA_PADRAO));
   tempo = num(e.tempo, 0);
+  valoresFlutuantes.length = 0;
   tChegada = num(e.tChegada, 1);
   stats.sairam = num(e.stats && e.stats.sairam, 0);
   selecionado = null; selObj = null; selFunc = null;

@@ -153,7 +153,7 @@ npm test         # teste de fumaça, ~10 s (tests/smoke.js)
 - `aplicarJogo` valida tudo **antes** de alterar o jogo (save inválido não estraga o parque); chaves desconhecidas
   viram grama/vazio; convidado em estado incoerente é solto. Serviço simples em uso guarda `ancora` para refazer `def`.
 - Texto vindo do usuário (nome de save, nome do parque) entra na tela só por `textContent`, nunca `innerHTML`.
-- Autosave (id `autosave`), música e efeito sonoro das cobranças: `docs/REGRAS_DE_JOGO.md` §4.
+- Autosave (id `autosave`), música, efeito sonoro e valores flutuantes das cobranças: `docs/REGRAS_DE_JOGO.md` §4.
 
 ## Verificação
 - **`npm test`** (tests/smoke.js, ~10 s, sem navegador): servidor + API de saves, carga da página, modo livre,

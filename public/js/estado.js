@@ -37,6 +37,7 @@ function redimensionarMapa(n) {
 // Convidados ANDANDO em cada tile ("gx,gy" -> quantos). É derivado das posições: refeito a cada passo
 // da simulação (atualizarLotacao) e não vai no save.
 const lotacao = new Map();
+const valoresFlutuantes = [];   // efeitos visuais transitórios de compras, manutenção e salários
 
 // Estado das atrações com fila, indexado pela âncora ("gx,gy").
 const atracoes = new Map();

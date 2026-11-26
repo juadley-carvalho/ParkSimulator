@@ -79,6 +79,7 @@ function limparParque(tamanho = MAPA) {
   atracoes.clear(); gestao.clear(); rotacoes.clear(); convidados.length = 0;
   sujeira.clear(); lixeiras.clear(); lotacao.clear(); funcionarios.length = 0; selFunc = null;
   Object.assign(fin, finInicial()); Object.assign(parque, parqueInicial()); Object.assign(partida, partidaInicial());
+  valoresFlutuantes.length = 0;
   tempo = 0; tChegada = 1; stats.sairam = 0; selecionado = null; selObj = null;
   ferramenta = { camada: 'terreno', chave: 'CAMINHO' }; rotacaoAtual = 0;   // a anterior pode estar bloqueada no cenário novo
 }

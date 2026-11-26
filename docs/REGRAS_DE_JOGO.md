@@ -189,3 +189,8 @@ Efeitos exatos de cada serviço: `OBJETOS` em `objetos.js`. Atrações grandes n
   uma fonte independente, sem limite de sobreposição. O ganho dos efeitos (`VOLUME_EFEITOS`) é separado do ganho
   da música, então o efeito continua mesmo com a música desligada. `ParkAudio.js` foi escrito como módulo: sem o
   `export` (scripts clássicos).
+- **Valores flutuantes**: compras pagas exibem `+$valor` sobre o convidado; ao fechar o mês, cada objeto com
+  manutenção e cada funcionário com salário exibem `−$valor` na própria posição. Os textos amarelos sobem,
+  enquanto despesas negativas aparecem em vermelho; todos mostram dois dígitos de centavos (ex.: `+$2,00`,
+  `−$12,30`). Surgem no instante da transação, sobem, desaparecem em 1,4 s de jogo e respeitam pausa/velocidade.
+  São efeitos visuais temporários, não fazem parte do save.
