@@ -218,6 +218,8 @@ function aplicarJogo(doc) {
     const funcao = FUNCOES[f.funcao] ? f.funcao : 'faxineiro';   // save antigo: todo funcionário era faxineiro
     funcionarios.push({ numero, nome: typeof f.nome === 'string' ? f.nome.slice(0, 30) : `${FUNCOES[funcao].nome} ${numero}`, x: f.x, y: f.y,
       alvo: null, anterior: null, tarefa: t, trabalho: Math.max(0, num(f.trabalho, 0)),
+      mesContratacao: Math.max(1, Math.min(fin.mes, Math.floor(num(f.mesContratacao, fin.mes)))),
+      limpezas: Math.max(0, Math.floor(num(f.limpezas, 0))),
       recolheu: Math.max(0, num(f.recolheu, 0)), recolheuMes: Math.max(0, num(f.recolheuMes, 0)),
       funcao, conserto: typeof f.conserto === 'string' ? f.conserto : null,   // conferido na próxima decisão (decidirMecanico)
       consertos: Math.max(0, num(f.consertos, 0)), consertosMes: Math.max(0, num(f.consertosMes, 0)),

@@ -157,8 +157,11 @@ async function abrirJogo(base) {
     };
     window.__foto = () => JSON.stringify({                           // resumo comparável do estado (para salvar/carregar)
       MAPA, mapa, objetos, rotacoes: [...rotacoes], gestao: [...gestao],
-      fin: { caixa: fin.caixa, divida: fin.divida, juros: fin.juros, mes: fin.mes, tMes: +fin.tMes.toFixed(3) },
-      conv: convidados.length, func: funcionarios.map(f => [f.funcao, f.nome]), tempo: +tempo.toFixed(3), sairam: stats.sairam,
+      fin: { caixa: fin.caixa, divida: fin.divida, juros: fin.juros, mes: fin.mes,
+        tMes: +fin.tMes.toFixed(3), investimentosMes: fin.investimentosMes },
+      conv: convidados.length,
+      func: funcionarios.map(f => [f.funcao, f.nome, f.mesContratacao, f.limpezas, f.consertos]),
+      tempo: +tempo.toFixed(3), sairam: stats.sairam,
       atr: [...atracoes].map(([k, a]) => [k, a.fase, a.fila.length, a.passageiros.length, a.quebrada, +a.desgaste.toFixed(3)]),
     });
   `);
@@ -207,6 +210,43 @@ async function abrirJogo(base) {
     ok('a entrada fica sobre um caminho', run("ehCaminho(ENTRADA.gx, ENTRADA.gy)"));
     ok('o parque inicial foi construído pelas regras do jogador', run('atracoes.size > 0 && gestao.size > 0') && jogo.problemas.length === 0, jogo.problemas.join(' | '));
     ok('a barra tem um cartão para cada objeto do catálogo', run("Object.keys(OBJETOS).every(k => ITENS_BARRA.some(i => i.camada === 'objeto' && i.chave === k))"));
+  });
+
+  await secao('Custos detalhados de manutenção', async () => {
+    const resultado = JSON.parse(run(`
+      const mesOriginal = fin.mes, f = funcionarios[0];
+      const statsOriginais = { mesContratacao: f.mesContratacao, limpezas: f.limpezas, consertos: f.consertos };
+      fin.mes = 4; f.mesContratacao = 2; f.limpezas = 7; f.consertos = 3;
+      $('btnFin').click(); $('btnCustosDetalhados').click(); atualizarFinancasUI();
+      $('abaCustosBrinquedos').click();
+      const brinquedosTexto = $('custosBrinquedos').textContent;
+      $('abaCustosLojas').click();
+      const lojasTexto = $('custosLojas').textContent;
+      $('abaCustosOutros').click();
+      const outrosTexto = $('custosOutros').textContent;
+      const celulasFuncionario = Array.from($('custosFuncionarios').querySelector('tbody tr').cells).map(c => c.textContent);
+      const dados = {
+        aberto: $('modalCustosManutencao').classList.contains('aberto'),
+        abas: document.querySelectorAll('[data-aba-custos]').length,
+        funcionario: celulasFuncionario[0] === 'Faxineiro 1' && celulasFuncionario[2] === moeda(FUNCOES.faxineiro.salario) &&
+          celulasFuncionario[3] === '2 meses' && celulasFuncionario[4] === '7' && celulasFuncionario[5] === '3',
+        brinquedos: brinquedosTexto.includes('Carrossel') && brinquedosTexto.includes('Corridas'),
+        lojas: lojasTexto.includes('Barraca de comida') && lojasTexto.includes('Receita total'),
+        outros: outrosTexto.includes('Árvore'),
+        resumo: $('custosResumo').textContent.includes('Total mensal') &&
+          $('custosResumo').textContent.includes('Salários + manutenção'),
+        financasGerais: $('empInfo').textContent.includes('Manutenção mensal:')
+      };
+      $('btnFecharCustos').click(); $('btnFechar').click();
+      fin.mes = mesOriginal; Object.assign(f, statsOriginais);
+      JSON.stringify(dados);
+    `));
+    ok('a tela abre com quatro abas e preserva o resumo geral de finanças',
+      resultado.aberto && resultado.abas === 4 && resultado.financasGerais);
+    ok('a aba de funcionários mostra custo, tempo de serviço, limpezas e consertos', resultado.funcionario);
+    ok('as abas de brinquedos, lojas e outros itens listam dados pertinentes',
+      resultado.brinquedos && resultado.lojas && resultado.outros);
+    ok('o rodapé resume subtotais e custo mensal total', resultado.resumo);
   });
 
   await secao('Efeito sonoro de compras', async () => {
@@ -339,24 +379,31 @@ async function abrirJogo(base) {
     run('window.__demole = (gx, gy) => { ferramenta = { camada: "remover", chave: "X" }; aplicar(gx, gy); }');
     const l = run("__achaLivre('ARVORE')");
     const caixa0 = run('fin.caixa');
+    ok('parque inicial não contabiliza construções do cenário como investimentos', run('fin.investimentosMes === 0'));
     run('valoresFlutuantes.length = 0');
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
     ok('construir cobra o custo', run(`!!objetoEm(${l.gx}, ${l.gy})`) && caixa0 - run('fin.caixa') === run("custoDe('ARVORE')"));
+    ok('construção soma ao investimento do mês', run(`fin.investimentosMes === custoDe('ARVORE')`));
     ok('construir mostra a despesa negativa no centro do objeto',
       run(`valoresFlutuantes.length === 1 && valoresFlutuantes[0].valor === -custoDe('ARVORE') && valoresFlutuantes[0].gx === ${l.gx} + 0.5 && valoresFlutuantes[0].gy === ${l.gy} + 0.5`));
     run(`__demole(${l.gx}, ${l.gy})`);
     ok('demolir remove e devolve a fração do custo', run(`!objetoEm(${l.gx}, ${l.gy})`) && Math.abs(run('fin.caixa') - (caixa0 - run("custoDe('ARVORE')") * (1 - run('REEMBOLSO')))) < 0.01);
+    const investimentosAntesFalha = run('fin.investimentosMes');
     run('fin.caixa = 0; valoresFlutuantes.length = 0');
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
-    ok('sem saldo não constrói nem mostra cobrança', run(`!objetoEm(${l.gx}, ${l.gy}) && valoresFlutuantes.length === 0`));
+    ok('sem saldo não constrói, não mostra cobrança nem soma investimento',
+      run(`!objetoEm(${l.gx}, ${l.gy}) && valoresFlutuantes.length === 0 && fin.investimentosMes === ${investimentosAntesFalha}`));
     run('fin.caixa = 1e6');
 
     const funcionariosAntes = run('funcionarios.length');
+    const investimentosAntesContratacao = run('fin.investimentosMes');
     run(`valoresFlutuantes.length = 0; ferramenta = { camada: 'contratar', chave: 'faxineiro' }; aplicar(ENTRADA.gx, ENTRADA.gy)`);
     ok('contratar funcionário mostra a despesa negativa no local de contratação',
       run(`funcionarios.length === ${funcionariosAntes} + 1 && valoresFlutuantes.length === 1 &&
         valoresFlutuantes[0].valor === -FUNCOES.faxineiro.contratacao &&
         valoresFlutuantes[0].gx === ENTRADA.gx + 0.5 && valoresFlutuantes[0].gy === ENTRADA.gy + 0.5`));
+    ok('contratação soma ao investimento do mês',
+      run(`fin.investimentosMes === ${investimentosAntesContratacao} + FUNCOES.faxineiro.contratacao`));
 
     // terreno x objeto
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
@@ -395,12 +442,43 @@ async function abrirJogo(base) {
     }
   });
 
+  await secao('Investimentos no balanço mensal', async () => {
+    run('novoJogoLivre(32); cobrar(125); fecharMes()');
+    const estado = JSON.parse(run(`
+      $('modalFin').classList.add('aberto'); atualizarFinancasUI();
+      JSON.stringify({
+        registrado: fin.balanco.investimentos,
+        reiniciado: fin.investimentosMes,
+        linha: $('balanco').textContent,
+        resultadoNegativo: $('balanco b').classList.contains('resultado-negativo'),
+        resultado: fin.balanco.receita - fin.balanco.manut - fin.balanco.juros -
+          fin.balanco.salarios - fin.balanco.investimentos
+      });
+    `));
+    ok('o fechamento registra investimentos e inicia o mês seguinte zerado',
+      estado.registrado === 125 && estado.reiniciado === 0);
+    ok('o balanço mostra os investimentos em andamento e os subtrai do resultado fechado',
+      estado.linha.includes(`investimentos ${run("moeda(0)")}`) &&
+      estado.linha.includes(`investimentos ${run("moeda(125)")}`) &&
+      estado.linha.includes(run(`moeda(${estado.resultado})`)));
+    ok('resultado negativo recebe a classe de destaque em vermelho',
+      estado.resultado < 0 && estado.resultadoNegativo);
+    run(`fin.balanco.receita = fin.balanco.manut + fin.balanco.juros +
+      fin.balanco.salarios + fin.balanco.investimentos + 1; atualizarFinancasUI()`);
+    ok('resultado zero ou positivo mantém a cor normal',
+      !run("$('balanco b').classList.contains('resultado-negativo')"));
+    run("$('modalFin').classList.remove('aberto'); novoJogoLivre(32)");
+  });
+
   await secao('Salvar e carregar', async () => {
     run('novoJogoLivre()');
     const girada = run("__achaLivre('NAVIO_PIRATA', 3)");
     run(`__constroi('NAVIO_PIRATA', ${girada.gx}, ${girada.gy}, 3)`);   // uma atração girada 270° entra no save
     run('__passo(6000)');   // 2 meses: convidados, filas e funcionários em andamento
+    const arvore = run("__achaLivre('ARVORE')");
+    run(`__constroi('ARVORE', ${arvore.gx}, ${arvore.gy})`);   // preserva investimento ainda em andamento no save
     const antes = run('__foto()');
+    ok('save captura o investimento do mês ainda em andamento', run('fin.investimentosMes === custoDe("ARVORE")'));
     const id = await run("salvarEm('Teste de fumaça')");
     ok('o id do save vem do nome (sem acento nem espaço)', id === 'teste-de-fumaca', id);
     ok('o save aparece na API', (await json('/api/saves')).corpo.some(s => s.id === id));

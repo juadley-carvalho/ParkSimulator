@@ -77,8 +77,25 @@
     <div class='secao'>
       <h4>📈 Balanço</h4>
       <div id='balanco'></div>
+      <div class='botoes'><button class='btn' id='btnCustosDetalhados'>🔧 Custos detalhados de manutenção</button></div>
     </div>
   </div>
+</div></div>
+<div id='modalCustosManutencao' class='modal'><div class='janela janela-custos'>
+  <div class='janela-topo'><h3>🔧 Custos de manutenção</h3><button class='fechar' id='btnFecharCustos' title='Fechar (Esc)'>✕</button></div>
+  <div class='janela-corpo custos-corpo'>
+    <div class='custos-abas' role='tablist' aria-label='Categorias de custos de manutenção'>
+      <button class='custos-aba ativa' id='abaCustosFuncionarios' role='tab' aria-selected='true' aria-controls='custosFuncionarios' data-aba-custos='funcionarios'>👷 Funcionários</button>
+      <button class='custos-aba' id='abaCustosBrinquedos' role='tab' aria-selected='false' aria-controls='custosBrinquedos' data-aba-custos='brinquedos'>🎢 Brinquedos</button>
+      <button class='custos-aba' id='abaCustosLojas' role='tab' aria-selected='false' aria-controls='custosLojas' data-aba-custos='lojas'>🏪 Lojas</button>
+      <button class='custos-aba' id='abaCustosOutros' role='tab' aria-selected='false' aria-controls='custosOutros' data-aba-custos='outros'>🌳 Outros itens</button>
+    </div>
+    <div id='custosFuncionarios' role='tabpanel' aria-labelledby='abaCustosFuncionarios' data-painel-custos='funcionarios'></div>
+    <div id='custosBrinquedos' role='tabpanel' aria-labelledby='abaCustosBrinquedos' data-painel-custos='brinquedos' hidden></div>
+    <div id='custosLojas' role='tabpanel' aria-labelledby='abaCustosLojas' data-painel-custos='lojas' hidden></div>
+    <div id='custosOutros' role='tabpanel' aria-labelledby='abaCustosOutros' data-painel-custos='outros' hidden></div>
+  </div>
+  <div id='custosResumo' class='custos-rodape'></div>
 </div></div>
 <div id='modalParque' class='modal'><div class='janela'>
   <div class='janela-topo'><h3>🎡 Parque</h3><button class='fechar' id='btnFecharParque' title='Fechar (Esc)'>✕</button></div>

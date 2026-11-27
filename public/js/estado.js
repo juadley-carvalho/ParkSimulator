@@ -37,7 +37,7 @@ function redimensionarMapa(n) {
 // Convidados ANDANDO em cada tile ("gx,gy" -> quantos). É derivado das posições: refeito a cada passo
 // da simulação (atualizarLotacao) e não vai no save.
 const lotacao = new Map();
-const valoresFlutuantes = [];   // efeitos visuais transitórios de compras, manutenção e salários
+const valoresFlutuantes = [];   // efeitos visuais transitórios de compras, obras, contratações e despesas
 
 // Estado das atrações com fila, indexado pela âncora ("gx,gy").
 const atracoes = new Map();
@@ -50,7 +50,8 @@ const gestao = new Map();   // âncora -> { precos, receita, usos } (todo objeto
 // do jogo que estava aberto. mes = contador desde o início (1 = Janeiro, Ano 1; ver nomeDoMes).
 function finInicial() {
   return { caixa: SALDO_INICIAL, divida: DIVIDA_INICIAL, juros: JUROS_MENSAL, mes: 1, tMes: 0, receitaMes: 0,
-           visitantesMes: 0, entradasMes: 0, recusasMes: 0, quebrasMes: 0, queixasMes: {}, balanco: null, aviso: '', avisoOk: false, tAviso: -99 };
+           investimentosMes: 0, visitantesMes: 0, entradasMes: 0, recusasMes: 0, quebrasMes: 0, queixasMes: {},
+           balanco: null, aviso: '', avisoOk: false, tAviso: -99 };
 }
 const fin = finInicial();
 

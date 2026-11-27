@@ -8,6 +8,8 @@ const CAMPOS = [['fome', 'Fome', true], ['sede', 'Sede', true], ['banheiro', 'Ba
                 ['nausea', 'Náusea', true], ['energia', 'Energia', false], ['felicidade', 'Felicidade', false]];
 
 const NOMES_SERVICO = { comida: 'Comida', bebida: 'Bebida', descanso: 'Descanso', banheiro: 'Banheiro', diversao: 'Ingresso' };
+let abaCustosAtiva = 'funcionarios';
+let proximaAtualizacaoCustos = -Infinity;
 
 function atualizarPainel() {
   painel.style.display = selecionado ? 'block' : 'none';
@@ -123,6 +125,7 @@ function atualizarFinancasUI() {
   $('finAviso').classList.toggle('ok', fin.avisoOk);
   for (const b of document.querySelectorAll('#velocidades button')) b.classList.toggle('ativo', +b.dataset.v === velocidade);
   $('pausado').hidden = !(velocidade === 0 && fase === 'jogando');
+  atualizarCustosManutencaoUI();
   if (!$('modalFin').classList.contains('aberto')) return;
   $('empInfo').innerHTML =
     `Caixa: <b>${moeda(fin.caixa)}</b><br>Dívida: <b>${moeda(fin.divida)}</b> (limite ${moeda(LIMITE_EMPRESTIMO)})<br>` +
@@ -136,16 +139,176 @@ function atualizarFinancasUI() {
   // Receita por visitante: quanto cada cliente rende, em média. Comparada com o custo fixo do mês
   // (manutenção + juros), mostra quantos visitantes são precisos para não ter prejuízo.
   const porVisitante = (receita, visitantes) => visitantes ? moeda(receita / visitantes) : '–';
+  const resultado = b ? b.receita - b.manut - b.juros - (b.salarios || 0) - (b.investimentos || 0) : 0;
   $('balanco').innerHTML =
     `${nomeDoMes(fin.mes)} (em andamento, dia ${diaDoMes(fin.tMes)}/${DIAS_POR_MES}): receita ${moeda(fin.receitaMes)} · ` +
-    `${fin.visitantesMes} visitantes · ${porVisitante(fin.receitaMes, fin.visitantesMes)} por visitante<br>` + (b
+    `investimentos ${moeda(fin.investimentosMes)} · ${fin.visitantesMes} visitantes · ` +
+    `${porVisitante(fin.receitaMes, fin.visitantesMes)} por visitante<br>` + (b
     ? `${nomeDoMes(b.mes)}: receita ${moeda(b.receita)} − manutenção ${moeda(b.manut)} − juros ${moeda(b.juros)}` +
-      (b.salarios ? ` − salários ${moeda(b.salarios)}` : '') + ` = <b>${moeda(b.receita - b.manut - b.juros - (b.salarios || 0))}</b><br>` +
+      (b.salarios ? ` − salários ${moeda(b.salarios)}` : '') +
+      ` − investimentos ${moeda(b.investimentos || 0)} = <b class='${resultado < 0 ? 'resultado-negativo' : ''}'>${moeda(resultado)}</b><br>` +
       (b.visitantes != null ? `${b.visitantes} visitantes · ${porVisitante(b.receita, b.visitantes)} por visitante` : '') +
       (b.entradas ? ` · entradas ${moeda(b.entradas)}` : '') +
       (b.recusas ? ` · ${b.recusas} acharam a entrada cara` : '') +
       (b.quebras ? ` · ${b.quebras} quebra${b.quebras === 1 ? '' : 's'} de brinquedo` : '')
     : 'Nenhum mês fechado ainda.');
+}
+
+function dadosCustosManutencao() {
+  const dados = { funcionarios: [], brinquedos: [], lojas: [], outros: [] };
+  for (const f of funcionarios) {
+    const mesContratacao = Number.isInteger(f.mesContratacao) && f.mesContratacao > 0
+      ? Math.min(fin.mes, f.mesContratacao) : fin.mes;
+    dados.funcionarios.push({
+      nome: f.nome,
+      funcao: (FUNCOES[f.funcao] || FUNCOES.faxineiro).nome,
+      salario: (FUNCOES[f.funcao] || FUNCOES.faxineiro).salario,
+      meses: Math.max(0, fin.mes - mesContratacao),
+      limpezas: f.limpezas || 0,
+      consertos: f.consertos || 0,
+    });
+  }
+  for (let gy = 0; gy < MAPA; gy++)
+    for (let gx = 0; gx < MAPA; gx++) {
+      const chave = objetos[gy][gx];
+      if (typeof chave !== 'string') continue;
+      const obj = OBJETOS[chave], chavePos = chaveAtr(gx, gy);
+      const item = {
+        chave, nome: obj.nome, icone: obj.icone || '📦', gx, gy,
+        manutencao: (ECONOMIA[chave] || {}).manutencao || 0,
+        gestao: gestao.get(chavePos),
+        atracao: atracoes.get(chavePos),
+      };
+      if (obj.categoria === 'atracoes') dados.brinquedos.push(item);
+      else if (Object.values(obj.servicos || {}).some(s => s.atividade === 'comer' || s.atividade === 'beber'))
+        dados.lojas.push(item);
+      else if (item.manutencao > 0) dados.outros.push(item);
+    }
+  return dados;
+}
+
+function desenharTabelaCustos(id, colunas, linhas, mensagemVazia) {
+  const painel = $(id);
+  painel.textContent = '';
+  if (!linhas.length) {
+    const vazio = document.createElement('div');
+    vazio.className = 'dica custos-vazio';
+    vazio.textContent = mensagemVazia;
+    painel.appendChild(vazio);
+    return;
+  }
+  const envolver = document.createElement('div');
+  envolver.className = 'custos-tabela-wrap';
+  const tabela = document.createElement('table');
+  tabela.className = 'custos-tabela';
+  const cabecalho = document.createElement('thead');
+  const trCabecalho = document.createElement('tr');
+  for (const coluna of colunas) {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = coluna.nome;
+    if (coluna.numero) th.className = 'numero';
+    trCabecalho.appendChild(th);
+  }
+  cabecalho.appendChild(trCabecalho);
+  tabela.appendChild(cabecalho);
+  const corpo = document.createElement('tbody');
+  for (const linha of linhas) {
+    const tr = document.createElement('tr');
+    linha.forEach((valor, i) => {
+      const td = document.createElement('td');
+      td.textContent = String(valor);
+      if (colunas[i].numero) td.className = 'numero';
+      tr.appendChild(td);
+    });
+    corpo.appendChild(tr);
+  }
+  tabela.appendChild(corpo);
+  envolver.appendChild(tabela);
+  painel.appendChild(envolver);
+}
+
+function renderizarAbaCustos(dados) {
+  if (abaCustosAtiva === 'funcionarios') {
+    desenharTabelaCustos('custosFuncionarios',
+      [{ nome: 'Funcionário' }, { nome: 'Função' }, { nome: 'Salário/mês', numero: true },
+       { nome: 'Tempo de serviço' }, { nome: 'Limpezas', numero: true }, { nome: 'Consertos', numero: true }],
+      dados.funcionarios.map(f => [f.nome, f.funcao, moeda(f.salario),
+        `${f.meses} ${f.meses === 1 ? 'mês' : 'meses'}`, f.limpezas, f.consertos]),
+      'Nenhum funcionário contratado.');
+    return;
+  }
+  if (abaCustosAtiva === 'brinquedos') {
+    desenharTabelaCustos('custosBrinquedos',
+      [{ nome: 'Brinquedo' }, { nome: 'Local' }, { nome: 'Manutenção/mês', numero: true },
+       { nome: 'Estado' }, { nome: 'Desgaste' }, { nome: 'Corridas', numero: true }, { nome: 'Consertos', numero: true }],
+      dados.brinquedos.map(item => {
+        const a = item.atracao;
+        const estado = !a ? '—' : emConserto(a) ? 'Em conserto' : a.quebrada ? 'Quebrado' : 'Funcionando';
+        const desgaste = a && Number.isFinite(a.desgaste) ? `${a.desgaste.toFixed(1).replace('.', ',')}%` : '—';
+        return [`${item.icone} ${item.nome}`, `${item.gx}, ${item.gy}`, moeda(item.manutencao),
+          estado, desgaste, a ? a.corridas : 0, a ? a.consertos : 0];
+      }),
+      'Nenhum brinquedo construído.');
+    return;
+  }
+  if (abaCustosAtiva === 'lojas') {
+    desenharTabelaCustos('custosLojas',
+      [{ nome: 'Loja' }, { nome: 'Local' }, { nome: 'Manutenção/mês', numero: true },
+       { nome: 'Usos totais', numero: true }, { nome: 'Receita total', numero: true }, { nome: 'Preços atuais' }],
+      dados.lojas.map(item => {
+        const precos = item.gestao ? Object.entries(item.gestao.precos)
+          .filter(([servico]) => OBJETOS[item.chave].servicos[servico])
+          .map(([servico, valor]) => {
+            const def = OBJETOS[item.chave].servicos[servico];
+            return `${def.nome || NOMES_SERVICO[servico] || servico}: ${moeda(valor)}`;
+          }).join(' · ') : '—';
+        return [`${item.icone} ${item.nome}`, `${item.gx}, ${item.gy}`, moeda(item.manutencao),
+          item.gestao ? item.gestao.usos : 0, moeda(item.gestao ? item.gestao.receita : 0), precos];
+      }),
+      'Nenhuma loja construída.');
+    return;
+  }
+  desenharTabelaCustos('custosOutros',
+    [{ nome: 'Item' }, { nome: 'Local' }, { nome: 'Manutenção/mês', numero: true }],
+    dados.outros.map(item => [`${item.icone} ${item.nome}`, `${item.gx}, ${item.gy}`, moeda(item.manutencao)]),
+    'Nenhum outro item com custo de manutenção.');
+}
+
+function atualizarResumoCustos(dados) {
+  const resumo = $('custosResumo');
+  resumo.textContent = '';
+  const itens = [
+    { nome: `Funcionários (${dados.funcionarios.length})`, detalhe: 'Salários/mês', valor: salariosMensais() },
+    { nome: `Brinquedos (${dados.brinquedos.length})`, detalhe: 'Manutenção/mês', valor: dados.brinquedos.reduce((s, i) => s + i.manutencao, 0) },
+    { nome: `Lojas (${dados.lojas.length})`, detalhe: 'Manutenção/mês', valor: dados.lojas.reduce((s, i) => s + i.manutencao, 0) },
+    { nome: `Outros itens (${dados.outros.length})`, detalhe: 'Manutenção/mês', valor: dados.outros.reduce((s, i) => s + i.manutencao, 0) },
+    { nome: 'Total mensal', detalhe: 'Salários + manutenção', valor: salariosMensais() + custoManutencaoMensal(), total: true },
+  ];
+  const grade = document.createElement('div');
+  grade.className = 'custos-resumo';
+  for (const item of itens) {
+    const cartao = document.createElement('div');
+    cartao.className = `custos-resumo-item${item.total ? ' total' : ''}`;
+    const nome = document.createElement('span');
+    nome.textContent = item.nome;
+    const detalhe = document.createElement('span');
+    detalhe.textContent = item.detalhe;
+    const valor = document.createElement('b');
+    valor.textContent = moeda(item.valor);
+    cartao.append(nome, detalhe, valor);
+    grade.appendChild(cartao);
+  }
+  resumo.appendChild(grade);
+}
+
+function atualizarCustosManutencaoUI(forcar = false) {
+  if (!$('modalCustosManutencao').classList.contains('aberto')) return;
+  if (!forcar && tempoReal < proximaAtualizacaoCustos) return;
+  proximaAtualizacaoCustos = tempoReal + 1;
+  const dados = dadosCustosManutencao();
+  renderizarAbaCustos(dados);
+  atualizarResumoCustos(dados);
 }
 
 // Janela "Parque": estatísticas do portão no mês em andamento (atualizadas a cada quadro, só com ela aberta)
@@ -279,6 +442,23 @@ function iniciarUI() {
   $('btnPegar').addEventListener('click', pegarEmprestimo);
   $('btnPagar').addEventListener('click', pagarEmprestimo);
   $('btnFechar').addEventListener('click', () => $('modalFin').classList.remove('aberto'));
+  $('btnCustosDetalhados').addEventListener('click', () => {
+    $('modalCustosManutencao').classList.add('aberto');
+    atualizarCustosManutencaoUI(true);
+  });
+  $('btnFecharCustos').addEventListener('click', () => $('modalCustosManutencao').classList.remove('aberto'));
+  document.querySelectorAll('[data-aba-custos]').forEach(botao => botao.addEventListener('click', () => {
+    abaCustosAtiva = botao.dataset.abaCustos;
+    document.querySelectorAll('[data-aba-custos]').forEach(aba => {
+      const ativa = aba === botao;
+      aba.classList.toggle('ativa', ativa);
+      aba.setAttribute('aria-selected', ativa);
+    });
+    document.querySelectorAll('[data-painel-custos]').forEach(painel => {
+      painel.hidden = painel.dataset.painelCustos !== abaCustosAtiva;
+    });
+    atualizarCustosManutencaoUI(true);
+  }));
   $('btnFin').addEventListener('click', () => {
     $('inJuros').value = +(fin.juros * 100).toFixed(2);   // preenchido só ao abrir, para não atrapalhar a digitação
     $('modalFin').classList.add('aberto');

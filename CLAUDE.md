@@ -109,7 +109,8 @@ npm test         # teste de fumaça, ~10 s (tests/smoke.js)
   conferidos por `validarCenario`). Objetivos em `TIPOS_OBJETIVO`; passar do prazo = derrota; vitória libera o próximo
   (progresso no `localStorage`). Nos cenários não há a aba 🧪 Teste.
 - **Calendário e finanças**: mês = `SEG_POR_MES`; no fechamento saem juros, manutenção e salários (caixa pode ficar
-  negativo). Construir cobra `ECONOMIA`/`CUSTO_TERRENO` (sem saldo: não constrói); demolir devolve `REEMBOLSO`. O
+  negativo). `cobrar()` acumula construções, terreno e contratações em `fin.investimentosMes`, registrado no balanço
+  ao fechar o mês. Construir cobra `ECONOMIA`/`CUSTO_TERRENO` (sem saldo: não constrói); demolir devolve `REEMBOLSO`. O
   preço de uso é por objeto (ferramenta Inspecionar), padrões em `PRECO_PADRAO`; o parque tem preço de entrada.
 - **Convidados** entram pela `ENTRADA` (tile da borda, protegido), sem limite simultâneo, no ritmo de `escalaChegada()`
   (pela avaliação). Saem com felicidade ≤ 10 ou dinheiro < $2. Só andam em CAMINHO; se o chão some, BFS até o caminho
@@ -122,7 +123,8 @@ npm test         # teste de fumaça, ~10 s (tests/smoke.js)
 - **Filas**: tamanho máximo, paciência e carga em config.js; o ingresso é cobrado no embarque. Atração de circuito
   (`voltas`) dá voltas exatas e o trem volta à estação.
 - **Lixo e funcionários** (`LIXO`, `FUNCOES`; lixo.js): comer/beber deixa lixo; lixeiras; faxineiros contratados pela
-  aba 👷. **Defeitos** (`DEFEITOS`; manutencao.js): só atrações com fila quebram; o mecânico conserta.
+  aba 👷. O relatório de manutenção lista salários, meses de serviço, limpezas e consertos por funcionário.
+  **Defeitos** (`DEFEITOS`; manutencao.js): só atrações com fila quebram; o mecânico conserta.
 - **Superlotação** (`LOTACAO`), **avaliação** 0–999 (soma de `partesDaAvaliacao`) e **pensamentos** (`PENSAMENTOS`):
   mexem na felicidade e na nota; a nota define o ritmo de chegada e o limite do ingresso.
 - **Chão x objetos**: só `sobreCaminho` (banco, lixeira) fica sobre CAMINHO; os demais nunca. Brinquedos `naAgua` exigem

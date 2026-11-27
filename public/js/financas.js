@@ -6,10 +6,11 @@
 // ok = true: mensagem boa (verde), como "Salvo automaticamente"; senão é um problema (vermelho)
 function avisar(msg, ok = false) { fin.aviso = msg; fin.avisoOk = ok; fin.tAviso = tempoReal; }
 
-// Tenta debitar do caixa. Sem saldo, avisa e devolve false (a obra não acontece).
+// Tenta debitar do caixa; só cobranças bem-sucedidas contam como investimento do mês.
 function cobrar(v) {
   if (fin.caixa < v) { avisar('Saldo insuficiente'); return false; }
   fin.caixa = arred(fin.caixa - v);
+  fin.investimentosMes = arred(fin.investimentosMes + v);
   return true;
 }
 
@@ -90,9 +91,10 @@ function patrimonio() {
 
 function salariosMensais() { return funcionarios.reduce((s, f) => s + (FUNCOES[f.funcao] || FUNCOES.faxineiro).salario, 0); }
 
-// Fechamento do mês: cobra juros sobre a dívida, a manutenção e os salários (o caixa pode ficar negativo)
+// Investimentos já foram debitados por cobrar(); no fechamento saem juros, manutenção e salários.
 function fecharMes() {
   const juros = arred(fin.divida * fin.juros), manut = custoManutencaoMensal(), salarios = salariosMensais();
+  const investimentos = fin.investimentosMes;
   fin.caixa = arred(fin.caixa - juros - manut - salarios);
   for (let gy = 0; gy < MAPA; gy++)
     for (let gx = 0; gx < MAPA; gx++) {
@@ -108,9 +110,10 @@ function fecharMes() {
     if (salario) mostrarValorFlutuante(-salario, f.x, f.y);
   }
   for (const f of funcionarios) { f.recolheuMes = 0; f.consertosMes = 0; }
-  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, salarios, visitantes: fin.visitantesMes,
+  fin.balanco = { mes: fin.mes, receita: fin.receitaMes, manut, juros, salarios, investimentos, visitantes: fin.visitantesMes,
                   entradas: fin.entradasMes, recusas: fin.recusasMes, quebras: fin.quebrasMes || 0, queixas: fin.queixasMes, nota: Math.round(avaliacao.nota) };
-  fin.receitaMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0; fin.quebrasMes = 0; fin.queixasMes = {}; fin.mes++;
+  fin.receitaMes = 0; fin.investimentosMes = 0; fin.visitantesMes = 0; fin.entradasMes = 0; fin.recusasMes = 0;
+  fin.quebrasMes = 0; fin.queixasMes = {}; fin.mes++;
   objetivoNoFechamento(fin.balanco.mes);   // cenário: vitória ou fim do prazo (cenarios.js)
 }
 

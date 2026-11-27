@@ -249,7 +249,7 @@ Constantes com elementos da página: `canvas` (#tela), `ctx` (contexto 2D), `inf
 |---|---|---|---|
 | `criarMatriz` | `tamanho, valor` | matriz quadrada preenchida | carga inicial |
 | `redimensionarMapa` | `n` | muda `MAPA`, `ENTRADA`, esvazia e recria `mapa`/`objetos` no lugar | `limparParque`, `aplicarJogo` |
-| `finInicial` | — | fábrica do objeto `fin` | carga, `limparParque`, `aplicarJogo` |
+| `finInicial` | — | fábrica do objeto `fin`, incluindo os investimentos acumulados no mês | carga, `limparParque`, `aplicarJogo` |
 | `parqueInicial` | — | fábrica de `parque` | idem |
 | `nomeDoParque` | — | nome sem espaços ou o padrão | HUD, portão, autosave |
 | `avaliacaoInicial` | — | fábrica de `avaliacao` | `iniciarAvaliacao`, `aplicarJogo` |
@@ -405,7 +405,7 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | Função | Parâmetros | O que faz | Quem chama |
 |---|---|---|---|
 | `avisar` | `msg, ok = false` | aviso na barra superior (2,5 s reais; verde se `ok`) | várias |
-| `cobrar` | `v` | debita do caixa; sem saldo avisa e devolve false | `aplicar` |
+| `cobrar` | `v` | debita do caixa e acumula investimentos do mês; sem saldo avisa e devolve false | `aplicar` |
 | `precoUso` | `ancora, servico` | preço atual do serviço (0 em diversão com `precosTravados`) | busca, embarque, painel |
 | `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto; preço positivo exibe o valor e toca moeda | serviços, embarque |
 | `mostrarValorFlutuante` | `valor, gx, gy` | adiciona valor temporário à posição em coordenadas da grade; formata sempre dois dígitos de centavos | compras, construção, contratação, fechamento mensal |
@@ -414,7 +414,7 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | `custoManutencaoMensal` | — | soma das manutenções (só âncoras) | fechamento, janela |
 | `patrimonio` | — | caixa − dívida + 50% do custo dos objetos | objetivo "lucro" |
 | `salariosMensais` | — | faxineiros × $150 | fechamento, janela |
-| `fecharMes` | — | cobra juros, manutenção e salários; grava `balanco`; avança o mês; avalia objetivo | `atualizarFinancas` |
+| `fecharMes` | — | cobra juros, manutenção e salários; grava também investimentos; zera os contadores mensais e avança o mês | `atualizarFinancas` |
 | `atualizarFinancas` | `dt` | relógio do mês (300 s) | `simular` |
 | `pegarEmprestimo` | — | +$1.000 de dívida e caixa (até $20.000) | botão |
 | `pagarEmprestimo` | — | −$1.000 de dívida e caixa | botão |
@@ -454,12 +454,12 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | `receberLixo` | `g, tipo` | lixo na mão por 8–30 s (conforme `capricho`) | `usar` |
 | `chegarNoTile` | `g, cx, cy` | pisar em sujeira, vomitar, jogar o lixo fora | `escolherAlvo` |
 | `irAteLixeira` | `g, cx, cy` | desvia até lixeira com espaço a até 6 tiles | `escolherAlvo` |
-| `contratarFaxineiro` | `gx, gy` | cria um faxineiro no tile | `aplicar`, mapa inicial |
+| `contratarFuncionario` | `funcao, gx, gy` | cria funcionário com mês de contratação e contadores de serviço | `aplicar`, mapa inicial |
 | `demitirFuncionario` | `f` | remove o faxineiro | painel |
 | `tarefaValida` | `t` | ainda há o que fazer no tile? | `decidirFaxineiro` |
 | `duracaoDoTrabalho` | `gx, gy` | 2 s (lixeira), 3 s (vômito) ou 1 s (lixo) | `decidirFaxineiro` |
 | `escolherTarefa` | `f, cx, cy` | tarefa de menor (distância − bônus), fora as reservadas | `decidirFaxineiro` |
-| `concluirTrabalho` | `f` | esvazia a lixeira ou recolhe um item | `atualizarFuncionarios` |
+| `concluirTrabalho` | `f` | esvazia a lixeira ou recolhe um item; conta uma limpeza concluída | `atualizarFuncionarios` |
 | `decidirFaxineiro` | `f` | trabalha, segue para a tarefa ou patrulha | `atualizarFuncionarios` |
 | `atualizarFuncionarios` | `dt` | movimento e trabalho de todos os faxineiros | `simular` |
 | `resumoLimpeza` | — | contagens para a janela do parque | `atualizarParqueUI` |
@@ -475,7 +475,12 @@ Constante: `TIPOS_SUJEIRA` = `['papel', 'copo', 'palito', 'vomito']`.
 | `selecionarFuncionario` | `f` | painel do faxineiro (botão Demitir) | `selecionar` |
 | `selecionarObjeto` | `k` | painel de preços do objeto (campos editáveis) | `selecionar` |
 | `atualizarPainelObj` | — | estatísticas do objeto/faxineiro selecionado | `loop` |
-| `atualizarFinancasUI` | — | barra superior, aviso, botões de velocidade, janela Finanças | `loop` |
+| `atualizarFinancasUI` | — | barra superior, aviso, botões de velocidade e balanço mensal com investimentos | `loop` |
+| `dadosCustosManutencao` | — | agrupa funcionários e objetos por categoria e calcula os dados exibidos | tela de custos |
+| `desenharTabelaCustos` | `id, colunas, linhas, mensagemVazia` | cria tabela de dados sem inserir texto externo como HTML | tela de custos |
+| `renderizarAbaCustos` | `dados` | lista funcionários, brinquedos, lojas ou outros itens | tela de custos |
+| `atualizarResumoCustos` | `dados` | atualiza subtotais e custo mensal total no rodapé | tela de custos |
+| `atualizarCustosManutencaoUI` | `forcar = false` | atualiza a aba aberta e o resumo no máximo uma vez por segundo | `loop`, janela |
 | `atualizarParqueUI` | — | janela Parque (portão, limpeza, lotação) | `loop` |
 | `corDaNota` | `nota` | vermelho → verde | `atualizarNotaUI` |
 | `atualizarNotaUI` | — | nota, barra e partes | `atualizarParqueUI` |
@@ -484,7 +489,7 @@ Constante: `TIPOS_SUJEIRA` = `['papel', 'copo', 'palito', 'vomito']`.
 | `definirVelocidade` | `v` | muda a velocidade (guarda a última não nula) | botões, teclas |
 | `alternarPausa` | — | Espaço | botões, teclas |
 | `iniciarVelocidades` | — | cria os botões ⏸ 1× 2× 4× e as teclas | `main.js` |
-| `iniciarUI` | — | painel do convidado, Esc, janela Finanças | `main.js` |
+| `iniciarUI` | — | painéis, Esc, janela Finanças e navegação de custos detalhados | `main.js` |
 
 Constantes: `CAMPOS` (barras do painel), `NOMES_SERVICO`.
 
@@ -885,10 +890,13 @@ após 30 s. Gatilhos:
 ### Finanças e calendário
 
 - Calendário: começa em Janeiro, Ano 1; mês = 300 s, 30 dias. `fin.mes` só cresce.
-- Construir cobra `ECONOMIA[chave].custo` / `CUSTO_TERRENO` (sem saldo, não constrói); demolir devolve 50%.
+- Construir cobra `ECONOMIA[chave].custo` / `CUSTO_TERRENO` e contratar cobra a taxa de contratação. `cobrar`
+  soma essas despesas em `fin.investimentosMes`; o fechamento transfere o valor para `fin.balanco.investimentos`,
+  exibe-o no balanço e zera o contador. Sem saldo, não há cobrança nem investimento registrado.
 - Empréstimo em parcelas de $1.000, dívida até $20.000; juros mensais editáveis na janela (padrão 3%).
 - **Fechamento** (`fecharMes`): caixa −= juros (dívida × taxa) + manutenção de todos os objetos + salários
-  (pode ficar negativo; não há falência). Grava o balanço, zera os contadores do mês e avalia o objetivo.
+  (pode ficar negativo; não há falência). Grava no balanço os investimentos pagos durante o mês (construções,
+  terrenos e contratações), zera os contadores mensais e avalia o objetivo.
 - Ingresso: cobrado na chegada, entra na receita e em `entradasMes`.
 - `patrimonio()` = caixa − dívida + 50% do custo dos objetos (base do objetivo "lucro").
 

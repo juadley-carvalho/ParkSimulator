@@ -167,6 +167,7 @@ function concluirTrabalho(f) {
   if (precisaEsvaziar(cx, cy)) { n = lixeiras.get(chaveAtr(cx, cy)); lixeiras.set(chaveAtr(cx, cy), 0); }
   else if (recolherItem(cx, cy)) n = 1;
   f.recolheu += n; f.recolheuMes += n;
+  if (n > 0) f.limpezas = (f.limpezas || 0) + 1;
 }
 
 // ---------- Funcionários (faxineiros aqui; mecânicos em manutencao.js) ----------
@@ -176,6 +177,7 @@ function contratarFuncionario(funcao, gx, gy) {
   const numero = Math.max(0, ...funcionarios.filter(f => f.funcao === funcao).map(f => f.numero || 0)) + 1;
   funcionarios.push({ numero, nome: `${FUNCOES[funcao].nome} ${numero}`, funcao, x: gx + 0.5, y: gy + 0.5, alvo: null, anterior: null,
                       tarefa: null, trabalho: 0,
+                      mesContratacao: fin.mes, limpezas: 0,       // meses completos de serviço e tarefas de limpeza concluídas
                       recolheu: 0, recolheuMes: 0,                // faxineiro: itens recolhidos
                       conserto: null, consertos: 0, consertosMes: 0,   // mecânico: atração (chave "gx,gy") e contagem
                       passo: Math.random(), movendo: false, olhaX: 1, olhaY: 0 });   // animação: ver registrarPasso

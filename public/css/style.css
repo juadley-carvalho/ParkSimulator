@@ -136,6 +136,7 @@ select:focus { border-color:var(--ouro); outline:none; }
 .msg { min-height:1.4em; margin:8px 0; font-size:14px; }
 #empInfo, #balanco, #parqueInfo, #parqueLimpeza { line-height:1.6; }
 #empInfo b, #balanco b, #parqueInfo b, #parqueLimpeza b { color:var(--ouro); }
+#balanco b.resultado-negativo { color:var(--perigo); }
 #fStats { font-size:14px; line-height:1.55; }
 
 /* Avaliação do parque: nota grande, barra e as partes que somam a nota */
@@ -157,6 +158,30 @@ select:focus { border-color:var(--ouro); outline:none; }
 .save-linha b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .save-linha small { display:block; color:var(--texto-suave); }
 .save-linha .btn { padding:5px 10px; font-size:14px; }
+
+/* ---------- Custos detalhados de manutenção ---------- */
+.janela-custos { width:min(1100px, 96vw); }
+.janela-custos .custos-corpo { flex:1; min-height:0; }
+.custos-abas { display:flex; gap:6px; overflow-x:auto; padding:2px 2px 8px; scrollbar-width:thin; }
+.custos-aba { flex:0 0 auto; padding:7px 12px; border:2px solid rgba(255,255,255,.1); border-radius:9px;
+              background:rgba(0,0,0,.2); color:var(--texto); cursor:pointer; font-weight:600; }
+.custos-aba:hover { background:rgba(255,255,255,.1); }
+.custos-aba.ativa { border-color:#8a6d12; background:linear-gradient(180deg, #ffe082 0%, #f9a825 100%);
+                    color:#3e2a00; text-shadow:none; }
+.custos-tabela-wrap { width:100%; overflow-x:auto; border-radius:8px; }
+.custos-tabela { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+.custos-tabela th, .custos-tabela td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.1); }
+.custos-tabela th { position:sticky; top:0; background:#263451; color:var(--ouro); font-weight:600; white-space:nowrap; }
+.custos-tabela td { white-space:nowrap; }
+.custos-tabela .numero { text-align:right; }
+.custos-vazio { padding:18px 10px; text-align:center; }
+.custos-rodape { flex:0 0 auto; padding:10px 18px 14px; border-top:2px dashed rgba(255,255,255,.12); }
+.custos-resumo { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; }
+.custos-resumo-item { display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:8px;
+                      background:rgba(0,0,0,.22); }
+.custos-resumo-item span { color:var(--texto-suave); font-size:13px; }
+.custos-resumo-item b { color:var(--ouro); }
+.custos-resumo-item.total { border:1px solid rgba(255,211,77,.45); }
 
 /* ---------- Barra de construção (parte inferior) ---------- */
 #barra { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);

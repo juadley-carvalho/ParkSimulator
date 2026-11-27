@@ -98,8 +98,15 @@ de rotação, bonecos animados, autosave e música. Leia a seção da área em q
 - **Finanças ($)**: caixa e dívida iniciais $15.000; empréstimo máx $20.000 em parcelas de $1.000; juros 3%/mês
   (editável na tela Finanças). No fechamento: juros + manutenção de todos os objetos saem do caixa
   (pode ficar negativo); o balanço guarda receita e visitantes do mês (`fin.visitantesMes`, contado na chegada).
-  Construir cobra `ECONOMIA`/`CUSTO_TERRENO` (sem saldo: não constrói); demolir devolve 50%.
+  Construir cobra `ECONOMIA`/`CUSTO_TERRENO` e contratar cobra a taxa da função; sem saldo, a ação não acontece.
+  Essas despesas bem-sucedidas acumulam como investimentos do mês e aparecem no balanço junto com manutenção,
+  juros e salários. Demolir devolve 50% do custo do objeto.
   O preço de uso é por objeto (ferramenta Inspecionar); padrões em `PRECO_PADRAO`. `fin` nasce de `finInicial()`.
+  A janela Finanças mantém os totais gerais e abre uma tela separada de custos detalhados: funcionários (salário,
+  meses completos desde a contratação, limpezas concluídas e consertos), brinquedos (estado, desgaste, corridas e
+  consertos), lojas (usos, receita total e preços atuais) e outros itens com manutenção. O rodapé soma salários e
+  manutenção por categoria e mostra o total mensal. Limpeza conta uma tarefa concluída, incluindo esvaziar uma lixeira,
+  independentemente de quantos itens foram recolhidos; os contadores e o mês de contratação acompanham o save.
 - **Chão x objetos**: só objetos `sobreCaminho` (o banco) ficam sobre CAMINHO; os demais nunca (bloqueariam a
   passagem). Trocar grama/caminho sob um objeto é recusado; água afoga o objeto. Demolir solta quem o usava.
   O banco é desenhado em cada lado do tile NÃO ligado a outro caminho (`ladosSemCaminho`); sem lado livre
