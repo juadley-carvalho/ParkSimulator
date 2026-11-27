@@ -58,12 +58,20 @@ function aplicar(gx, gy) {
       }
   } else if (camada === 'objeto') {
     if (!objetoLiberado(chave)) { avisar(`${OBJETOS[chave].nome} não está liberado neste cenário`); return; }
-    if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custoDe(chave))) construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
+    const custo = custoDe(chave);
+    if (podeConstruir(chave, gx, gy, rotacaoAtual) && cobrar(custo)) {
+      const { w, h } = tamanhoDe(chave, rotacaoAtual);
+      construir(chave, gx, gy, rotacaoAtual); // não se constrói na água
+      mostrarValorFlutuante(-custo, gx + w / 2, gy + h / 2);
+    }
   } else if (camada === 'contratar') {
     const fn = FUNCOES[chave];
     if (!fn) return;
     if (!ehCaminho(gx, gy)) { avisar(`O ${fn.nome.toLowerCase()} começa sobre um caminho`); return; }
-    if (cobrar(fn.contratacao)) contratarFuncionario(chave, gx, gy);
+    if (cobrar(fn.contratacao)) {
+      contratarFuncionario(chave, gx, gy);
+      mostrarValorFlutuante(-fn.contratacao, gx + 0.5, gy + 0.5);
+    }
   } else {
     removerObjeto(gx, gy);                              // demolir
   }

@@ -408,7 +408,7 @@ Constante: `QUEIXA_DA_FALTA` (`comida→fome`, `bebida→sede`, `banheiro→banh
 | `cobrar` | `v` | debita do caixa; sem saldo avisa e devolve false | `aplicar` |
 | `precoUso` | `ancora, servico` | preço atual do serviço (0 em diversão com `precosTravados`) | busca, embarque, painel |
 | `pagar` | `g, ancora, servico, preco` | convidado paga; caixa, receita do mês e do objeto; preço positivo exibe o valor e toca moeda | serviços, embarque |
-| `mostrarValorFlutuante` | `valor, gx, gy` | adiciona valor temporário à posição em coordenadas da grade; formata sempre dois dígitos de centavos | compras, fechamento mensal |
+| `mostrarValorFlutuante` | `valor, gx, gy` | adiciona valor temporário à posição em coordenadas da grade; formata sempre dois dígitos de centavos | compras, construção, contratação, fechamento mensal |
 | `atualizarValoresFlutuantes` | — | remove textos que terminaram a animação | `simular` |
 | `pagarEntrada` | `g` | cobra o ingresso do parque | `atualizarEntrada` |
 | `custoManutencaoMensal` | — | soma das manutenções (só âncoras) | fechamento, janela |
@@ -601,7 +601,7 @@ O primeiro clique/tecla também libera o `AudioContext` para efeitos, independen
 | `ajustarTamanho` | — | canvas = janela × `devicePixelRatio` | carga, `resize` |
 | `zoomMinimo` | — | 0,3 ou menos para o mapa inteiro caber | roda, `centralizar` |
 | `centralizar` | — | câmera na região da entrada, zoom inicial | partidas |
-| `aplicar` | `gx, gy` | regras de cada ferramenta (terreno, objeto, contratar, demolir, inspecionar) | `pintarEm` |
+| `aplicar` | `gx, gy` | regras de cada ferramenta (terreno, objeto, contratar, demolir, inspecionar); construção e contratação bem-sucedidas mostram a despesa | `pintarEm` |
 | `pintarEm` (const) | `sx, sy` | aplica no tile sob o pixel | ponteiro |
 | `pintarLinha` | `a, b` | amostra pontos entre duas posições do mouse (traço contínuo) | arrastar |
 | `girarObjeto` | — | tecla Z: `rotacaoAtual` 0→1→2→3 (só atrações) | teclado |

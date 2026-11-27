@@ -339,14 +339,24 @@ async function abrirJogo(base) {
     run('window.__demole = (gx, gy) => { ferramenta = { camada: "remover", chave: "X" }; aplicar(gx, gy); }');
     const l = run("__achaLivre('ARVORE')");
     const caixa0 = run('fin.caixa');
+    run('valoresFlutuantes.length = 0');
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
     ok('construir cobra o custo', run(`!!objetoEm(${l.gx}, ${l.gy})`) && caixa0 - run('fin.caixa') === run("custoDe('ARVORE')"));
+    ok('construir mostra a despesa negativa no centro do objeto',
+      run(`valoresFlutuantes.length === 1 && valoresFlutuantes[0].valor === -custoDe('ARVORE') && valoresFlutuantes[0].gx === ${l.gx} + 0.5 && valoresFlutuantes[0].gy === ${l.gy} + 0.5`));
     run(`__demole(${l.gx}, ${l.gy})`);
     ok('demolir remove e devolve a fração do custo', run(`!objetoEm(${l.gx}, ${l.gy})`) && Math.abs(run('fin.caixa') - (caixa0 - run("custoDe('ARVORE')") * (1 - run('REEMBOLSO')))) < 0.01);
-    run('fin.caixa = 0');
+    run('fin.caixa = 0; valoresFlutuantes.length = 0');
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
-    ok('sem saldo não constrói', run(`!objetoEm(${l.gx}, ${l.gy})`));
+    ok('sem saldo não constrói nem mostra cobrança', run(`!objetoEm(${l.gx}, ${l.gy}) && valoresFlutuantes.length === 0`));
     run('fin.caixa = 1e6');
+
+    const funcionariosAntes = run('funcionarios.length');
+    run(`valoresFlutuantes.length = 0; ferramenta = { camada: 'contratar', chave: 'faxineiro' }; aplicar(ENTRADA.gx, ENTRADA.gy)`);
+    ok('contratar funcionário mostra a despesa negativa no local de contratação',
+      run(`funcionarios.length === ${funcionariosAntes} + 1 && valoresFlutuantes.length === 1 &&
+        valoresFlutuantes[0].valor === -FUNCOES.faxineiro.contratacao &&
+        valoresFlutuantes[0].gx === ENTRADA.gx + 0.5 && valoresFlutuantes[0].gy === ENTRADA.gy + 0.5`));
 
     // terreno x objeto
     run(`__constroi('ARVORE', ${l.gx}, ${l.gy})`);
